@@ -2,15 +2,15 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Search, ShoppingCart, Star, Shield, Info, ExternalLink, Zap, 
   BarChart3, AlertCircle, CheckCircle, MousePointer2, 
-  Cpu, Rocket, Mail, Lock, Phone, MessageSquare, Tag, Award, Users, Heart,
+  Cpu, Rocket, Mail, Lock, Phone, MessageSquare, Award, Users, Heart,
   Instagram, Twitter, Send, ArrowLeft, Plus, Trash2, X,
   Activity, Globe, Coins, Bell, MessageCircle, BarChart2, Flame, Languages, Link, Home, Grid, Menu, Share2
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
-import { getFirestore, doc, setDoc, onSnapshot, collection, increment, updateDoc, addDoc, deleteDoc, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, onSnapshot, collection, increment, addDoc, deleteDoc, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 
-// --- أيقونة الموقع ---
+// --- إعدادات الخريطة ---
 const MapPinIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
 );
@@ -188,7 +188,7 @@ const App = () => {
   const [showExclusiveToast, setShowExclusiveToast] = useState(false);
   const [currentOffer, setCurrentOffer] = useState(null);
   
-  // --- إدارة المفضلة (تخزين دائم) ---
+  // --- إدارة المفضلة ---
   const [favorites, setFavorites] = useState(() => {
     const saved = localStorage.getItem('moqaren_favorites');
     return saved ? JSON.parse(saved) : [];
@@ -258,7 +258,7 @@ const App = () => {
     setLang(prev => prev === 'ar' ? 'en' : 'ar');
   };
 
-  // --- حفظ المفضلة عند التغيير ---
+  // --- حفظ المفضلة ---
   useEffect(() => {
     localStorage.setItem('moqaren_favorites', JSON.stringify(favorites));
   }, [favorites]);
@@ -392,7 +392,6 @@ const App = () => {
     clickTimeoutRef.current = setTimeout(() => setAdminClickCount(0), 3000);
   };
 
-  // Handlers for Forms
   const handleMerchantSubmit = async (e) => {
     e.preventDefault();
     if (!user) return;
@@ -425,7 +424,7 @@ const App = () => {
 
   const handleDeleteMessage = async (msgId) => { if (!confirm('حذف؟')) return; try { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'inbox', msgId)); showNotification("تم الحذف"); } catch (err) { } };
 
-  // Admin Config Handlers (Shortened)
+  // Admin Config Handlers
   const handleAddStore = () => { if (newStoreName && newStoreLink) { setAdminConfig({ ...adminConfig, affiliateLinks: [...adminConfig.affiliateLinks, { name: newStoreName, link: newStoreLink }] }); setNewStoreName(''); setNewStoreLink(''); }};
   const handleDeleteStore = (i) => { const u = [...adminConfig.affiliateLinks]; u.splice(i, 1); setAdminConfig({ ...adminConfig, affiliateLinks: u }); };
   const handleAddPartner = () => { if (newPartnerName) { setAdminConfig({ ...adminConfig, trustedPartners: [...adminConfig.trustedPartners, { name: newPartnerName }] }); setNewPartnerName(''); }};

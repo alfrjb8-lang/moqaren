@@ -435,7 +435,7 @@ const App = () => {
     } 
     // المرحلة الثانية: التحقق من الرمز السري
     else {
-      if (adminInput === "123456") { 
+      if (adminInput === process.env.REACT_APP_ADMIN_CODE) { 
         setIsAdminAuthenticated(true);
         setAdminInput('');
         setLoginStep(0);
@@ -928,3 +928,4 @@ const App = () => {
 };
 
 export default App;
+

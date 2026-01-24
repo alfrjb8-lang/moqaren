@@ -11,99 +11,21 @@ import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, onSnapshot, collection, increment, updateDoc, addDoc, deleteDoc, getDocs, arrayUnion } from 'firebase/firestore';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
 
-// --- أدوات SEO المساعدة ---
-const updateMetaTags = (view, lang, searchQuery = '') => {
-  let title = '';
-  let description = '';
-  const siteName = lang === 'ar' ? 'مقارن' : 'Moqaren';
-
-  if (view === 'home') {
-    if (searchQuery) {
-      title = lang === 'ar' 
-        ? `سعر ${searchQuery} - مقارنة أسعار ${siteName}`
-        : `${searchQuery} Price - ${siteName} Comparison`;
-      description = lang === 'ar'
-        ? `قارن أسعار ${searchQuery} في السعودية من أمازون، نون، والمتاجر الكبرى. احصل على أرخص سعر وعروض حصرية.`
-        : `Compare ${searchQuery} prices in Saudi Arabia from Amazon, Noon, and top stores. Get the best deals now.`;
-    } else {
-      title = lang === 'ar' 
-        ? 'مقارن | محرك البحث الذكي لمقارنة الأسعار في السعودية'
-        : 'Moqaren | Smart Price Comparison Engine in Saudi Arabia';
-      description = lang === 'ar'
-        ? 'أفضل موقع لمقارنة الأسعار في السعودية. قارن بين أمازون، نون، جرير وإكسترا في ثوانٍ. وفر فلوسك مع مقارن.'
-        : 'The best price comparison site in Saudi Arabia. Compare Amazon, Noon, Jarir, and Extra in seconds. Save money with Moqaren.';
-    }
-  } else if (view === 'about') {
-    title = lang === 'ar' ? `عن ${siteName} - كيف نعمل؟` : `About ${siteName}`;
-    description = lang === 'ar' ? 'تعرف على آلية عمل مقارن وكيف نستخدم الذكاء الاصطناعي لتوفير أموالك.' : 'Learn how Moqaren uses AI to save your money.';
-  } else if (view === 'merchant') {
-    title = lang === 'ar' ? `انضم كتاجر - ${siteName}` : `Merchant Partner - ${siteName}`;
-    description = 'سجل متجرك في مقارن ووصل منتجاتك لملايين المتسوقين في السعودية.';
-  } else {
-    title = `${siteName}`;
-  }
-
-  document.title = title;
-  
-  let metaDesc = document.querySelector("meta[name='description']");
-  if (!metaDesc) {
-    metaDesc = document.createElement('meta');
-    metaDesc.name = 'description';
-    document.head.appendChild(metaDesc);
-  }
-  metaDesc.content = description;
-
-  document.documentElement.lang = lang;
-  document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-};
-
-const updateSchemaMarkup = (results, view, lang) => {
-  const existingScript = document.getElementById('json-ld-schema');
-  if (existingScript) existingScript.remove();
-
-  const script = document.createElement('script');
-  script.id = 'json-ld-schema';
-  script.type = 'application/ld+json';
-
-  if (view === 'home' && results && results.length > 0) {
-    const productSchema = {
-      "@context": "https://schema.org/",
-      "@type": "Product",
-      "name": "نتائج البحث",
-      "description": "قائمة مقارنة أسعار للمنتجات المطلوبة",
-      "offers": {
-        "@type": "AggregateOffer",
-        "offerCount": results.length,
-        "lowPrice": Math.min(...results.map(r => r.price)),
-        "highPrice": Math.max(...results.map(r => r.price)),
-        "priceCurrency": "SAR"
-      }
-    };
-    script.text = JSON.stringify(productSchema);
-  } else {
-    const orgSchema = {
-      "@context": "https://schema.org",
-      "@type": "Organization",
-      "name": "Moqaren",
-      "url": "https://moqaren.com",
-      "logo": "https://moqaren.com/logo.png",
-      "contactPoint": {
-        "@type": "ContactPoint",
-        "telephone": "+966500000000",
-        "contactType": "customer service"
-      }
-    };
-    script.text = JSON.stringify(orgSchema);
-  }
-  document.head.appendChild(script);
-};
-
+// --- أيقونة الموقع ---
 const MapPinIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
 );
 
+// --- قاموس الترجمة الشامل مع نصوص SEO ---
 const translations = {
   ar: {
+    // SEO Data
+    siteTitle: 'مقارن | محرك بحث الأسعار الأول في السعودية',
+    siteDesc: 'قارن أسعار الجوالات، الإلكترونيات، والعطور في السعودية. محرك مقارن يبحث لك في أمازون، نون، جرير وإكسترا ويعطيك أرخص سعر في ثانية.',
+    keywords: 'مقارنة أسعار, أرخص سعر ايفون, عروض السعودية, أمازون السعودية, نون, جرير, تسوق ذكي',
+    ogTitle: 'وفر فلوسك مع مقارن - دليلك لأرخص الأسعار',
+    
+    // UI Texts
     home: 'الرئيسية',
     about: 'وش مقارن؟',
     features: 'ليش نثق فينا؟',
@@ -187,6 +109,13 @@ const translations = {
     emailPlaceholder: 'اكتب إيميلك هنا'
   },
   en: {
+    // SEO Data
+    siteTitle: 'Moqaren | #1 Price Comparison Engine in Saudi Arabia',
+    siteDesc: 'Compare prices for phones, electronics, and perfumes in KSA. Moqaren searches Amazon, Noon, Jarir, and Xcite to find you the best deal instantly.',
+    keywords: 'price comparison, cheapest iphone, ksa deals, amazon saudi, noon, jarir, smart shopping',
+    ogTitle: 'Save Money with Moqaren - Your Guide to Best Prices',
+
+    // UI Texts
     home: 'Home',
     about: 'About Us',
     features: 'Why Trust Us?',
@@ -271,28 +200,100 @@ const translations = {
   }
 };
 
-// --- (تحديث) إعدادات المحرك الذكي من متغيرات البيئة ---
-const apiKey = process.env.REACT_APP_GEMINI_KEY || ""; 
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+// --- استدعاء المفاتيح السرية من البيئة (Direct process.env access) ---
+const ADMIN_CODE = process.env.REACT_APP_ADMIN_CODE;
+const GEMINI_API_KEY = process.env.REACT_APP_GEMINI_KEY; 
 
-// --- (تحديث) إعدادات Firebase من متغيرات البيئة ---
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
+
+// --- إعدادات Firebase من البيئة ---
 const firebaseConfig = {
-    apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
-    authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
-    projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
-    storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: process.env.REACT_APP_FIREBASE_SENDER_ID,
-    appId: process.env.REACT_APP_FIREBASE_APP_ID
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.REACT_APP_FIREBASE_SENDER_ID,
+  appId: process.env.REACT_APP_FIREBASE_APP_ID
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-// نستخدم App ID من متغيرات البيئة أو قيمة افتراضية
-const appId = process.env.REACT_APP_FIREBASE_APP_ID || 'default-app-id';
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
-// --- (تحديث) كود الأدمن من متغيرات البيئة ---
-const ADMIN_CODE = process.env.REACT_APP_ADMIN_CODE || "123456"; // Fallback if env not found
+// --- مكون لإدارة SEO ديناميكياً ---
+const SEOHead = ({ title, description, keywords, lang }) => {
+  useEffect(() => {
+    document.title = title;
+    
+    // Helper function to update meta tags
+    const updateMeta = (name, content, attribute = 'name') => {
+      let element = document.querySelector(`meta[${attribute}="${name}"]`);
+      if (!element) {
+        element = document.createElement('meta');
+        element.setAttribute(attribute, name);
+        document.head.appendChild(element);
+      }
+      element.setAttribute('content', content);
+    };
+
+    updateMeta('description', description);
+    updateMeta('keywords', keywords);
+    
+    // Open Graph / Facebook / WhatsApp
+    updateMeta('og:title', title, 'property');
+    updateMeta('og:description', description, 'property');
+    updateMeta('og:type', 'website', 'property');
+    updateMeta('og:locale', lang === 'ar' ? 'ar_SA' : 'en_US', 'property');
+    
+    // Twitter Card
+    updateMeta('twitter:card', 'summary_large_image', 'name');
+    updateMeta('twitter:title', title, 'name');
+    updateMeta('twitter:description', description, 'name');
+
+    // Language attribute
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+
+  }, [title, description, keywords, lang]);
+
+  return null;
+};
+
+// --- بيانات JSON-LD (Structured Data) لجوجل ---
+const SchemaMarkup = () => {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Moqaren",
+    "alternateName": ["مقارن", "Moqaren KSA"],
+    "url": window.location.origin,
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": `${window.location.origin}/?search={search_term_string}`
+      },
+      "query-input": "required name=search_term_string"
+    },
+    "description": "محرك بحث ذكي لمقارنة الأسعار في السعودية، يساعدك في العثور على أفضل العروض من أمازون، نون، وغيرها.",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Moqaren",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://moqaren.com/logo.png" // Placeholder
+      }
+    }
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
+  );
+};
 
 const App = () => {
   const [user, setUser] = useState(null);
@@ -304,23 +305,23 @@ const App = () => {
   const [showExclusiveToast, setShowExclusiveToast] = useState(false);
   const [currentOffer, setCurrentOffer] = useState(null);
   
-  // --- ميزات القائمة الجانبية ---
+  // --- ميزات القائمة الجانبية (جديد) ---
   const [showSidePanel, setShowSidePanel] = useState(false);
-  const [sidePanelTab, setSidePanelTab] = useState('favorites');
+  const [sidePanelTab, setSidePanelTab] = useState('favorites'); // 'favorites' or 'history'
   const [myFavorites, setMyFavorites] = useState([]);
   const [mySearchHistory, setMySearchHistory] = useState([]);
 
-  // --- ميزات البريد الترويجي ---
+  // --- ميزات البريد الترويجي (جديد) ---
   const [showPromoPopup, setShowPromoPopup] = useState(false);
   const [promoEmail, setPromoEmail] = useState('');
   const [isSubscribed, setIsSubscribed] = useState(false);
-  const [subscriberEmail, setSubscriberEmail] = useState('');
+  const [subscriberEmail, setSubscriberEmail] = useState(''); // الإيميل المحفوظ في الجلسة
 
-  // --- ميزات إدارة التسويق ---
+  // --- ميزات إدارة التسويق (جديد) ---
   const [marketingFilter, setMarketingFilter] = useState('');
   const [marketingSubject, setMarketingSubject] = useState('');
   const [marketingBody, setMarketingBody] = useState('');
-  const [subscribersList, setSubscribersList] = useState([]);
+  const [subscribersList, setSubscribersList] = useState([]); // قائمة المشتركين للإدارة
 
   // اللغة
   const [lang, setLang] = useState('ar');
@@ -329,7 +330,7 @@ const App = () => {
   // إشعارات النظام
   const [notification, setNotification] = useState(null);
 
-  // حالة العداد الحقيقي
+  // حالة العداد الحقيقي (يبدأ من 0)
   const [realSearchCount, setRealSearchCount] = useState(0);
 
   // --- حالات لوحة التحكم ---
@@ -387,13 +388,6 @@ const App = () => {
 
   const [adminConfig, setAdminConfig] = useState(defaultAdminConfig);
 
-  // --- SEO Hook Integration ---
-  useEffect(() => {
-    updateMetaTags(view, lang, searchQuery);
-    updateSchemaMarkup(results, view, lang);
-  }, [view, lang, results, searchQuery]);
-
-
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 4000);
@@ -442,19 +436,23 @@ const App = () => {
     });
   };
 
-  // --- المصادقة ---
+  // --- 1. المصادقة (تم الإصلاح: تعمل مرة واحدة فقط) ---
   useEffect(() => {
     const initAuth = async () => {
       try {
-        await signInAnonymously(auth);
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
+        }
       } catch (error) { try { await signInAnonymously(auth); } catch (e) {} }
     };
     initAuth();
     const unsubscribe = onAuthStateChanged(auth, setUser);
     return () => unsubscribe();
-  }, []);
+  }, []); // Empty dependency array = run once
 
-  // --- إدارة النوافذ المنبثقة والاشتراكات ---
+  // --- 1.1 إدارة النوافذ المنبثقة والاشتراكات ---
   useEffect(() => {
     if (!user) return;
     const savedEmail = localStorage.getItem('moqaren_user_email');
@@ -469,7 +467,7 @@ const App = () => {
     }
   }, [user, view, isAdminAuthenticated]);
 
-  // --- جلب الإعدادات والبيانات ---
+  // --- 2. جلب الإعدادات والبيانات ---
   useEffect(() => {
     if (!user) return;
     const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'app_settings', 'main_config');
@@ -479,7 +477,7 @@ const App = () => {
     return () => unsubscribe();
   }, [user]);
 
-  // --- العداد الحقيقي ---
+  // --- 3. العداد الحقيقي ---
   useEffect(() => {
     if (!user) return;
     const statsRef = doc(db, 'artifacts', appId, 'public', 'data', 'stats', 'global_counts');
@@ -489,7 +487,7 @@ const App = () => {
     return () => unsubscribe();
   }, [user]);
 
-  // --- جلب بيانات لوحة التحكم ---
+  // --- 4. جلب بيانات لوحة التحكم (تم الإصلاح: الفرز في الجافاسكريبت) ---
   useEffect(() => {
     if (!user || !isAdminAuthenticated) return;
     
@@ -501,7 +499,7 @@ const App = () => {
       setInboxMessages(msgs);
     }, (error) => console.log('Inbox error', error));
     
-    // Top Terms
+    // Top Terms (Fix: Fetch all then sort)
     const fetchStats = async () => {
         try {
             const statsRef = collection(db, 'artifacts', appId, 'public', 'data', 'search_analytics');
@@ -513,7 +511,7 @@ const App = () => {
     };
     fetchStats();
 
-    // Logs
+    // Logs (Fix: Fetch strict collection then sort)
     const logsRef = collection(db, 'artifacts', appId, 'public', 'data', 'search_logs');
     const unsubLogs = onSnapshot(logsRef, (snapshot) => {
         let logs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -539,7 +537,7 @@ const App = () => {
     return () => { unsubInbox(); unsubLogs(); unsubMonthly(); unsubSubscribers(); };
   }, [user, isAdminAuthenticated]);
 
-  // --- وظائف التسويق ---
+  // --- وظائف التسويق (جديد) ---
   const handleSubscribe = async (e) => {
       e.preventDefault();
       if (!promoEmail || !user) return;
@@ -568,15 +566,19 @@ const App = () => {
       const cleanTerm = term.trim().toLowerCase();
       if (cleanTerm.length < 2) return; 
       
+      // 1. Update Term Aggregation
       const termRef = doc(db, 'artifacts', appId, 'public', 'data', 'search_analytics', cleanTerm);
       try { await setDoc(termRef, { term: term.trim(), count: increment(1), lastSearched: new Date().toISOString() }, { merge: true }); } catch (e) { }
 
+      // 2. Log Individual Search
       try { await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'search_logs'), { term: term.trim(), timestamp: new Date().toISOString(), device: /Mobi|Android/i.test(navigator.userAgent) ? 'Mobile' : 'Desktop' }); } catch (e) { }
 
+      // 3. Update Monthly Stats
       const currentMonth = new Date().toISOString().slice(0, 7);
       const monthlyRef = doc(db, 'artifacts', appId, 'public', 'data', 'analytics_monthly', currentMonth);
       try { await setDoc(monthlyRef, { total_searches: increment(1), last_updated: new Date().toISOString() }, { merge: true }); } catch (e) { }
 
+      // 4. Update Subscriber Interests (New)
       if (subscriberEmail) {
           const subDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'newsletter_subscribers', subscriberEmail);
           try {
@@ -676,7 +678,6 @@ const App = () => {
 
   const handleAdminLogin = (e) => {
     e.preventDefault();
-    // (تحديث) استخدام ADMIN_CODE من متغيرات البيئة
     if (loginStep === 0) {
       if (adminInput === "abdulrhman07") { setLoginStep(1); setAdminInput(''); } else { alert("بيانات غير صحيحة"); setAdminInput(''); }
     } else {
@@ -703,7 +704,7 @@ const App = () => {
 
   // --- AI ---
   const callGeminiAI = async (product, stores) => {
-    if (!apiKey) { return { summary: `بما أننا في وضع التجربة، ${stores[0].store} يبدو الخيار الأفضل حالياً.`, verdict: `${stores[0].store} - الأرخص` }; }
+    if (!GEMINI_API_KEY) { return { summary: `بما أننا في وضع التجربة، ${stores[0].store} يبدو الخيار الأفضل حالياً.`, verdict: `${stores[0].store} - الأرخص` }; }
     const languageInstruction = lang === 'en' ? "Respond in English." : "الرد باللهجة السعودية البيضاء.";
     const prompt = `Expert shopping assistant for 'Moqaren'. Analyze product: ${product}. Data: ${JSON.stringify(stores)}. Instructions: 1. Summary: One concise line. 2. Verdict: Store name + reason (2 words). ${languageInstruction} Output JSON: { summary: "string", verdict: "string" }`;
     const payload = { contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: "application/json" } };
@@ -759,6 +760,15 @@ const App = () => {
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-blue-200 selection:text-blue-900" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
       
+      {/* SEO & Meta Tags Management */}
+      <SEOHead 
+        title={view === 'home' && !results ? t.siteTitle : `${searchQuery ? searchQuery + ' | ' : ''} ${t.siteTitle}`} 
+        description={t.siteDesc} 
+        keywords={t.keywords}
+        lang={lang}
+      />
+      <SchemaMarkup />
+
       {/* إشعار النظام الموحد */}
       {notification && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-top-4 duration-300">
@@ -769,7 +779,7 @@ const App = () => {
         </div>
       )}
 
-      {/* --- نافذة الاشتراك البريدي --- */}
+      {/* --- نافذة الاشتراك البريدي (جديد) --- */}
       {showPromoPopup && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
               <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={() => setShowPromoPopup(false)}></div>
@@ -812,7 +822,7 @@ const App = () => {
         </div>
       </button>
 
-      {/* --- القائمة الجانبية --- */}
+      {/* --- القائمة الجانبية (Slide Panel) --- */}
       <div className={`fixed inset-0 z-[60] transition-all duration-500 ${showSidePanel ? 'visible' : 'invisible'}`}>
         <div className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-500 ${showSidePanel ? 'opacity-100' : 'opacity-0'}`} onClick={() => setShowSidePanel(false)}></div>
         <div className={`absolute left-0 top-0 h-full w-full md:w-[400px] bg-white shadow-2xl transition-transform duration-500 ease-in-out transform ${showSidePanel ? 'translate-x-0' : '-translate-x-full'}`}>
@@ -923,7 +933,7 @@ const App = () => {
       {/* الصفحة الرئيسية */}
       {view === 'home' && (
         <>
-          <header className="bg-gradient-to-b from-slate-950 via-blue-950 to-indigo-900 text-white pt-40 pb-32 px-4 relative overflow-hidden rounded-b-[3rem] md:rounded-b-[5rem] shadow-2xl">
+          <div className="bg-gradient-to-b from-slate-950 via-blue-950 to-indigo-900 text-white pt-40 pb-32 px-4 relative overflow-hidden rounded-b-[3rem] md:rounded-b-[5rem] shadow-2xl">
             <div className="absolute top-0 left-0 w-full h-full opacity-30 pointer-events-none">
                 <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-blue-500 rounded-full blur-[120px] animate-pulse"></div>
                 <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-indigo-500 rounded-full blur-[120px] animate-pulse" style={{animationDelay: '1s'}}></div>
@@ -959,12 +969,11 @@ const App = () => {
                 )}
               </div>
             </div>
-          </header>
+          </div>
 
           <main className="max-w-7xl mx-auto px-4 -mt-20 relative z-20">
             {!results && !isSearching && (
               <section id="partners" className="bg-white/80 backdrop-blur-md rounded-[2.5rem] shadow-xl border border-white/50 p-8 mb-24 flex flex-col md:flex-row items-center justify-between gap-8 scroll-mt-32">
-                <h2 className="sr-only">شركاؤنا</h2>
                 <div className="flex items-center gap-3 text-slate-400 font-black text-xs uppercase tracking-[0.1em] shrink-0 w-full md:w-auto justify-center md:justify-start"><div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>{t.partnersTitle}</div>
                 <div className="flex flex-wrap justify-center md:justify-end items-center gap-8 md:gap-16 opacity-50 grayscale hover:grayscale-0 transition-all duration-500 cursor-pointer font-black w-full">
                     {adminConfig.trustedPartners?.map((partner, idx) => (<div key={idx} className="text-xl md:text-2xl font-black italic tracking-tighter hover:text-blue-900 transition-colors transform hover:scale-110">{partner.name}</div>))}
@@ -987,11 +996,11 @@ const App = () => {
             {results && !isSearching && (
               <div className="space-y-12 animate-in fade-in slide-in-from-bottom-10 duration-700 mb-32">
                 {aiSummary && (
-                    <article className="bg-gradient-to-br from-slate-900 to-blue-950 text-white p-8 md:p-12 rounded-[3rem] shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-8 relative overflow-hidden border border-white/10">
+                    <div className="bg-gradient-to-br from-slate-900 to-blue-950 text-white p-8 md:p-12 rounded-[3rem] shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-8 relative overflow-hidden border border-white/10">
                         <div className="absolute top-0 right-0 w-full h-full opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
                         <div className="relative z-10 flex-1">
                           <div className="flex items-center gap-3 mb-6 text-blue-300 font-black text-sm uppercase tracking-widest bg-white/10 w-fit px-4 py-1.5 rounded-full backdrop-blur-sm"><BarChart3 size={16} /> {t.aiTitle}</div>
-                          <h2 className="text-white text-2xl md:text-4xl font-black leading-snug tracking-tight mb-4">"{aiSummary.summary}"</h2>
+                          <p className="text-white text-2xl md:text-4xl font-black leading-snug tracking-tight mb-4">"{aiSummary.summary}"</p>
                         </div>
                         <div className="relative z-10 bg-white/10 backdrop-blur-md border border-white/10 p-8 rounded-[2.5rem] shadow-2xl shrink-0 text-center min-w-[220px]">
                             <span className="text-xs font-bold text-blue-200 block mb-3 uppercase tracking-widest">{t.winner}</span>
@@ -1000,7 +1009,7 @@ const App = () => {
                                 {aiSummary.verdict}
                             </div>
                         </div>
-                    </article>
+                    </div>
                 )}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                   {results.map((item) => (
@@ -1008,7 +1017,7 @@ const App = () => {
                       {item.store.includes('شريك') && (<div className="absolute top-6 right-6 bg-red-500 text-white px-4 py-1.5 rounded-full text-[10px] font-black z-20 animate-pulse shadow-lg ring-4 ring-red-100">{t.specialOffer}</div>)}
                       <div className={`${item.storeColor} py-8 px-8 text-white flex justify-between items-start relative overflow-hidden`}>
                         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
-                        <div><h3 className="font-black text-2xl tracking-tighter block mb-1">{item.store}</h3><div className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase backdrop-blur-md inline-flex items-center gap-1"><Shield size={10} /> {t.trusted}</div></div>
+                        <div><span className="font-black text-2xl tracking-tighter block mb-1">{item.store}</span><div className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase backdrop-blur-md inline-flex items-center gap-1"><Shield size={10} /> {t.trusted}</div></div>
                         <div className="relative z-10 flex gap-2">
                             <button onClick={() => handleShare(item)} className="bg-white/20 hover:bg-white hover:text-blue-600 p-2 rounded-full transition-all text-white backdrop-blur-md" title="مشاركة">
                                 <Share2 size={20} />
@@ -1070,7 +1079,7 @@ const App = () => {
                </p>
                <form onSubmit={handleAdminLogin} className="space-y-4">
                  <input 
-                   type={loginStep === 0 ? "text" : "password"} 
+                   type={loginStep === 0 ? "text" : "password"} // تغيير النوع حسب الخطوة
                    className="w-full p-4 rounded-xl bg-slate-50 font-black text-center focus:ring-2 focus:ring-blue-600 outline-none transition-all" 
                    placeholder={loginStep === 0 ? "User ID" : "******"} 
                    value={adminInput} 
@@ -1100,7 +1109,7 @@ const App = () => {
                 </div>
               </div>
               
-              {/* Marketing & Promotion */}
+              {/* Marketing & Promotion (New Section) */}
               <div className="mb-12 bg-purple-50 border border-purple-100 rounded-[2rem] p-8">
                   <h3 className="font-black text-purple-900 border-b border-purple-200 pb-4 mb-6 flex items-center gap-2">
                       <Mail className="text-purple-600" />
@@ -1286,6 +1295,18 @@ const App = () => {
                       </div>
                   </div>
               </div>
+
+              {/* Other Configs */}
+               <div className="mb-12"><h3 className="font-black text-slate-900 border-b pb-4 mb-6 flex items-center gap-2"><MessageCircle className="text-blue-600" />الرسائل والطلبات الواردة</h3><div className="bg-slate-50 rounded-[2rem] p-6 max-h-[400px] overflow-y-auto custom-scrollbar">{inboxMessages.length === 0 ? (<div className="text-center py-12 text-slate-400 font-bold">لا توجد رسائل جديدة</div>) : (<div className="space-y-4">{inboxMessages.map((msg) => (<div key={msg.id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative group"><button onClick={() => handleDeleteMessage(msg.id)} className="absolute top-4 left-4 text-slate-300 hover:text-red-500 transition-colors"><Trash2 size={18} /></button><div className="flex items-center gap-3 mb-2"><span className={`text-[10px] font-black px-3 py-1 rounded-full ${msg.type === 'partner_request' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'}`}>{msg.type === 'partner_request' ? 'طلب شراكة' : 'رسالة تواصل'}</span><span className="text-xs text-slate-400 font-bold" dir="ltr">{new Date(msg.timestamp).toLocaleDateString('en-GB')}</span></div><h4 className="font-black text-lg text-slate-900 mb-1">{msg.type === 'partner_request' ? msg.store : msg.name}</h4><p className="text-blue-600 font-bold text-sm mb-2" dir="ltr">{msg.email}</p>{msg.message && (<p className="text-slate-600 text-sm leading-relaxed bg-slate-50 p-3 rounded-xl mt-2">"{msg.message}"</p>)}</div>))}</div>)}</div></div>
+
+               <div className="mb-12 bg-orange-50 border border-orange-100 rounded-[2rem] p-8"><h3 className="font-black text-orange-900 border-b border-orange-200 pb-4 mb-6 flex items-center gap-2"><Flame className="text-orange-600" />إدارة الكلمات الرائجة (تظهر في الرئيسية)</h3><div className="space-y-4"><div className="flex flex-wrap gap-2 mb-4">{adminConfig.trendingKeywords?.map((kw, idx) => (<div key={idx} className="bg-white text-orange-800 px-3 py-2 rounded-xl text-sm font-bold flex items-center gap-2 shadow-sm border border-orange-100">{kw}<button onClick={() => handleDeleteTrendingKeyword(idx)} className="text-orange-300 hover:text-red-500 transition-colors"><X size={14} /></button></div>))}</div><div className="flex gap-2"><input type="text" placeholder="أضف كلمة جديدة" className="flex-1 p-4 rounded-xl text-sm font-bold border-none shadow-sm" value={newTrendingKeyword} onChange={(e) => setNewTrendingKeyword(e.target.value)} /><button onClick={handleAddTrendingKeyword} className="bg-orange-600 text-white px-6 rounded-xl font-bold text-sm hover:bg-orange-700 shadow-lg shadow-orange-200"><Plus size={20} /></button></div></div></div>
+
+               <div className="grid md:grid-cols-2 gap-10 mb-12">
+                 <div className="space-y-6"><h3 className="font-black text-blue-900 border-b pb-2">بيانات التواصل</h3><div className="space-y-2"><label className="text-xs font-bold text-slate-400">الواتساب</label><input type="text" value={adminConfig.whatsappNumber} onChange={(e) => setAdminConfig({...adminConfig, whatsappNumber: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div><div className="space-y-2"><label className="text-xs font-bold text-slate-400">الإيميل</label><input type="email" value={adminConfig.supportEmail} onChange={(e) => setAdminConfig({...adminConfig, supportEmail: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div><div className="space-y-2"><label className="text-xs font-bold text-slate-400">تويتر</label><input type="text" value={adminConfig.twitterLink} onChange={(e) => setAdminConfig({...adminConfig, twitterLink: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div><div className="space-y-2"><label className="text-xs font-bold text-slate-400">إنستقرام</label><input type="text" value={adminConfig.instagramLink} onChange={(e) => setAdminConfig({...adminConfig, instagramLink: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div></div>
+                 <div className="space-y-6"><h3 className="font-black text-green-600 border-b pb-2">روابط المتاجر</h3><div className="max-h-64 overflow-y-auto pr-2 space-y-3 custom-scrollbar">{adminConfig.affiliateLinks?.map((store, index) => (<div key={index} className="flex gap-2"><input type="text" value={store.link} onChange={(e) => { const newLinks = [...adminConfig.affiliateLinks]; newLinks[index].link = e.target.value; setAdminConfig({...adminConfig, affiliateLinks: newLinks}); }} className="w-full p-3 rounded-xl bg-slate-50 font-bold border text-xs" dir="ltr" /><div className="w-24 p-3 rounded-xl bg-slate-100 font-black text-center text-xs flex items-center justify-center">{store.name.toUpperCase()}</div><button onClick={() => handleDeleteStore(index)} className="p-3 rounded-xl bg-red-50 text-red-500 hover:bg-red-100"><Trash2 size={16} /></button></div>))}</div><div className="bg-green-50 p-4 rounded-2xl border border-green-100"><h4 className="font-bold text-green-700 text-sm mb-3">إضافة متجر جديد</h4><div className="flex gap-2 mb-2"><input type="text" placeholder="الاسم" className="w-1/2 p-3 rounded-xl border text-sm font-bold" value={newStoreName} onChange={(e) => setNewStoreName(e.target.value)} /><input type="text" placeholder="الرابط" className="w-1/2 p-3 rounded-xl border text-sm font-bold text-left" dir="ltr" value={newStoreLink} onChange={(e) => setNewStoreLink(e.target.value)} /></div><button onClick={handleAddStore} className="w-full bg-green-600 text-white py-2 rounded-xl font-bold text-sm hover:bg-green-700 flex items-center justify-center gap-2"><Plus size={16} /> إضافة</button></div></div>
+                 <div className="space-y-6"><h3 className="font-black text-blue-900 border-b pb-2">شركاء نثق بهم</h3><div className="space-y-2">{adminConfig.trustedPartners?.map((partner, index) => (<div key={index} className="flex gap-2 items-center"><div className="flex-1 p-3 rounded-xl bg-slate-100 font-black text-center text-xs">{partner.name}</div><button onClick={() => handleDeletePartner(index)} className="p-3 rounded-xl bg-red-50 text-red-500 hover:bg-red-100"><Trash2 size={16} /></button></div>))}</div><div className="flex gap-2"><input type="text" placeholder="اسم الشريك" className="flex-1 p-3 rounded-xl border text-sm font-bold" value={newPartnerName} onChange={(e) => setNewPartnerName(e.target.value)} /><button onClick={handleAddPartner} className="bg-blue-600 text-white px-4 rounded-xl font-bold text-sm hover:bg-blue-700"><Plus size={16} /></button></div></div>
+                 <div className="space-y-6"><h3 className="font-black text-purple-600 border-b pb-2">العروض الخاصة</h3><div className="max-h-64 overflow-y-auto pr-2 space-y-3 custom-scrollbar">{adminConfig.exclusiveOffers?.map((offer, index) => (<div key={index} className="bg-purple-50 p-3 rounded-xl text-xs relative group"><button onClick={() => handleDeleteOffer(index)} className="absolute top-2 left-2 text-red-400 hover:text-red-600"><X size={14} /></button><p className="font-black text-purple-900">كلمة البحث: {offer.keyword}</p><p className="text-slate-600 truncate">{offer.message}</p></div>))}</div><div className="bg-purple-50 p-4 rounded-2xl border border-purple-100"><h4 className="font-bold text-purple-700 text-sm mb-3">إضافة عرض ذكي</h4><input type="text" placeholder="كلمة البحث" className="w-full p-2 mb-2 rounded-lg border text-xs font-bold" value={newOfferKeyword} onChange={(e) => setNewOfferKeyword(e.target.value)} /><input type="text" placeholder="رسالة العرض" className="w-full p-2 mb-2 rounded-lg border text-xs font-bold" value={newOfferMessage} onChange={(e) => setNewOfferMessage(e.target.value)} /><input type="text" placeholder="رابط العرض" className="w-full p-2 mb-2 rounded-lg border text-xs font-bold text-left" dir="ltr" value={newOfferLink} onChange={(e) => setNewOfferLink(e.target.value)} /><button onClick={handleAddOffer} className="w-full bg-purple-600 text-white py-2 rounded-xl font-bold text-sm hover:bg-purple-700 flex items-center justify-center gap-2"><Plus size={16} /> إضافة عرض</button></div></div>
+              </div>
             </div>
           )}
         </div>
@@ -1347,8 +1368,8 @@ const App = () => {
       {view === 'contact' && (
         <div className="max-w-6xl mx-auto px-4 py-32 animate-in fade-in">
            <div className="text-center mb-16">
-             <h1 className="text-4xl font-black text-slate-900 mb-4">{t.contactTitle} 📞</h1>
-             <p className="text-slate-500 font-bold text-xl">حنا هنا عشان نسمعك، سواء عندك اقتراح أو مشكلة.</p>
+              <h1 className="text-4xl font-black text-slate-900 mb-4">{t.contactTitle} 📞</h1>
+              <p className="text-slate-500 font-bold text-xl">حنا هنا عشان نسمعك، سواء عندك اقتراح أو مشكلة.</p>
            </div>
            <div className="grid md:grid-cols-2 gap-10">
               <div className="space-y-6">

@@ -201,7 +201,10 @@ const translations = {
 };
 
 // --- استدعاء المفاتيح السرية من البيئة (Direct process.env access) ---
+// تم التعديل: استخدام المتغيرات البيئية لاسم المستخدم ورمز الدخول
 const ADMIN_CODE = process.env.REACT_APP_ADMIN_CODE;
+const ADMIN_USER = process.env.REACT_APP_ADMIN_USER; // اسم المستخدم المخفي
+
 const GEMINI_API_KEY = process.env.REACT_APP_GEMINI_KEY; 
 
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
@@ -683,8 +686,10 @@ const App = () => {
   const handleAdminLogin = (e) => {
     e.preventDefault();
     if (loginStep === 0) {
-      if (adminInput === "abdulrhman07") { setLoginStep(1); setAdminInput(''); } else { alert("بيانات غير صحيحة"); setAdminInput(''); }
+      // تم التعديل: التحقق من الاسم المخفي (Environment Variable)
+      if (adminInput === ADMIN_USER) { setLoginStep(1); setAdminInput(''); } else { alert("بيانات غير صحيحة"); setAdminInput(''); }
     } else {
+      // تم التعديل: التحقق من الرمز المخفي (Environment Variable)
       if (adminInput === ADMIN_CODE) { setIsAdminAuthenticated(true); setAdminInput(''); setLoginStep(0); } else { alert("بيانات غير صحيحة"); setAdminInput(''); setLoginStep(0); }
     }
   };

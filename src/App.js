@@ -454,18 +454,22 @@ const App = () => {
 
   // --- 1.1 إدارة النوافذ المنبثقة والاشتراكات ---
   useEffect(() => {
-    if (!user) return;
+    // التحقق من الاشتراك المحلي فور تحميل المكون
     const savedEmail = localStorage.getItem('moqaren_user_email');
     if (savedEmail) {
         setSubscriberEmail(savedEmail);
         setIsSubscribed(true);
     } else {
+        // إذا لم يكن مشتركاً، ابدأ المؤقت لإظهار النافذة
         const timer = setTimeout(() => {
-            if (view === 'home' && !isAdminAuthenticated) setShowPromoPopup(true);
-        }, 8000);
+            // شرط إضافي: التأكد من أننا في الصفحة الرئيسية ولسنا في وضع الإدارة
+            if (view === 'home' && !isAdminAuthenticated) {
+                setShowPromoPopup(true);
+            }
+        }, 3500); // تقليل الوقت إلى 3.5 ثانية لضمان ظهورها
         return () => clearTimeout(timer);
     }
-  }, [user, view, isAdminAuthenticated]);
+  }, [view, isAdminAuthenticated]);
 
   // --- 2. جلب الإعدادات والبيانات ---
   useEffect(() => {

@@ -5,11 +5,11 @@ import {
   Cpu, Rocket, Mail, Lock, Phone, MessageSquare, Tag, Award, Users, Heart,
   Instagram, Twitter, Send, Settings, Eye, EyeOff, Save, ArrowLeft, Plus, Trash2, X,
   FileText, Activity, Globe, ChevronLeft, Coins, Database, Bell, MessageCircle, BarChart2, Flame, Languages, Link, Server,
-  ChevronRight, Clock, XCircle, Share2, Calendar, TrendingUp, Filter, UserCheck
+  ChevronRight, Clock, XCircle, Share2, Calendar, TrendingUp, Filter, UserCheck, LogOut
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, onSnapshot, collection, increment, updateDoc, addDoc, deleteDoc, getDocs, arrayUnion } from 'firebase/firestore';
-import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 
 // --- أيقونة الموقع ---
 const MapPinIcon = () => (
@@ -80,9 +80,9 @@ const translations = {
     madeIn: 'صُنع بحب في السعودية 🇸🇦',
     privacy: 'سياسة الخصوصية',
     terms: 'الشروط والأحكام',
-    adminLogin: 'لوحة الإدارة',
-    enterCode: 'يرجى إدخال رمز الدخول للوصول للوحة التحكم',
-    login: 'دخول',
+    adminLogin: 'بوابة الإدارة الآمنة',
+    enterCode: 'يرجى إدخال بيانات الدخول',
+    login: 'تسجيل دخول',
     back: 'رجوع',
     toastSuccess: 'تم بنجاح!',
     toastError: 'حدث خطأ ما',
@@ -170,8 +170,8 @@ const translations = {
     madeIn: 'Made with love in Saudi Arabia 🇸🇦',
     privacy: 'Privacy Policy',
     terms: 'Terms & Conditions',
-    adminLogin: 'Admin Panel',
-    enterCode: 'Please enter access code',
+    adminLogin: 'Secure Admin Portal',
+    enterCode: 'Please enter credentials',
     login: 'Login',
     back: 'Back',
     toastSuccess: 'Success!',
@@ -202,8 +202,8 @@ const translations = {
 
 // --- استدعاء المفاتيح السرية من البيئة (Direct process.env access) ---
 // تم التعديل: استخدام المتغيرات البيئية لاسم المستخدم ورمز الدخول
-const ADMIN_CODE = process.env.REACT_APP_ADMIN_CODE;
-const ADMIN_USER = process.env.REACT_APP_ADMIN_USER; // اسم المستخدم المخفي
+// ADMIN_UID هو رقم الهوية الذي ستحصل عليه من فايربيس وتضعه في Vercel
+const ADMIN_UID = process.env.REACT_APP_ADMIN_ID; 
 
 const GEMINI_API_KEY = process.env.REACT_APP_GEMINI_KEY; 
 
@@ -300,6 +300,13 @@ const SchemaMarkup = () => {
 
 const App = () => {
   const [user, setUser] = useState(null);
+  
+  // --- حالة تسجيل دخول المدير الجديدة ---
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [results, setResults] = useState(null);
@@ -338,9 +345,6 @@ const App = () => {
 
   // --- حالات لوحة التحكم ---
   const [adminClickCount, setAdminClickCount] = useState(0);
-  const [adminInput, setAdminInput] = useState(''); 
-  const [loginStep, setLoginStep] = useState(0); 
-  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
   const clickTimeoutRef = useRef(null); 
 
   // --- البيانات ---
@@ -439,21 +443,25 @@ const App = () => {
     });
   };
 
-  // --- 1. المصادقة (تم الإصلاح: تعمل مرة واحدة فقط) ---
+  // --- 1. المصادقة الذكية (Firebase Auth Listener) ---
   useEffect(() => {
-    const initAuth = async () => {
-      try {
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-          await signInWithCustomToken(auth, __initial_auth_token);
-        } else {
-          await signInAnonymously(auth);
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      
+      // هنا نقطة التحقق الأمنية:
+      // هل المستخدم مسجل دخول؟ وهل رقم الـ UID الخاص به يطابق الرقم المخزن في Vercel؟
+      if (currentUser && currentUser.uid === ADMIN_UID) {
+        setIsAdminAuthenticated(true);
+      } else {
+        setIsAdminAuthenticated(false);
+        // إذا لم يكن مسجلاً، نسجله كزائر مجهول لكي يعمل الفايربيس للزوار العاديين
+        if (!currentUser) {
+            signInAnonymously(auth).catch((error) => console.log("Anon login err", error));
         }
-      } catch (error) { try { await signInAnonymously(auth); } catch (e) {} }
-    };
-    initAuth();
-    const unsubscribe = onAuthStateChanged(auth, setUser);
+      }
+    });
     return () => unsubscribe();
-  }, []); // Empty dependency array = run once
+  }, []);
 
   // --- 1.1 إدارة النوافذ المنبثقة والاشتراكات ---
   useEffect(() => {
@@ -494,9 +502,10 @@ const App = () => {
     return () => unsubscribe();
   }, [user]);
 
-  // --- 4. جلب بيانات لوحة التحكم (تم الإصلاح: الفرز في الجافاسكريبت) ---
+  // --- 4. جلب بيانات لوحة التحكم (مؤمنة، تعمل فقط للأدمن) ---
   useEffect(() => {
-    if (!user || !isAdminAuthenticated) return;
+    // إذا لم يكن المستخدم هو المدير الحقيقي، لا تحاول جلب البيانات الحساسة
+    if (!isAdminAuthenticated) return;
     
     // Inbox
     const inboxRef = collection(db, 'artifacts', appId, 'public', 'data', 'inbox');
@@ -506,7 +515,7 @@ const App = () => {
       setInboxMessages(msgs);
     }, (error) => console.log('Inbox error', error));
     
-    // Top Terms (Fix: Fetch all then sort)
+    // Top Terms
     const fetchStats = async () => {
         try {
             const statsRef = collection(db, 'artifacts', appId, 'public', 'data', 'search_analytics');
@@ -518,7 +527,7 @@ const App = () => {
     };
     fetchStats();
 
-    // Logs (Fix: Fetch strict collection then sort)
+    // Logs
     const logsRef = collection(db, 'artifacts', appId, 'public', 'data', 'search_logs');
     const unsubLogs = onSnapshot(logsRef, (snapshot) => {
         let logs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -542,7 +551,7 @@ const App = () => {
     }, (error) => console.log('Subscribers error', error));
 
     return () => { unsubInbox(); unsubLogs(); unsubMonthly(); unsubSubscribers(); };
-  }, [user, isAdminAuthenticated]);
+  }, [isAdminAuthenticated]);
 
   // --- وظائف التسويق (جديد) ---
   const handleSubscribe = async (e) => {
@@ -614,13 +623,18 @@ const App = () => {
   };
 
   const handleSaveAllChanges = async () => {
-    if (!user) return;
+    // تحقق مزدوج قبل الحفظ
+    if (!isAdminAuthenticated) {
+        showNotification("ليس لديك صلاحية الحفظ", "error");
+        return;
+    }
+    
     try {
       const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'app_settings', 'main_config');
       await setDoc(docRef, adminConfig);
       showNotification(t.toastSuccess);
       setView('home');
-    } catch (error) { showNotification(t.toastError, "error"); }
+    } catch (error) { showNotification("حدث خطأ أثناء الحفظ، تأكد من اتصالك", "error"); }
   };
 
   const resetToHome = () => {
@@ -652,8 +666,10 @@ const App = () => {
     if (newCount >= 7) {
       setView('admin');
       setAdminClickCount(0);
-      setLoginStep(0); 
-      setAdminInput('');
+      // مسح حقول الدخول عند فتح الصفحة
+      setAdminEmail('');
+      setAdminPassword('');
+      setLoginError('');
       return;
     } 
     resetToHome();
@@ -683,15 +699,33 @@ const App = () => {
     } catch (err) { showNotification(t.toastError, "error"); }
   };
 
-  const handleAdminLogin = (e) => {
+  // --- تسجيل دخول المدير الحقيقي (Firebase Auth) ---
+  const handleAdminLogin = async (e) => {
     e.preventDefault();
-    if (loginStep === 0) {
-      // تم التعديل: التحقق من الاسم المخفي (Environment Variable)
-      if (adminInput === ADMIN_USER) { setLoginStep(1); setAdminInput(''); } else { alert("بيانات غير صحيحة"); setAdminInput(''); }
-    } else {
-      // تم التعديل: التحقق من الرمز المخفي (Environment Variable)
-      if (adminInput === ADMIN_CODE) { setIsAdminAuthenticated(true); setAdminInput(''); setLoginStep(0); } else { alert("بيانات غير صحيحة"); setAdminInput(''); setLoginStep(0); }
+    setLoginError('');
+    
+    try {
+        // محاولة تسجيل الدخول عبر فايربيس
+        await signInWithEmailAndPassword(auth, adminEmail, adminPassword);
+        
+        // عند النجاح، الـ useEffect الخاص بالـ onAuthStateChanged سيتحقق من الـ UID 
+        // ويقوم بتحديث حالة isAdminAuthenticated تلقائياً
+        
+        // تنظيف الحقول
+        setAdminEmail('');
+        setAdminPassword('');
+        
+    } catch (error) {
+        console.error("Login failed", error);
+        setLoginError('فشل الدخول. تأكد من الإيميل وكلمة المرور.');
     }
+  };
+  
+  const handleLogout = async () => {
+      await signOut(auth);
+      setIsAdminAuthenticated(false);
+      setView('home');
+      showNotification('تم الخروج بنجاح');
   };
 
   const handleDeleteMessage = async (msgId) => {
@@ -1083,22 +1117,12 @@ const App = () => {
             <div className="bg-white rounded-[3rem] shadow-2xl p-12 max-w-sm mx-auto text-center border border-slate-100">
                <Lock size={40} className="mx-auto mb-6 text-slate-900" />
                <h1 className="text-2xl font-black mb-6">{t.adminLogin}</h1>
-               <p className="text-slate-400 mb-6 font-bold">
-                 {loginStep === 0 ? "الهوية الأمنية" : "رمز الدخول"}
-               </p>
+               <p className="text-slate-400 mb-6 font-bold text-sm">استخدم بيانات حساب الفايربيس (Firebase) الخاصة بك</p>
+               {loginError && <p className="text-red-500 font-bold text-xs mb-4">{loginError}</p>}
                <form onSubmit={handleAdminLogin} className="space-y-4">
-                 <input 
-                   type={loginStep === 0 ? "text" : "password"} // تغيير النوع حسب الخطوة
-                   className="w-full p-4 rounded-xl bg-slate-50 font-black text-center focus:ring-2 focus:ring-blue-600 outline-none transition-all" 
-                   placeholder={loginStep === 0 ? "User ID" : "******"} 
-                   value={adminInput} 
-                   onChange={(e) => setAdminInput(e.target.value)} 
-                   autoFocus
-                   autoComplete="off"
-                 />
-                 <button type="submit" className="w-full bg-blue-600 text-white py-4 rounded-xl font-black hover:bg-blue-700 transition-colors">
-                   {loginStep === 0 ? "التالي" : t.login}
-                 </button>
+                 <input type="email" required className="w-full p-4 rounded-xl bg-slate-50 font-bold text-center border focus:ring-2 focus:ring-blue-600 outline-none" placeholder="الإيميل" value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} />
+                 <input type="password" required className="w-full p-4 rounded-xl bg-slate-50 font-bold text-center border focus:ring-2 focus:ring-blue-600 outline-none" placeholder="كلمة المرور" value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} />
+                 <button type="submit" className="w-full bg-blue-600 text-white py-4 rounded-xl font-black hover:bg-blue-700 transition-colors">{t.login}</button>
                </form>
                <button onClick={resetToHome} className="mt-6 text-slate-400 font-bold text-sm">{t.back}</button>
             </div>
@@ -1107,14 +1131,11 @@ const App = () => {
               <div className="flex justify-between items-center mb-10 border-b pb-6">
                 <div className="flex items-center gap-4">
                     <h1 className="text-2xl font-black">الإعدادات ⚙️</h1>
-                    <div className="relative bg-slate-100 p-2 rounded-xl">
-                        <Bell className={`w-6 h-6 ${inboxMessages.length > 0 ? 'text-red-500 animate-pulse' : 'text-slate-400'}`} />
-                        {inboxMessages.length > 0 && <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-black">{inboxMessages.length}</span>}
-                    </div>
+                    <div className="relative bg-slate-100 p-2 rounded-xl"><Bell className={`w-6 h-6 ${inboxMessages.length > 0 ? 'text-red-500 animate-pulse' : 'text-slate-400'}`} />{inboxMessages.length > 0 && <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-black">{inboxMessages.length}</span>}</div>
                 </div>
                 <div className="flex gap-3">
                     <button onClick={handleSaveAllChanges} className="px-6 py-2 bg-green-600 text-white rounded-xl font-black text-xs hover:bg-green-700 shadow-lg flex items-center gap-2"><Save size={14} /> حفظ التغييرات</button>
-                    <button onClick={() => setIsAdminAuthenticated(false)} className="text-red-500 font-bold text-sm">خروج</button>
+                    <button onClick={handleLogout} className="text-red-500 font-bold text-sm flex items-center gap-1"><LogOut size={14} /> خروج</button>
                 </div>
               </div>
               

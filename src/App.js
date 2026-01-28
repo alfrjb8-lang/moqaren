@@ -10,7 +10,6 @@ import {
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, onSnapshot, collection, increment, updateDoc, addDoc, deleteDoc, getDocs, arrayUnion } from 'firebase/firestore';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import MobileUI from './MobileUI';
 
 // --- أيقونة الموقع ---
 const MapPinIcon = () => (
@@ -803,37 +802,7 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-blue-200 selection:text-blue-900" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
-      {/* واجهة الجوال الجديدة */}
-<div className="block lg:hidden">
-  <MobileUI
-    lang={lang}
-    t={t}
-    view={view}
-    setView={setView}
-    realSearchCount={realSearchCount}
-    searchQuery={searchQuery}
-    setSearchQuery={setSearchQuery}
-    isSearching={isSearching}
-    results={results}
-    aiSummary={aiSummary}
-    resetToHome={resetToHome}
-    scrollToSection={scrollToSection}
-    handleLogoClick={handleLogoClick}
-    toggleLanguage={toggleLanguage}
-    openMySpace={() => setShowSidePanel(true)}
-    handleSearch={handleSearch}
-    adminConfig={adminConfig}
-    isFavorite={isFavorite}
-    toggleFavorite={toggleFavorite}
-    handleShare={handleShare}
-    getStoreLink={getStoreLink}
-  />
-</div>
-
-{/* خَلّ واجهتك القديمة للديسكتوب فقط */}
-<div className="hidden lg:block">
-  {/* الكود القديم حقك كامل زي ما هو (الناف القديم + الهيرو القديم + النتائج القديمة...) */}
-
+      
       {/* SEO & Meta Tags Management */}
       <SEOHead 
         title={view === 'home' && !results ? t.siteTitle : `${searchQuery ? searchQuery + ' | ' : ''} ${t.siteTitle}`} 
@@ -1480,10 +1449,7 @@ const App = () => {
         </div>
       </footer>
     </div>
-</div>
   );
 };
 
 export default App;
-
-

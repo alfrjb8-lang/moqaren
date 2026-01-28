@@ -1480,8 +1480,10 @@ const App = () => {
         </div>
       </footer>
     </div>
+</div>
   );
 };
 
 export default App;
+
 

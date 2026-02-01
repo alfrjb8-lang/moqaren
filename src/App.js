@@ -6,7 +6,7 @@ import {
   Instagram, Twitter, Send, Settings, Eye, EyeOff, Save, ArrowLeft, Plus, Trash2, X,
   FileText, Activity, Globe, ChevronLeft, Coins, Database, Bell, MessageCircle, BarChart2, Flame, Languages, Link, Server,
   ChevronRight, Clock, XCircle, Share2, Calendar, TrendingUp, Filter, UserCheck, LogOut,
-  Brain // <--- تمت إضافة أيقونة الدماغ هنا
+  Brain, Hexagon // تم التأكد من وجود الأيقونات الهندسية
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, onSnapshot, collection, increment, updateDoc, addDoc, deleteDoc, getDocs, arrayUnion } from 'firebase/firestore';
@@ -92,7 +92,7 @@ const translations = {
     instantPickup: 'استلام فوري',
     agentWarranty: 'سنتين وكيل',
     storeWarranty: 'سنة متجر',
-    comprehensiveWarranty: 'سنتين شامل',
+    comprehensiveWarranty: '2 Years Full',
     mySpace: 'مساحتي',
     favorites: 'المفضلة',
     recentSearches: 'آخر بحث',
@@ -979,11 +979,45 @@ const App = () => {
       {/* الصفحة الرئيسية */}
       {view === 'home' && (
         <>
+          {/* --- قسم الـ Hero Section المحدث --- */}
           <div className="bg-gradient-to-b from-slate-950 via-blue-950 to-indigo-900 text-white pt-40 pb-32 px-4 relative overflow-hidden rounded-b-[3rem] md:rounded-b-[5rem] shadow-2xl">
+            
+            {/* 1. الطبقة الموجودة سابقاً (الدوائر المضببة الكبيرة) */}
             <div className="absolute top-0 left-0 w-full h-full opacity-30 pointer-events-none">
                 <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-blue-500 rounded-full blur-[120px] animate-pulse"></div>
                 <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-indigo-500 rounded-full blur-[120px] animate-pulse" style={{animationDelay: '1s'}}></div>
             </div>
+
+            {/* 2. طبقة جديدة: شبكة بيانات رقمية دقيقة (Data Grid Dots) */}
+            <svg className="absolute inset-0 w-full h-full text-white/5 mix-blend-overlay pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+              <pattern id="data-grid" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                <circle cx="1" cy="1" r="1" fill="currentColor" />
+              </pattern>
+              <rect width="100%" height="100%" fill="url(#data-grid)" />
+            </svg>
+
+            {/* 3. طبقة جديدة: خطوط شبكية هندسية / دوائر إلكترونية (Circuit Lines) */}
+            <svg className="absolute inset-0 w-full h-full text-indigo-300/10 mix-blend-overlay pointer-events-none animate-pulse" style={{animationDuration: '8s'}} xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <pattern id="circuit-pattern" x="0" y="0" width="200" height="200" patternUnits="userSpaceOnUse">
+                        <path d="M0 20 L20 20 L20 0 M20 20 L40 40 M40 40 L60 40 M60 40 L60 60 M100 100 L120 100 L120 80 M150 150 L180 150 L180 180" stroke="currentColor" strokeWidth="0.5" fill="none"/>
+                        <circle cx="20" cy="20" r="2" fill="currentColor"/>
+                        <circle cx="60" cy="40" r="2" fill="currentColor"/>
+                        <circle cx="120" cy="100" r="2" fill="currentColor"/>
+                    </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#circuit-pattern)" />
+            </svg>
+
+            {/* 4. طبقة جديدة: أيقونات تقنية عائمة وضبابية (Floating Tech Icons) */}
+            <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
+                <Hexagon size={64} className="text-blue-300/10 absolute top-[10%] left-[5%] animate-spin-slow blur-sm" />
+                <Cpu size={48} className="text-indigo-300/10 absolute bottom-[20%] right-[10%] animate-bounce-slow blur-sm" />
+                <Database size={32} className="text-blue-400/10 absolute top-[30%] right-[25%] animate-pulse blur-sm" />
+                <Brain size={80} className="text-indigo-500/5 absolute bottom-[10%] left-[20%] animate-pulse blur-xl rotate-12" />
+            </div>
+
+            {/* المحتوى الرئيسي للنص والبحث */}
             <div className="max-w-4xl mx-auto text-center relative z-10">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/10 text-blue-200 text-xs font-black mb-8 backdrop-blur-md shadow-lg animate-in fade-in slide-in-from-top-4 duration-700">
                 <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span></span>

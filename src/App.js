@@ -5,7 +5,8 @@ import {
   Cpu, Rocket, Mail, Lock, Phone, MessageSquare, Tag, Award, Users, Heart,
   Instagram, Twitter, Send, Settings, Eye, EyeOff, Save, ArrowLeft, Plus, Trash2, X,
   FileText, Activity, Globe, ChevronLeft, Coins, Database, Bell, MessageCircle, BarChart2, Flame, Languages, Link, Server,
-  ChevronRight, Clock, XCircle, Share2, Calendar, TrendingUp, Filter, UserCheck, LogOut
+  ChevronRight, Clock, XCircle, Share2, Calendar, TrendingUp, Filter, UserCheck, LogOut,
+  Brain // <--- تمت إضافة أيقونة الدماغ هنا
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, onSnapshot, collection, increment, updateDoc, addDoc, deleteDoc, getDocs, arrayUnion } from 'firebase/firestore';
@@ -956,7 +957,9 @@ const App = () => {
       <nav className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
         <div className="bg-white/90 backdrop-blur-xl shadow-2xl shadow-blue-900/10 rounded-full px-2 py-2 flex items-center gap-1 md:gap-2 pointer-events-auto border border-white/50 max-w-full overflow-x-auto no-scrollbar">
           <div className="flex items-center gap-2 px-4 cursor-pointer group select-none" onClick={handleLogoClick}>
-            <div className="bg-gradient-to-tr from-blue-600 to-indigo-600 p-1.5 rounded-full text-white shadow-lg group-hover:scale-110 transition-transform"><Zap size={18} fill="currentColor" /></div>
+            <div className="bg-gradient-to-tr from-blue-600 to-indigo-600 p-1.5 rounded-full text-white shadow-lg group-hover:scale-110 transition-transform">
+                <Brain size={18} />
+            </div>
             <span className="text-lg font-black text-slate-800 tracking-tighter hidden md:block">مقارن</span>
           </div>
           <div className="h-6 w-px bg-slate-200 mx-1"></div>
@@ -1029,7 +1032,7 @@ const App = () => {
                 <div className="relative w-24 h-24 mx-auto mb-8">
                     <div className="absolute inset-0 border-8 border-slate-100 rounded-full"></div>
                     <div className="absolute inset-0 border-8 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                    <Zap className="absolute inset-0 m-auto text-blue-600 animate-pulse" size={32} fill="currentColor" />
+                    <Brain className="absolute inset-0 m-auto text-blue-600 animate-pulse" size={32} />
                 </div>
                 <h3 className="text-slate-900 font-black text-2xl md:text-3xl animate-pulse tracking-tight mb-2">{t.loadingTitle}</h3>
                 <p className="text-slate-400 font-medium">{t.loadingDesc}</p>
@@ -1437,7 +1440,7 @@ const App = () => {
         <div className="max-w-7xl mx-auto px-8 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
             <div className="col-span-1 md:col-span-1">
-              <div className="flex items-center gap-2 text-white mb-6"><div className="bg-blue-600 p-2 rounded-xl"><Zap size={24} fill="currentColor" /></div><span className="text-3xl font-black tracking-tighter">مقارن</span></div>
+              <div className="flex items-center gap-2 text-white mb-6"><div className="bg-blue-600 p-2 rounded-xl"><Brain size={24} /></div><span className="text-3xl font-black tracking-tighter">مقارن</span></div>
               <p className="text-slate-400 text-sm leading-relaxed font-medium mb-6">{t.footerDesc}</p>
               <div className="flex gap-4"><a href={adminConfig.twitterLink} className="bg-white/5 hover:bg-blue-500 hover:text-white p-3 rounded-full transition-all"><Twitter size={18} /></a><a href={adminConfig.instagramLink} className="bg-white/5 hover:bg-pink-500 hover:text-white p-3 rounded-full transition-all"><Instagram size={18} /></a></div>
             </div>

@@ -6,7 +6,7 @@ import {
   Instagram, Twitter, Send, Settings, Eye, EyeOff, Save, ArrowLeft, Plus, Trash2, X,
   FileText, Activity, Globe, ChevronLeft, Coins, Database, Bell, MessageCircle, BarChart2, Flame, Languages, Link, Server,
   ChevronRight, Clock, XCircle, Share2, Calendar, TrendingUp, Filter, UserCheck, LogOut,
-  Brain, Hexagon, Menu, X as XIcon, Home, CreditCard, Store, ChevronDown, MapPin
+  Brain, Hexagon, Menu, X as XIcon, Home, CreditCard, Store, FileCheck, ArrowRight, Smartphone
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, onSnapshot, collection, increment, updateDoc, addDoc, deleteDoc, getDocs, arrayUnion } from 'firebase/firestore';
@@ -28,10 +28,10 @@ const translations = {
     
     // UI Texts
     home: 'الرئيسية',
-    about: 'وش مقارن؟',
-    features: 'ليش نثق فينا؟',
+    about: 'عن مقارن',
+    features: 'المميزات',
     earn: 'كيف نربح؟',
-    partners: 'شركاء مقارن',
+    partners: 'الشركاء',
     merchant: 'للشركات',
     langName: 'English',
     heroTitlePart1: 'قارن بذكاء..',
@@ -118,16 +118,9 @@ const translations = {
     stores: 'المتاجر',
     offers: 'العروض',
     configuration: 'الإعدادات',
-    privacyPolicy: 'سياسة الخصوصية',
-    viewResults: 'عرض النتائج',
-    comparison: 'المقارنة',
-    allResults: 'جميع النتائج',
-    sortBy: 'ترتيب حسب',
-    price: 'السعر',
-    rating: 'التقييم',
-    bestMatch: 'الأفضل',
-    showMore: 'عرض المزيد',
-    showLess: 'عرض أقل'
+    pages: 'المحتوى',
+    swipeHint: 'اسحب للمقارنة',
+    generalSettings: 'إعدادات التواصل والمحتوى'
   },
   en: {
     // SEO Data
@@ -138,8 +131,8 @@ const translations = {
 
     // UI Texts
     home: 'Home',
-    about: 'About Us',
-    features: 'Why Trust Us?',
+    about: 'About',
+    features: 'Features',
     earn: 'Our Model',
     partners: 'Partners',
     merchant: 'Merchants',
@@ -228,16 +221,9 @@ const translations = {
     stores: 'Stores',
     offers: 'Offers',
     configuration: 'Configuration',
-    privacyPolicy: 'Privacy Policy',
-    viewResults: 'View Results',
-    comparison: 'Comparison',
-    allResults: 'All Results',
-    sortBy: 'Sort By',
-    price: 'Price',
-    rating: 'Rating',
-    bestMatch: 'Best Match',
-    showMore: 'Show More',
-    showLess: 'Show Less'
+    pages: 'Content & Settings',
+    swipeHint: 'Swipe to compare',
+    generalSettings: 'Contact & Content Settings'
   }
 };
 
@@ -362,8 +348,6 @@ const App = () => {
   const [adminClickCount, setAdminClickCount] = useState(0);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [sortBy, setSortBy] = useState('bestMatch');
-  const [showComparisonGuide, setShowComparisonGuide] = useState(true);
   
   const clickTimeoutRef = useRef(null); 
   const t = translations[lang];
@@ -391,6 +375,8 @@ const App = () => {
     whatsappNumber: "+966500000000",
     twitterLink: "https://twitter.com/moqaren",
     instagramLink: "https://instagram.com/moqaren",
+    privacyText: "نحن في مقارن نحترم خصوصيتك. يتم جمع البيانات لأغراض تحسين الخدمة فقط ولا يتم مشاركتها مع أطراف ثالثة دون موافقتك.",
+    termsText: "باستخدامك لموقع مقارن أنت توافق على الشروط والأحكام. نحن لسنا مسؤولين عن تغيير الأسعار في المتاجر الأصلية.",
     trendingKeywords: ['آيفون 15', 'سوني 5', 'ماك بوك', 'سماعات ابل'],
     customApis: [],
     affiliateLinks: [
@@ -659,7 +645,6 @@ const App = () => {
     setAiSummary(null);
     setShowExclusiveToast(false);
     setIsMobileMenuOpen(false);
-    setShowComparisonGuide(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -746,14 +731,8 @@ const App = () => {
   // Admin CRUD Functions
   const handleAddStore = () => { if (newStoreName && newStoreLink) { setAdminConfig({ ...adminConfig, affiliateLinks: [...adminConfig.affiliateLinks, { name: newStoreName, link: newStoreLink }] }); setNewStoreName(''); setNewStoreLink(''); }};
   const handleDeleteStore = (i) => { const u = [...adminConfig.affiliateLinks]; u.splice(i, 1); setAdminConfig({ ...adminConfig, affiliateLinks: u }); };
-  const handleAddPartner = () => { if (newPartnerName) { setAdminConfig({ ...adminConfig, trustedPartners: [...adminConfig.trustedPartners, { name: newPartnerName }] }); setNewPartnerName(''); }};
-  const handleDeletePartner = (i) => { const u = [...adminConfig.trustedPartners]; u.splice(i, 1); setAdminConfig({ ...adminConfig, trustedPartners: u }); };
-  const handleAddOffer = () => { if (newOfferKeyword && newOfferMessage && newOfferLink) { setAdminConfig({ ...adminConfig, exclusiveOffers: [...adminConfig.exclusiveOffers, { keyword: newOfferKeyword, message: newOfferMessage, link: newOfferLink }] }); setNewOfferKeyword(''); setNewOfferMessage(''); setNewOfferLink(''); }};
   const handleDeleteOffer = (i) => { const u = [...adminConfig.exclusiveOffers]; u.splice(i, 1); setAdminConfig({ ...adminConfig, exclusiveOffers: u }); };
-  const handleAddTrendingKeyword = () => { if (newTrendingKeyword) { setAdminConfig({ ...adminConfig, trendingKeywords: [...(adminConfig.trendingKeywords || []), newTrendingKeyword] }); setNewTrendingKeyword(''); }};
-  const handleDeleteTrendingKeyword = (index) => { const updated = [...(adminConfig.trendingKeywords || [])]; updated.splice(index, 1); setAdminConfig({ ...adminConfig, trendingKeywords: updated }); };
-  const handleAddApi = () => { if (newApiName && newApiUrl) { setAdminConfig({ ...adminConfig, customApis: [...(adminConfig.customApis || []), { name: newApiName, url: newApiUrl }] }); setNewApiName(''); setNewApiUrl(''); }};
-  const handleDeleteApi = (index) => { const updated = [...(adminConfig.customApis || [])]; updated.splice(index, 1); setAdminConfig({ ...adminConfig, customApis: updated }); };
+  const handleAddOffer = () => { if (newOfferKeyword && newOfferMessage && newOfferLink) { setAdminConfig({ ...adminConfig, exclusiveOffers: [...adminConfig.exclusiveOffers, { keyword: newOfferKeyword, message: newOfferMessage, link: newOfferLink }] }); setNewOfferKeyword(''); setNewOfferMessage(''); setNewOfferLink(''); }};
 
   // --- AI ---
   const callGeminiAI = async (product, stores) => {
@@ -776,7 +755,6 @@ const App = () => {
     setAiSummary(null);
     setShowExclusiveToast(false);
     setCurrentOffer(null);
-    setShowComparisonGuide(true);
     incrementGlobalCounter();
     trackSearchTerm(searchQuery);
     addToHistory(searchQuery); 
@@ -810,19 +788,6 @@ const App = () => {
       );
   });
 
-  // Sort results
-  const sortedResults = results ? [...results].sort((a, b) => {
-    switch(sortBy) {
-      case 'price':
-        return a.price - b.price;
-      case 'rating':
-        return b.rating - a.rating;
-      case 'bestMatch':
-      default:
-        return 0;
-    }
-  }) : [];
-
   const navItems = [
     { id: 'home', label: t.home, icon: Home, action: resetToHome },
     { id: 'about', label: t.about, icon: Info, action: () => scrollToSection('about') },
@@ -831,222 +796,8 @@ const App = () => {
     { id: 'partners', label: t.partners, icon: Users, action: () => scrollToSection('partners') }
   ];
 
-  // --- صفحة سياسة الخصوصية ---
-  const PrivacyPage = () => (
-    <div className="max-w-4xl mx-auto px-4 py-32 animate-in fade-in">
-      <div className="bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl p-6 md:p-12 border border-slate-100 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-3xl -mr-40 -mt-40"></div>
-        <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="bg-blue-100 p-3 rounded-2xl">
-              <Lock className="text-blue-600" size={28} />
-            </div>
-            <div>
-              <h1 className="text-2xl md:text-3xl font-black text-slate-900">{t.privacyPolicy}</h1>
-              <p className="text-slate-500 font-bold">آخر تحديث: يناير 2026</p>
-            </div>
-          </div>
-          
-          <div className="space-y-8">
-            <section className="bg-blue-50 p-6 rounded-2xl">
-              <h2 className="text-xl font-black text-slate-900 mb-4 flex items-center gap-2">
-                <Shield className="text-blue-600" size={20} />
-                1. مقدمة
-              </h2>
-              <p className="text-slate-600 leading-relaxed">
-                في "مقارن"، نأخذ خصوصيتك على محمل الجد. تشرح هذه الوثيقة كيف نجمع بياناتك ونستخدمها ونحميها عند استخدامك لموقعنا.
-              </p>
-            </section>
-
-            <section className="bg-green-50 p-6 rounded-2xl">
-              <h2 className="text-xl font-black text-slate-900 mb-4 flex items-center gap-2">
-                <Database className="text-green-600" size={20} />
-                2. البيانات التي نجمعها
-              </h2>
-              <ul className="list-disc list-inside space-y-2 text-slate-600 leading-relaxed ml-4">
-                <li><strong>بيانات البحث:</strong> نقوم بتخزين كلمات البحث (بدون هوية) لتحسين خوارزمياتنا واقتراح منتجات أفضل.</li>
-                <li><strong>بيانات الجهاز:</strong> مثل نوع المتصفح والجهاز لضمان أفضل تجربة تصفح.</li>
-                <li><strong>بيانات الاشتراك:</strong> إذا اشتركت في نشرتنا البريدية، نخزن إيميلك فقط لإرسال العروض.</li>
-              </ul>
-            </section>
-
-            <section className="bg-yellow-50 p-6 rounded-2xl">
-              <h2 className="text-xl font-black text-slate-900 mb-4 flex items-center gap-2">
-                <FileText className="text-yellow-600" size={20} />
-                3. ملفات تعريف الارتباط (Cookies)
-              </h2>
-              <p className="text-slate-600 leading-relaxed">
-                نستخدم الكوكيز لتحسين تجربتك وتذكر تفضيلاتك. يمكنك تعطيل الكوكيز من إعدادات متصفحك، لكن قد يؤثر ذلك على بعض وظائف الموقع.
-              </p>
-            </section>
-
-            <section className="bg-purple-50 p-6 rounded-2xl">
-              <h2 className="text-xl font-black text-slate-900 mb-4 flex items-center gap-2">
-                <Link className="text-purple-600" size={20} />
-                4. الروابط الخارجية والعمولات
-              </h2>
-              <p className="text-slate-600 leading-relaxed">
-                يحتوي موقعنا على روابط لمتاجر خارجية (مثل أمازون ونون). عند النقر عليها، قد نتحصل على عمولة بسيطة دون أي تكلفة إضافية عليك. نحن غير مسؤولين عن سياسات الخصوصية الخاصة بتلك المتاجر.
-              </p>
-            </section>
-
-            <section className="bg-red-50 p-6 rounded-2xl">
-              <h2 className="text-xl font-black text-slate-900 mb-4 flex items-center gap-2">
-                <Shield className="text-red-600" size={20} />
-                5. أمان البيانات
-              </h2>
-              <p className="text-slate-600 leading-relaxed">
-                نستخدم بروتوكولات تشفير متقدمة (SSL) لحماية اتصالك بالموقع. لا نقوم ببيع بياناتك لأي طرف ثالث. نحتفظ ببياناتك فقط طالما كنت تستخدم خدماتنا.
-              </p>
-            </section>
-
-            <section className="bg-slate-50 p-6 rounded-2xl">
-              <h2 className="text-xl font-black text-slate-900 mb-4 flex items-center gap-2">
-                <Mail className="text-slate-600" size={20} />
-                6. تواصل معنا
-              </h2>
-              <p className="text-slate-600 leading-relaxed">
-                إذا كان لديك أي استفسار حول سياسة الخصوصية، يمكنك التواصل معنا عبر:
-              </p>
-              <div className="mt-4 space-y-2">
-                <p className="font-bold text-slate-700">البريد الإلكتروني: <span className="text-blue-600" dir="ltr">{adminConfig.supportEmail}</span></p>
-                <p className="font-bold text-slate-700">رقم الواتساب: <span className="text-green-600" dir="ltr">{adminConfig.whatsappNumber}</span></p>
-              </div>
-            </section>
-          </div>
-
-          <div className="mt-12 pt-8 border-t border-slate-200">
-            <button 
-              onClick={resetToHome}
-              className="bg-slate-900 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-600 transition-colors flex items-center gap-2"
-            >
-              <ArrowLeft size={18} />
-              العودة للرئيسية
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  // --- صفحة تواصل معنا ---
-  const ContactPage = () => (
-    <div className="max-w-6xl mx-auto px-4 py-32 animate-in fade-in">
-      <div className="text-center mb-16">
-        <h1 className="text-3xl md:text-4xl font-black text-slate-900 mb-4">{t.contactTitle} 📞</h1>
-        <p className="text-slate-500 font-bold text-lg md:text-xl">حنا هنا عشان نسمعك، سواء عندك اقتراح أو مشكلة أو سؤال.</p>
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-10">
-        <div className="space-y-6">
-          <div className="bg-white p-8 rounded-[2.5rem] shadow-lg border border-slate-50 flex items-center gap-6 hover:-translate-y-1 transition-transform">
-            <div className="bg-blue-100 text-blue-600 p-4 rounded-2xl">
-              <Mail size={28} />
-            </div>
-            <div>
-              <h3 className="font-black text-lg text-slate-800">البريد الإلكتروني</h3>
-              <p className="text-blue-600 font-bold" dir="ltr">{adminConfig.supportEmail}</p>
-              <p className="text-sm text-slate-500 mt-1">ردنا خلال 24 ساعة</p>
-            </div>
-          </div>
-
-          <div className="bg-white p-8 rounded-[2.5rem] shadow-lg border border-slate-50 flex items-center gap-6 hover:-translate-y-1 transition-transform">
-            <div className="bg-green-100 text-green-600 p-4 rounded-2xl">
-              <MessageSquare size={28} />
-            </div>
-            <div>
-              <h3 className="font-black text-lg text-slate-800">واتساب</h3>
-              <p className="text-green-600 font-bold" dir="ltr">{adminConfig.whatsappNumber}</p>
-              <p className="text-sm text-slate-500 mt-1">خدمة العملاء 24/7</p>
-            </div>
-          </div>
-
-          <div className="bg-white p-8 rounded-[2.5rem] shadow-lg border border-slate-50 flex items-center gap-6 hover:-translate-y-1 transition-transform">
-            <div className="bg-purple-100 text-purple-600 p-4 rounded-2xl">
-              <MapPin size={28} />
-            </div>
-            <div>
-              <h3 className="font-black text-lg text-slate-800">العنوان</h3>
-              <p className="text-slate-700 font-bold">الرياض، المملكة العربية السعودية</p>
-              <p className="text-sm text-slate-500 mt-1">مقرنا الرئيسي</p>
-            </div>
-          </div>
-
-          <div className="bg-white p-8 rounded-[2.5rem] shadow-lg border border-slate-50 flex items-center gap-6 hover:-translate-y-1 transition-transform">
-            <div className="bg-pink-100 text-pink-600 p-4 rounded-2xl">
-              <Instagram size={28} />
-            </div>
-            <div>
-              <h3 className="font-black text-lg text-slate-800">سوشيال ميديا</h3>
-              <div className="flex gap-4 mt-2">
-                <a href={adminConfig.twitterLink} className="bg-slate-100 hover:bg-blue-100 p-3 rounded-xl transition-colors">
-                  <Twitter size={20} className="text-slate-600 hover:text-blue-500" />
-                </a>
-                <a href={adminConfig.instagramLink} className="bg-slate-100 hover:bg-pink-100 p-3 rounded-xl transition-colors">
-                  <Instagram size={20} className="text-slate-600 hover:text-pink-500" />
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-10 rounded-[2.5rem] shadow-xl border border-slate-50 h-full">
-          <h3 className="text-2xl font-black mb-6 text-slate-900">أرسل رسالة مباشرة ✉️</h3>
-          <form className="space-y-4" onSubmit={handleContactSubmit}>
-            <input 
-              type="text" 
-              className="w-full p-4 rounded-2xl bg-slate-50 border-none font-bold focus:ring-4 focus:ring-blue-100" 
-              placeholder="اسمك الكامل" 
-              required 
-              value={contactForm.name} 
-              onChange={e => setContactForm({...contactForm, name: e.target.value})} 
-            />
-            <input 
-              type="email" 
-              className="w-full p-4 rounded-2xl bg-slate-50 border-none font-bold focus:ring-4 focus:ring-blue-100" 
-              placeholder="البريد الإلكتروني" 
-              required 
-              value={contactForm.email} 
-              onChange={e => setContactForm({...contactForm, email: e.target.value})} 
-            />
-            <textarea 
-              className="w-full p-4 rounded-2xl bg-slate-50 border-none font-bold focus:ring-4 focus:ring-blue-100 h-40 resize-none" 
-              placeholder="اكتب رسالتك هنا..." 
-              required 
-              value={contactForm.message} 
-              onChange={e => setContactForm({...contactForm, message: e.target.value})}
-            ></textarea>
-            <button 
-              type="submit" 
-              className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-lg shadow-lg hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
-            >
-              <Send size={20} />
-              إرسال الرسالة
-            </button>
-          </form>
-          
-          <div className="mt-8 pt-6 border-t border-slate-100">
-            <p className="text-sm text-slate-500 text-center">
-              سنرد على رسالتك في أقرب وقت ممكن. شكراً لتواصلك معنا!
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="text-center mt-16">
-        <button 
-          onClick={resetToHome} 
-          className="text-slate-400 font-bold hover:text-blue-600 flex items-center justify-center gap-2 mx-auto transition-colors"
-        >
-          <ArrowLeft size={16} /> 
-          العودة للرئيسية
-        </button>
-      </div>
-    </div>
-  );
-
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-blue-200 selection:text-blue-900" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-blue-200 selection:text-blue-900 pb-20 md:pb-0" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
       
       {/* SEO & Meta Tags Management */}
       <SEOHead 
@@ -1098,21 +849,7 @@ const App = () => {
           </div>
       )}
 
-      {/* --- زر القائمة الجانبية للجوال --- */}
-      {isMobile && (
-        <button 
-          onClick={() => setShowSidePanel(true)}
-          className="fixed bottom-6 left-6 z-40 bg-white/90 backdrop-blur-md p-4 rounded-full shadow-xl border border-slate-200 hover:scale-110 transition-all active:scale-95"
-          title={t.mySpace}
-        >
-          <div className="relative">
-              {myFavorites.length > 0 && <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>}
-              <Heart size={24} className={myFavorites.length > 0 ? 'text-red-500' : 'text-slate-600'} />
-          </div>
-        </button>
-      )}
-
-      {/* --- زر القائمة الجانبية للديسكتوب --- */}
+      {/* --- زر القائمة الجانبية للديسكتوب فقط --- */}
       {!isMobile && (
         <button 
           onClick={() => setShowSidePanel(true)}
@@ -1124,6 +861,32 @@ const App = () => {
               <ChevronRight className="text-slate-600 group-hover:text-blue-600 transition-colors" size={24} />
           </div>
         </button>
+      )}
+
+      {/* --- شريط التنقل السفلي للجوال (Bottom Nav) --- */}
+      {isMobile && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-lg border-t border-slate-200 z-[90] flex justify-around items-center p-2 pb-6 md:pb-2 shadow-2xl animate-in slide-in-from-bottom-4">
+           <button onClick={resetToHome} className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${view === 'home' ? 'text-blue-600' : 'text-slate-400'}`}>
+              <Home size={24} fill={view === 'home' ? 'currentColor' : 'none'} />
+              <span className="text-[10px] font-bold">{t.home}</span>
+           </button>
+           
+           <button onClick={() => setView('merchant')} className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${view === 'merchant' ? 'text-blue-600' : 'text-slate-400'}`}>
+              <Store size={24} />
+              <span className="text-[10px] font-bold">{t.partners}</span>
+           </button>
+
+           <button onClick={() => setShowSidePanel(true)} className="flex flex-col items-center gap-1 p-2 rounded-xl transition-all text-slate-400 relative">
+              {myFavorites.length > 0 && <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>}
+              <Heart size={24} />
+              <span className="text-[10px] font-bold">{t.mySpace}</span>
+           </button>
+
+           <button onClick={() => scrollToSection('about')} className="flex flex-col items-center gap-1 p-2 rounded-xl transition-all text-slate-400">
+              <Info size={24} />
+              <span className="text-[10px] font-bold">{t.about}</span>
+           </button>
+        </div>
       )}
 
       {/* --- القائمة الجانبية (Slide Panel) --- */}
@@ -1189,7 +952,7 @@ const App = () => {
       {/* زر اللغة العائم */}
       <button 
         onClick={toggleLanguage} 
-        className={`fixed ${isMobile ? 'top-20' : 'top-6'} ${lang === 'ar' ? 'left-4' : 'right-4'} z-[100] bg-white/90 backdrop-blur-xl shadow-xl border border-white/50 p-3 rounded-full hover:scale-110 transition-all active:scale-95 group`}
+        className={`fixed ${isMobile ? 'top-4' : 'top-6'} ${lang === 'ar' ? 'left-4' : 'right-4'} z-[100] bg-white/90 backdrop-blur-xl shadow-xl border border-white/50 p-3 rounded-full hover:scale-110 transition-all active:scale-95 group`}
         title="Switch Language"
       >
         <Languages size={20} className="text-slate-600 group-hover:text-blue-600 transition-colors" />
@@ -1200,7 +963,7 @@ const App = () => {
 
       {/* إشعار العرض الخاص */}
       {showExclusiveToast && currentOffer && (
-        <div className={`fixed ${isMobile ? 'bottom-20 left-4 right-4' : 'bottom-6 left-4'} md:max-w-sm z-[100] animate-in slide-in-from-bottom-10 duration-500`}>
+        <div className={`fixed ${isMobile ? 'bottom-24 left-4 right-4' : 'bottom-6 left-4'} md:max-w-sm z-[100] animate-in slide-in-from-bottom-10 duration-500`}>
           <div className="bg-gradient-to-l from-blue-600 to-indigo-600 text-white p-6 rounded-[2rem] shadow-2xl relative border-4 border-white/20 backdrop-blur-md">
             <button onClick={() => setShowExclusiveToast(false)} className={`absolute top-4 ${lang === 'ar' ? 'right-4' : 'left-4'} text-white/50 hover:text-white transition-colors bg-white/10 rounded-full w-8 h-8 flex items-center justify-center`}>✕</button>
             <div className="flex items-center gap-3 mb-3">
@@ -1213,99 +976,50 @@ const App = () => {
         </div>
       )}
 
-      {/* Navigation - إصلاح كامل وتوسيط */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 ${isMobile ? 'px-4 pt-4' : 'flex justify-center px-4 pt-4'}`}>
-        <div className={`bg-white/90 backdrop-blur-xl shadow-2xl shadow-blue-900/10 rounded-2xl flex items-center justify-between p-3 border border-white/50 ${!isMobile ? 'w-auto max-w-4xl' : ''}`}>
-          <div 
-            className="flex items-center gap-2 px-2 cursor-pointer group select-none" 
-            onClick={handleLogoClick}
-          >
-            <div className="bg-gradient-to-tr from-blue-600 to-indigo-600 p-1.5 rounded-full text-white shadow-lg group-hover:scale-110 transition-transform">
-                <Brain size={18} />
-            </div>
-            <span className="text-lg font-black text-slate-800 tracking-tighter">مقارن</span>
-          </div>
-          
-          {/* Desktop Navigation - توسيط */}
-          <div className="hidden md:flex items-center gap-1">
-            {navItems.map((item) => (
+      {/* Navigation - Fixed Centering Issue */}
+      <nav className="fixed top-0 left-0 right-0 z-50 px-4 pt-4 pointer-events-none">
+        <div className="max-w-7xl mx-auto pointer-events-auto">
+            <div className={`bg-white/90 backdrop-blur-xl shadow-2xl shadow-blue-900/10 rounded-2xl flex items-center ${isMobile ? 'justify-center' : 'justify-between'} p-3 border border-white/50`}>
+              <div 
+                className="flex items-center gap-2 px-2 cursor-pointer group select-none" 
+                onClick={handleLogoClick}
+              >
+                <div className="bg-gradient-to-tr from-blue-600 to-indigo-600 p-1.5 rounded-full text-white shadow-lg group-hover:scale-110 transition-transform">
+                    <Brain size={18} />
+                </div>
+                <span className="text-lg font-black text-slate-800 tracking-tighter">مقارن</span>
+              </div>
+              
+              {/* Desktop Navigation */}
+              <div className="hidden md:flex items-center gap-1">
+                {navItems.map((item) => (
+                    <button 
+                      key={item.id} 
+                      onClick={() => {
+                        item.action();
+                        setIsMobileMenuOpen(false);
+                      }} 
+                      className={`px-3 py-2 rounded-full font-bold text-sm flex items-center gap-2 transition-all duration-300 ${
+                        view === 'home' ? 'hover:bg-blue-50 hover:text-blue-600 text-slate-600' : ''
+                      }`}
+                    >
+                        <item.icon size={14} className="opacity-70" />
+                        <span className="whitespace-nowrap">{item.label}</span>
+                    </button>
+                ))}
+                <div className="h-6 w-px bg-slate-200 mx-2"></div>
                 <button 
-                  key={item.id} 
                   onClick={() => {
-                    item.action();
+                    setView('merchant');
                     setIsMobileMenuOpen(false);
                   }} 
-                  className={`px-3 py-2 rounded-full font-bold text-sm flex items-center gap-2 transition-all duration-300 ${
-                    view === 'home' ? 'hover:bg-blue-50 hover:text-blue-600 text-slate-600' : ''
-                  }`}
+                  className="bg-slate-900 text-white px-5 py-2 rounded-full font-bold text-xs hover:bg-slate-800 shadow-lg flex items-center gap-2 active:scale-95 transition-all whitespace-nowrap"
                 >
-                    <item.icon size={14} className="opacity-70" />
-                    <span className="whitespace-nowrap">{item.label}</span>
+                  <Store size={14} /> {t.merchant}
                 </button>
-            ))}
-            <div className="h-6 w-px bg-slate-200 mx-2"></div>
-            <button 
-              onClick={() => {
-                setView('privacy');
-                setIsMobileMenuOpen(false);
-              }} 
-              className="px-3 py-2 rounded-full font-bold text-sm flex items-center gap-2 hover:bg-blue-50 hover:text-blue-600 text-slate-600 transition-all"
-            >
-              <Lock size={14} /> {t.privacy}
-            </button>
-            <button 
-              onClick={() => {
-                setView('contact');
-                setIsMobileMenuOpen(false);
-              }} 
-              className="px-3 py-2 rounded-full font-bold text-sm flex items-center gap-2 hover:bg-blue-50 hover:text-blue-600 text-slate-600 transition-all"
-            >
-              <MessageSquare size={14} /> {t.contact}
-            </button>
-            <button 
-              onClick={() => {
-                setView('merchant');
-                setIsMobileMenuOpen(false);
-              }} 
-              className="bg-slate-900 text-white px-5 py-2 rounded-full font-bold text-xs hover:bg-slate-800 shadow-lg flex items-center gap-2 active:scale-95 transition-all whitespace-nowrap"
-            >
-              <Store size={14} /> {t.merchant}
-            </button>
-          </div>
-
-          {/* Mobile Menu Button */}
-          <button 
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
-            className="md:hidden bg-slate-100 p-2 rounded-lg text-slate-700 hover:bg-slate-200 transition-colors"
-          >
-            {isMobileMenuOpen ? <XIcon size={24} /> : <Menu size={24} />}
-          </button>
+              </div>
+            </div>
         </div>
-
-        {/* Mobile Menu Dropdown */}
-        {isMobileMenuOpen && (
-          <div className="mt-2 bg-white/90 backdrop-blur-xl shadow-2xl rounded-2xl border border-white/50 p-4 animate-in slide-in-from-top-4">
-            <div className="space-y-2">
-              {[...navItems, 
-                { id: 'privacy', label: t.privacy, icon: Lock, action: () => setView('privacy') },
-                { id: 'contact', label: t.contact, icon: MessageSquare, action: () => setView('contact') },
-                { id: 'merchant', label: t.merchant, icon: Store, action: () => setView('merchant') }
-              ].map((item) => (
-                <button 
-                  key={item.id} 
-                  onClick={() => {
-                    item.action();
-                    setIsMobileMenuOpen(false);
-                  }} 
-                  className="w-full text-right flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition-colors"
-                >
-                  <span className="font-bold text-slate-700">{item.label}</span>
-                  <item.icon size={18} className="text-slate-400" />
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
       </nav>
 
       {/* الصفحة الرئيسية */}
@@ -1313,7 +1027,6 @@ const App = () => {
         <>
           {/* --- قسم الـ Hero Section المحدث --- */}
           <div className="bg-gradient-to-b from-slate-950 via-blue-950 to-indigo-900 text-white pt-28 pb-20 px-4 relative overflow-hidden rounded-b-[2rem] md:rounded-b-[5rem] shadow-2xl">
-            
             {/* طبقات الخلفية */}
             <div className="absolute top-0 left-0 w-full h-full opacity-30 pointer-events-none">
                 <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-blue-500 rounded-full blur-[120px] animate-pulse"></div>
@@ -1398,311 +1111,136 @@ const App = () => {
               </div>
             )}
 
-            {/* --- تصميم جديد للبطاقات مع دليل المقارنة --- */}
+            {/* --- عرض النتائج (تم تعديل تصميم الجوال) --- */}
             {results && !isSearching && (
-              <div className="animate-in fade-in slide-in-from-bottom-10 duration-700 mb-16 md:mb-32">
+              <div className="space-y-8 md:space-y-12 animate-in fade-in slide-in-from-bottom-10 duration-700 mb-16 md:mb-32">
                 {aiSummary && (
-                    <div className="bg-gradient-to-br from-slate-900 to-blue-950 text-white p-6 md:p-12 rounded-[2rem] md:rounded-[3rem] shadow-2xl mb-8 relative overflow-hidden border border-white/10">
+                    <div className="bg-gradient-to-br from-slate-900 to-blue-950 text-white p-6 md:p-12 rounded-[2rem] md:rounded-[3rem] shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-6 md:gap-8 relative overflow-hidden border border-white/10">
                         <div className="absolute top-0 right-0 w-full h-full opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-                        <div className="relative z-10">
+                        <div className="relative z-10 flex-1">
                           <div className="flex items-center gap-3 mb-4 md:mb-6 text-blue-300 font-black text-sm uppercase tracking-widest bg-white/10 w-fit px-4 py-1.5 rounded-full backdrop-blur-sm"><BarChart3 size={16} /> {t.aiTitle}</div>
                           <p className="text-white text-xl md:text-4xl font-black leading-snug tracking-tight mb-4">"{aiSummary.summary}"</p>
                         </div>
+                        <div className="relative z-10 bg-white/10 backdrop-blur-md border border-white/10 p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] shadow-2xl shrink-0 text-center min-w-[200px] md:min-w-[220px]">
+                            <span className="text-xs font-bold text-blue-200 block mb-3 uppercase tracking-widest">{t.winner}</span>
+                            <div className="flex flex-col items-center justify-center gap-2 font-black text-2xl md:text-3xl">
+                                <div className="bg-green-500 rounded-full p-2 mb-2 shadow-lg shadow-green-500/30"><CheckCircle size={28} className="text-white" /></div>
+                                {aiSummary.verdict}
+                            </div>
+                        </div>
                     </div>
                 )}
-
-                {/* دليل المقارنة */}
-                {showComparisonGuide && (
-                  <div className="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-[2rem] border-2 border-blue-100">
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                      <div className="flex items-center gap-3">
-                        <div className="bg-blue-100 p-3 rounded-2xl">
-                          <BarChart3 className="text-blue-600" size={24} />
-                        </div>
-                        <div>
-                          <h3 className="font-black text-slate-900 text-lg">🔍 كيف تقارن بين النتائج؟</h3>
-                          <p className="text-slate-600 text-sm">استخدم الأزرار بالأسفل لتغيير طريقة عرض النتائج</p>
-                        </div>
-                      </div>
-                      <button 
-                        onClick={() => setShowComparisonGuide(false)}
-                        className="text-blue-600 font-bold text-sm hover:text-blue-800 flex items-center gap-1"
-                      >
-                        <XIcon size={16} /> إخفاء التلميح
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* عناصر التحكم */}
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-                  <div>
-                    <h2 className="text-2xl md:text-3xl font-black text-slate-900">{t.comparison}</h2>
-                    <p className="text-slate-500 font-bold">{sortedResults.length} {t.allResults}</p>
-                  </div>
-                  
-                  <div className="flex flex-wrap gap-3">
-                    <div className="bg-white border border-slate-200 rounded-xl p-2">
-                      <select 
-                        className="bg-transparent font-bold text-slate-700 focus:outline-none"
-                        value={sortBy}
-                        onChange={(e) => setSortBy(e.target.value)}
-                      >
-                        <option value="bestMatch">{t.bestMatch}</option>
-                        <option value="price">{t.price} ↑</option>
-                        <option value="rating">{t.rating} ↓</option>
-                      </select>
-                    </div>
-                    
-                    {/* أزرار عرض مختلفة */}
-                    <div className="flex gap-2">
-                      <button 
-                        onClick={() => setIsMobile(!isMobile)}
-                        className={`px-4 py-2 rounded-xl font-bold text-sm transition-colors ${isMobile ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-                      >
-                        {isMobile ? 'عرض الجوال' : 'عرض الديسكتوب'}
-                      </button>
-                    </div>
-                  </div>
+                
+                {/* تلميح السحب للجوال */}
+                <div className="md:hidden text-center animate-pulse flex items-center justify-center gap-2 text-slate-400 text-sm font-bold mb-2">
+                    <ArrowRight size={16} /> {t.swipeHint} <ArrowLeft size={16} />
                 </div>
 
-                {/* تصميم البطاقات للجوال - Horizontal Scroll */}
-                {isMobile ? (
-                  <>
-                    {/* عرض بطاقة واحدة كبيرة أولاً */}
-                    <div className="mb-8 bg-white rounded-[2rem] shadow-xl border border-slate-100 overflow-hidden">
-                      <div className="p-6 border-b border-slate-200">
-                        <h3 className="font-black text-xl text-slate-900 mb-2">أفضل نتيجة</h3>
-                        <p className="text-slate-500 text-sm">النتيجة الأفضل بناءً على السعر والجودة</p>
-                      </div>
-                      {sortedResults.slice(0, 1).map((item) => (
-                        <div key={item.id} className="p-6">
-                          <div className={`${item.storeColor} text-white p-6 rounded-2xl mb-6`}>
-                            <div className="flex justify-between items-center">
-                              <h4 className="font-black text-2xl">{item.store}</h4>
-                              <div className="bg-white/20 px-3 py-1 rounded-full text-xs font-black uppercase">
-                                {t.trusted}
+                {/* حاوية البطاقات: أفقية للجوال (Scroll)، شبكية للديسكتوب */}
+                <div className="flex overflow-x-auto md:grid md:grid-cols-3 gap-4 md:gap-8 pb-8 md:pb-0 snap-x snap-mandatory md:snap-none px-4 md:px-0 -mx-4 md:mx-0 custom-scrollbar md:overflow-visible">
+                  {results.map((item) => (
+                    <div key={item.id} className="min-w-[85vw] md:min-w-0 snap-center bg-white rounded-[2rem] md:rounded-[2.5rem] shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border border-slate-100 overflow-hidden flex flex-col group">
+                      {/* Header */}
+                      <div className={`${item.storeColor} py-6 md:py-8 px-6 md:px-8 text-white relative overflow-hidden`}>
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="font-black text-xl md:text-2xl tracking-tighter mb-2">{item.store}</h3>
+                            <div className="flex items-center gap-2">
+                              <div className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase backdrop-blur-md inline-flex items-center gap-1">
+                                <Shield size={10} /> {t.trusted}
                               </div>
+                              {item.store.includes('شريك') && (
+                                <div className="bg-red-500 text-white px-2 py-1 rounded-full text-[10px] font-black animate-pulse">
+                                  {t.specialOffer}
+                                </div>
+                              )}
                             </div>
                           </div>
-                          
-                          <div className="space-y-6">
-                            <div className="flex justify-between items-center">
-                              <div>
-                                <div className="text-4xl font-black text-slate-900">{item.price}</div>
-                                <div className="text-lg text-slate-400">{item.currency}</div>
-                              </div>
-                              <div className="text-red-400 line-through font-black">
-                                {item.originalPrice} {item.currency}
-                              </div>
-                            </div>
-                            
-                            <button 
-                              onClick={() => document.getElementById('allResultsMobile').scrollIntoView({ behavior: 'smooth' })}
-                              className="w-full bg-blue-600 text-white py-4 rounded-xl font-black text-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-                            >
-                              <ChevronDown size={20} />
-                              عرض جميع النتائج ({sortedResults.length})
+                          <div className="flex gap-2">
+                            <button onClick={() => handleShare(item)} className="bg-white/20 hover:bg-white hover:text-blue-600 p-2 rounded-full transition-all text-white backdrop-blur-md">
+                              <Share2 size={18} />
+                            </button>
+                            <button onClick={() => toggleFavorite(item)} className="bg-white/20 hover:bg-white hover:text-red-500 p-2 rounded-full transition-all text-white backdrop-blur-md">
+                              <Heart size={18} className={isFavorite(item) ? 'fill-red-500 text-red-500' : ''} />
                             </button>
                           </div>
                         </div>
-                      ))}
-                    </div>
+                      </div>
 
-                    {/* جميع النتائج في Horizontal Scroll */}
-                    <div id="allResultsMobile" className="mb-8">
-                      <h3 className="font-black text-xl text-slate-900 mb-4">جميع النتائج ({sortedResults.length})</h3>
-                      <div className="relative">
-                        <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 snap-x snap-mandatory">
-                          {sortedResults.map((item) => (
-                            <div key={item.id} className="min-w-[85vw] bg-white rounded-2xl shadow-lg border border-slate-100 p-6 snap-center">
-                              <div className={`${item.storeColor} text-white p-4 rounded-2xl mb-4`}>
-                                <div className="flex justify-between items-center">
-                                  <h4 className="font-black text-xl">{item.store}</h4>
-                                  <div className="flex gap-2">
-                                    <button onClick={() => toggleFavorite(item)} className="bg-white/20 hover:bg-white hover:text-red-500 p-2 rounded-full transition-all text-white">
-                                      <Heart size={18} className={isFavorite(item) ? 'fill-red-500 text-red-500' : ''} />
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
-                              
-                              <div className="space-y-4">
-                                <div className="text-center">
-                                  <div className="text-3xl font-black text-slate-900">{item.price}</div>
-                                  <div className="text-slate-400">{item.currency}</div>
-                                  <div className="text-sm text-red-400 line-through mt-1">
-                                    {item.originalPrice} {item.currency}
-                                  </div>
-                                </div>
-                                
-                                <div className="grid grid-cols-2 gap-3">
-                                  <div className="bg-slate-50 p-3 rounded-xl text-center">
-                                    <Star size={16} className="text-yellow-500 fill-yellow-500 inline-block mb-1" />
-                                    <div className="text-sm font-bold text-slate-900">{item.rating}</div>
-                                    <div className="text-xs text-slate-500">{t.rating}</div>
-                                  </div>
-                                  <div className="bg-slate-50 p-3 rounded-xl text-center">
-                                    <Shield size={16} className="text-blue-500 inline-block mb-1" />
-                                    <div className="text-sm font-bold text-slate-900">{item.warranty}</div>
-                                    <div className="text-xs text-slate-500">{t.warrantyTitle}</div>
-                                  </div>
-                                </div>
-                                
-                                <a 
-                                  href={getStoreLink(item.storeKey)} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer" 
-                                  className="block w-full bg-slate-900 text-white py-3 rounded-xl font-bold text-center hover:bg-blue-600 transition-colors"
-                                >
-                                  {t.visitStore}
-                                </a>
-                              </div>
+                      {/* Price Section */}
+                      <div className="p-6 md:p-8 border-b border-dashed border-slate-200">
+                        <div className="flex justify-between items-end">
+                          <div>
+                            <span className="text-4xl md:text-5xl font-black text-slate-900 leading-none">{item.price}</span>
+                            <span className="text-lg text-slate-400 font-bold mx-2">{item.currency}</span>
+                          </div>
+                          <div className="text-sm text-red-400 line-through font-black opacity-50">
+                            {item.originalPrice} {item.currency}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Details */}
+                      <div className="p-6 md:p-8 flex-grow">
+                        <div className="space-y-4 mb-6">
+                          {/* Rating */}
+                          <div className="flex items-center gap-3">
+                            <div className="bg-yellow-100 p-2 rounded-xl">
+                              <Star size={20} className="text-yellow-500 fill-yellow-500" />
                             </div>
-                          ))}
-                        </div>
-                        
-                        {/* مؤشر التمرير */}
-                        <div className="flex justify-center gap-2 mt-4">
-                          {sortedResults.map((_, idx) => (
-                            <div key={idx} className="w-2 h-2 rounded-full bg-slate-300"></div>
-                          ))}
-                        </div>
-                      </div>
-                      
-                      <div className="text-center mt-6">
-                        <p className="text-slate-500 text-sm">اسحب لليمين لرؤية المزيد ←</p>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  /* تصميم البطاقات للديسكتوب - Grid */
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-                    {sortedResults.map((item) => (
-                      <div key={item.id} className="bg-white rounded-[2rem] md:rounded-[2.5rem] shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border border-slate-100 overflow-hidden flex flex-col group">
-                        {/* Header */}
-                        <div className={`${item.storeColor} py-6 md:py-8 px-6 md:px-8 text-white relative overflow-hidden`}>
-                          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
-                          <div className="flex justify-between items-start">
                             <div>
-                              <h3 className="font-black text-xl md:text-2xl tracking-tighter mb-2">{item.store}</h3>
-                              <div className="flex items-center gap-2">
-                                <div className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase backdrop-blur-md inline-flex items-center gap-1">
-                                  <Shield size={10} /> {t.trusted}
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex gap-2">
-                              <button onClick={() => handleShare(item)} className="bg-white/20 hover:bg-white hover:text-blue-600 p-2 rounded-full transition-all text-white backdrop-blur-md">
-                                <Share2 size={18} />
-                              </button>
-                              <button onClick={() => toggleFavorite(item)} className="bg-white/20 hover:bg-white hover:text-red-500 p-2 rounded-full transition-all text-white backdrop-blur-md">
-                                <Heart size={18} className={isFavorite(item) ? 'fill-red-500 text-red-500' : ''} />
-                              </button>
+                              <div className="font-black text-slate-900">{item.rating} {t.rating}</div>
+                              <div className="text-xs text-slate-500">{item.reviewsCount.toLocaleString()} {t.client}</div>
                             </div>
                           </div>
-                        </div>
 
-                        {/* Price Section */}
-                        <div className="p-6 md:p-8 border-b border-dashed border-slate-200">
-                          <div className="flex justify-between items-end">
+                          {/* Warranty */}
+                          <div className="flex items-center gap-3">
+                            <div className="bg-blue-100 p-2 rounded-xl">
+                              <Shield size={20} className="text-blue-500" />
+                            </div>
                             <div>
-                              <span className="text-4xl md:text-5xl font-black text-slate-900 leading-none">{item.price}</span>
-                              <span className="text-lg text-slate-400 font-bold mx-2">{item.currency}</span>
+                              <div className="font-black text-slate-900">{t.warrantyTitle}</div>
+                              <div className="text-xs text-slate-500">{item.warranty}</div>
                             </div>
-                            <div className="text-sm text-red-400 line-through font-black opacity-50">
-                              {item.originalPrice} {item.currency}
+                          </div>
+
+                          {/* Delivery */}
+                          <div className="flex items-center gap-3">
+                            <div className="bg-green-100 p-2 rounded-xl">
+                              <ShoppingCart size={20} className="text-green-500" />
+                            </div>
+                            <div>
+                              <div className="font-black text-slate-900">{t.deliveryTitle}</div>
+                              <div className="text-xs text-slate-500">{item.delivery}</div>
                             </div>
                           </div>
                         </div>
 
-                        {/* Details */}
-                        <div className="p-6 md:p-8 flex-grow">
-                          <div className="space-y-4 mb-6">
-                            {/* Rating */}
-                            <div className="flex items-center gap-3">
-                              <div className="bg-yellow-100 p-2 rounded-xl">
-                                <Star size={20} className="text-yellow-500 fill-yellow-500" />
-                              </div>
-                              <div>
-                                <div className="font-black text-slate-900">{item.rating} {t.rating}</div>
-                                <div className="text-xs text-slate-500">{item.reviewsCount.toLocaleString()} {t.client}</div>
-                              </div>
-                            </div>
-
-                            {/* Warranty */}
-                            <div className="flex items-center gap-3">
-                              <div className="bg-blue-100 p-2 rounded-xl">
-                                <Shield size={20} className="text-blue-500" />
-                              </div>
-                              <div>
-                                <div className="font-black text-slate-900">{t.warrantyTitle}</div>
-                                <div className="text-xs text-slate-500">{item.warranty}</div>
-                              </div>
-                            </div>
-
-                            {/* Delivery */}
-                            <div className="flex items-center gap-3">
-                              <div className="bg-green-100 p-2 rounded-xl">
-                                <ShoppingCart size={20} className="text-green-500" />
-                              </div>
-                              <div>
-                                <div className="font-black text-slate-900">{t.deliveryTitle}</div>
-                                <div className="text-xs text-slate-500">{item.delivery}</div>
-                              </div>
-                            </div>
+                        {/* AI Analysis */}
+                        <div className="bg-blue-50 p-4 rounded-2xl mb-6">
+                          <div className="flex items-start gap-2">
+                            <Brain size={16} className="text-blue-600 mt-0.5" />
+                            <p className="text-sm text-blue-800 font-bold leading-relaxed">"{item.aiAnalysis}"</p>
                           </div>
-
-                          {/* AI Analysis */}
-                          <div className="bg-blue-50 p-4 rounded-2xl mb-6">
-                            <div className="flex items-start gap-2">
-                              <Brain size={16} className="text-blue-600 mt-0.5" />
-                              <p className="text-sm text-blue-800 font-bold leading-relaxed">"{item.aiAnalysis}"</p>
-                            </div>
-                          </div>
-
-                          {/* CTA Button */}
-                          <a 
-                            href={getStoreLink(item.storeKey)} 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            className="block w-full bg-slate-900 hover:bg-blue-600 text-white py-4 rounded-[1.5rem] font-black text-center transition-all shadow-lg hover:shadow-xl active:scale-95 group/btn"
-                          >
-                            <div className="flex items-center justify-center gap-2">
-                              {t.visitStore}
-                              <ExternalLink size={18} className="group-hover/btn:translate-x-1 transition-transform" />
-                            </div>
-                          </a>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
 
-                {/* ملخص النتائج */}
-                <div className="mt-12 bg-gradient-to-r from-slate-50 to-blue-50 p-8 rounded-[2rem] border border-slate-200">
-                  <h3 className="font-black text-xl text-slate-900 mb-4 flex items-center gap-2">
-                    <CheckCircle className="text-green-600" size={24} />
-                    ملخص المقارنة
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="text-center p-4 bg-white rounded-2xl">
-                      <div className="text-3xl font-black text-blue-600">
-                        {sortedResults.reduce((min, item) => Math.min(min, item.price), Infinity)}
+                        {/* CTA Button */}
+                        <a 
+                          href={getStoreLink(item.storeKey)} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="block w-full bg-slate-900 hover:bg-blue-600 text-white py-4 rounded-[1.5rem] font-black text-center transition-all shadow-lg hover:shadow-xl active:scale-95 group/btn"
+                        >
+                          <div className="flex items-center justify-center gap-2">
+                            {t.visitStore}
+                            <ExternalLink size={18} className="group-hover/btn:translate-x-1 transition-transform" />
+                          </div>
+                        </a>
                       </div>
-                      <div className="text-slate-600 font-bold">أقل سعر</div>
                     </div>
-                    <div className="text-center p-4 bg-white rounded-2xl">
-                      <div className="text-3xl font-black text-green-600">
-                        {sortedResults.reduce((max, item) => Math.max(max, item.rating), 0)}
-                      </div>
-                      <div className="text-slate-600 font-bold">أعلى تقييم</div>
-                    </div>
-                    <div className="text-center p-4 bg-white rounded-2xl">
-                      <div className="text-3xl font-black text-purple-600">{sortedResults.length}</div>
-                      <div className="text-slate-600 font-bold">عدد المتاجر</div>
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -1780,13 +1318,51 @@ const App = () => {
         </>
       )}
 
-      {/* صفحة سياسة الخصوصية */}
-      {view === 'privacy' && <PrivacyPage />}
+      {/* صفحة الخصوصية */}
+      {view === 'privacy' && (
+        <div className="max-w-4xl mx-auto px-4 py-32 animate-in fade-in">
+           <div className="bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl p-6 md:p-12 border border-slate-100">
+             <div className="flex items-center gap-4 mb-8">
+               <div className="bg-blue-100 p-3 rounded-2xl text-blue-600"><Lock size={32} /></div>
+               <h1 className="text-2xl md:text-4xl font-black text-slate-900">{t.privacy}</h1>
+             </div>
+             <div className="prose prose-lg text-slate-600 font-medium">
+                <p className="whitespace-pre-line">{adminConfig.privacyText}</p>
+             </div>
+             <button onClick={resetToHome} className="mt-8 text-blue-600 font-black flex items-center gap-2 hover:underline"><ArrowRight size={16} /> {t.back}</button>
+           </div>
+        </div>
+      )}
 
       {/* صفحة تواصل معنا */}
-      {view === 'contact' && <ContactPage />}
+      {view === 'contact' && (
+        <div className="max-w-4xl mx-auto px-4 py-32 animate-in fade-in">
+           <div className="bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl p-6 md:p-12 border border-slate-100">
+             <div className="flex items-center gap-4 mb-8">
+               <div className="bg-green-100 p-3 rounded-2xl text-green-600"><MessageSquare size={32} /></div>
+               <h1 className="text-2xl md:text-4xl font-black text-slate-900">{t.contactTitle}</h1>
+             </div>
+             <div className="grid md:grid-cols-2 gap-12">
+               <div>
+                  <p className="text-slate-500 font-bold mb-6">يسعدنا سماع صوتك! تواصل معنا عبر النموذج أو القنوات الرسمية.</p>
+                  <ul className="space-y-4 font-bold text-slate-700">
+                    <li className="flex items-center gap-3"><Mail className="text-blue-500" /> {adminConfig.supportEmail}</li>
+                    <li className="flex items-center gap-3"><Phone className="text-green-500" /> {adminConfig.whatsappNumber}</li>
+                  </ul>
+               </div>
+               <form onSubmit={handleContactSubmit} className="space-y-4">
+                  <input type="text" placeholder="الاسم" className="w-full p-4 rounded-xl bg-slate-50 border font-bold" value={contactForm.name} onChange={e => setContactForm({...contactForm, name: e.target.value})} required />
+                  <input type="email" placeholder="البريد الإلكتروني" className="w-full p-4 rounded-xl bg-slate-50 border font-bold" value={contactForm.email} onChange={e => setContactForm({...contactForm, email: e.target.value})} required />
+                  <textarea placeholder="رسالتك..." className="w-full p-4 rounded-xl bg-slate-50 border font-bold h-32" value={contactForm.message} onChange={e => setContactForm({...contactForm, message: e.target.value})} required></textarea>
+                  <button type="submit" className="w-full bg-slate-900 text-white py-4 rounded-xl font-black hover:bg-slate-800">إرسال</button>
+               </form>
+             </div>
+             <button onClick={resetToHome} className="mt-8 text-blue-600 font-black flex items-center gap-2 hover:underline"><ArrowRight size={16} /> {t.back}</button>
+           </div>
+        </div>
+      )}
 
-      {/* صفحة لوحة التحكم */}
+      {/* صفحة لوحة التحكم الكاملة */}
       {view === 'admin' && (
         <div className="max-w-7xl mx-auto px-4 py-32 animate-in fade-in">
           {!isAdminAuthenticated ? (
@@ -1818,55 +1394,465 @@ const App = () => {
                   </div>
                   <div className="flex gap-3">
                     <button onClick={handleSaveAllChanges} className="px-6 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 shadow-lg flex items-center gap-2">
-                      <Save size={18} /> حفظ التغييرات
+                      <Save size={18} /> {t.save || "حفظ التغييرات"}
                     </button>
                     <button onClick={handleLogout} className="px-6 py-3 bg-red-100 text-red-600 rounded-xl font-bold hover:bg-red-200 flex items-center gap-2">
-                      <LogOut size={18} /> خروج
+                      <LogOut size={18} /> {t.logout || "خروج"}
                     </button>
                   </div>
                 </div>
                 
-                {/* إدارة صفحات الموقع */}
-                <div className="mt-8 bg-blue-50 p-6 rounded-2xl">
-                  <h3 className="font-black text-blue-900 mb-4">إدارة صفحات الموقع</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <button 
-                      onClick={() => setView('privacy')}
-                      className="bg-white p-4 rounded-xl hover:shadow-lg transition-shadow flex items-center gap-3"
-                    >
-                      <Lock className="text-blue-600" size={20} />
-                      <div className="text-right">
-                        <div className="font-bold text-slate-900">{t.privacy}</div>
-                        <div className="text-xs text-slate-500">إدارة سياسة الخصوصية</div>
+                {/* Stats Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="bg-blue-50 p-6 rounded-2xl">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-blue-600 font-bold">عمليات البحث</p>
+                        <h3 className="text-2xl font-black text-slate-900">{realSearchCount.toLocaleString()}</h3>
                       </div>
-                    </button>
-                    <button 
-                      onClick={() => setView('contact')}
-                      className="bg-white p-4 rounded-xl hover:shadow-lg transition-shadow flex items-center gap-3"
-                    >
-                      <MessageSquare className="text-green-600" size={20} />
-                      <div className="text-right">
-                        <div className="font-bold text-slate-900">{t.contact}</div>
-                        <div className="text-xs text-slate-500">إدارة صفحة التواصل</div>
+                      <Activity className="text-blue-500" size={24} />
+                    </div>
+                  </div>
+                  <div className="bg-green-50 p-6 rounded-2xl">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-green-600 font-bold">المشتركين</p>
+                        <h3 className="text-2xl font-black text-slate-900">{subscribersList.length}</h3>
                       </div>
-                    </button>
-                    <button 
-                      onClick={() => setView('merchant')}
-                      className="bg-white p-4 rounded-xl hover:shadow-lg transition-shadow flex items-center gap-3"
-                    >
-                      <Store className="text-orange-600" size={20} />
-                      <div className="text-right">
-                        <div className="font-bold text-slate-900">{t.merchant}</div>
-                        <div className="text-xs text-slate-500">صفحة الشركاء</div>
+                      <Users className="text-green-500" size={24} />
+                    </div>
+                  </div>
+                  <div className="bg-purple-50 p-6 rounded-2xl">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-purple-600 font-bold">الرسائل</p>
+                        <h3 className="text-2xl font-black text-slate-900">{inboxMessages.length}</h3>
                       </div>
-                    </button>
+                      <MessageCircle className="text-purple-500" size={24} />
+                    </div>
+                  </div>
+                  <div className="bg-orange-50 p-6 rounded-2xl">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-orange-600 font-bold">المتاجر</p>
+                        <h3 className="text-2xl font-black text-slate-900">{adminConfig.affiliateLinks?.length || 0}</h3>
+                      </div>
+                      <Store className="text-orange-500" size={24} />
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* باقي لوحة التحكم... */}
-              {/* ... (نفس محتوى لوحة التحكم السابق) ... */}
-              
+              {/* قسم جديد: إعدادات التواصل والمحتوى */}
+              <div className="bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl p-6 md:p-8 border border-slate-100">
+                <h3 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-2">
+                  <FileText className="text-slate-600" />
+                  {t.generalSettings}
+                </h3>
+                <div className="grid md:grid-cols-2 gap-8">
+                    {/* معلومات التواصل */}
+                    <div className="space-y-4">
+                        <h4 className="font-bold text-slate-700 border-b pb-2">بيانات التواصل</h4>
+                        <div>
+                            <label className="block text-sm font-bold text-slate-500 mb-1">البريد الإلكتروني للدعم</label>
+                            <input 
+                                type="text"
+                                className="w-full p-3 rounded-xl bg-slate-50 border font-bold text-left"
+                                dir="ltr"
+                                value={adminConfig.supportEmail || ''}
+                                onChange={(e) => setAdminConfig({...adminConfig, supportEmail: e.target.value})}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-bold text-slate-500 mb-1">رقم الواتساب</label>
+                            <input 
+                                type="text"
+                                className="w-full p-3 rounded-xl bg-slate-50 border font-bold text-left"
+                                dir="ltr"
+                                value={adminConfig.whatsappNumber || ''}
+                                onChange={(e) => setAdminConfig({...adminConfig, whatsappNumber: e.target.value})}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-bold text-slate-500 mb-1">رابط تويتر (X)</label>
+                            <input 
+                                type="text"
+                                className="w-full p-3 rounded-xl bg-slate-50 border font-bold text-left"
+                                dir="ltr"
+                                value={adminConfig.twitterLink || ''}
+                                onChange={(e) => setAdminConfig({...adminConfig, twitterLink: e.target.value})}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-bold text-slate-500 mb-1">رابط انستقرام</label>
+                            <input 
+                                type="text"
+                                className="w-full p-3 rounded-xl bg-slate-50 border font-bold text-left"
+                                dir="ltr"
+                                value={adminConfig.instagramLink || ''}
+                                onChange={(e) => setAdminConfig({...adminConfig, instagramLink: e.target.value})}
+                            />
+                        </div>
+                    </div>
+                    
+                    {/* محتوى الصفحات */}
+                    <div className="space-y-4">
+                        <h4 className="font-bold text-slate-700 border-b pb-2">محتوى الصفحات</h4>
+                        <div>
+                            <label className="block text-sm font-bold text-slate-500 mb-1">نص سياسة الخصوصية</label>
+                            <textarea 
+                                className="w-full p-3 rounded-xl bg-slate-50 border font-bold h-32"
+                                value={adminConfig.privacyText || ''}
+                                onChange={(e) => setAdminConfig({...adminConfig, privacyText: e.target.value})}
+                            ></textarea>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-bold text-slate-500 mb-1">نص الشروط والأحكام</label>
+                            <textarea 
+                                className="w-full p-3 rounded-xl bg-slate-50 border font-bold h-32"
+                                value={adminConfig.termsText || ''}
+                                onChange={(e) => setAdminConfig({...adminConfig, termsText: e.target.value})}
+                            ></textarea>
+                        </div>
+                    </div>
+                </div>
+              </div>
+
+              {/* التسويق والترويج */}
+              <div className="bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl p-6 md:p-8 border border-slate-100">
+                <h3 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-2">
+                  <Mail className="text-purple-600" />
+                  {t.marketing}
+                </h3>
+                
+                <div className="grid md:grid-cols-2 gap-8">
+                  <div>
+                    <div className="mb-6">
+                      <label className="block text-sm font-bold text-slate-700 mb-2">فرز المشتركين حسب الاهتمام</label>
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <input 
+                            type="text" 
+                            placeholder="اكتب كلمة للفلترة (مثل: آيفون، سوني)" 
+                            className="w-full p-3 pl-10 rounded-xl border border-slate-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 font-bold"
+                            value={marketingFilter}
+                            onChange={(e) => setMarketingFilter(e.target.value)}
+                          />
+                          <Filter size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-slate-50 rounded-2xl border border-slate-200 h-64 overflow-y-auto p-4">
+                      <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-200">
+                        <span className="text-sm font-bold text-slate-600">{t.subscribers}</span>
+                        <span className="text-xs font-black bg-purple-100 text-purple-600 px-2 py-1 rounded-full">
+                          {filteredSubscribers.length} مشترك
+                        </span>
+                      </div>
+                      {filteredSubscribers.length > 0 ? (
+                        filteredSubscribers.map((sub, idx) => (
+                          <div key={idx} className="flex items-center justify-between p-3 hover:bg-white rounded-lg transition-colors">
+                            <div className="flex items-center gap-3">
+                              <div className="bg-white p-2 rounded-full">
+                                <UserCheck size={14} className="text-slate-400" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-bold text-slate-700" dir="ltr">{sub.email}</p>
+                                {sub.interests && sub.interests.length > 0 && (
+                                  <p className="text-xs text-slate-500">مهتم بـ: {sub.interests.slice(-2).join(', ')}</p>
+                                )}
+                              </div>
+                            </div>
+                            <span className="text-xs text-slate-400">
+                              {new Date(sub.joined_at).toLocaleDateString('ar-SA')}
+                            </span>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="h-full flex flex-col items-center justify-center text-slate-400">
+                          <Filter size={32} className="mb-2 opacity-50" />
+                          <p className="text-sm font-bold">لا يوجد مشتركين مطابقين</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="mb-6">
+                      <label className="block text-sm font-bold text-slate-700 mb-2">إنشاء حملة ترويجية</label>
+                      <input 
+                        type="text" 
+                        placeholder="عنوان الرسالة" 
+                        className="w-full p-3 rounded-xl bg-slate-50 border-none font-bold text-sm mb-4 focus:ring-2 focus:ring-purple-200"
+                        value={marketingSubject}
+                        onChange={(e) => setMarketingSubject(e.target.value)}
+                      />
+                      <textarea 
+                        placeholder="نص الرسالة..." 
+                        className="w-full p-3 rounded-xl bg-slate-50 border-none font-bold text-sm h-40 focus:ring-2 focus:ring-purple-200 resize-none"
+                        value={marketingBody}
+                        onChange={(e) => setMarketingBody(e.target.value)}
+                      ></textarea>
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
+                      <div className="text-sm text-slate-500">
+                        سيتم الإرسال لـ <span className="font-black text-purple-600">{filteredSubscribers.length}</span> مشترك
+                      </div>
+                      <button 
+                        onClick={handleSendCampaign}
+                        className="bg-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-purple-700 flex items-center gap-2 shadow-lg shadow-purple-200 disabled:opacity-50"
+                        disabled={filteredSubscribers.length === 0}
+                      >
+                        <Send size={18} /> إرسال الحملة
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* الرسائل الواردة */}
+              <div className="bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl p-6 md:p-8 border border-slate-100">
+                <h3 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-2">
+                  <MessageCircle className="text-blue-600" />
+                  {t.inbox}
+                  {inboxMessages.length > 0 && (
+                    <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                      {inboxMessages.length}
+                    </span>
+                  )}
+                </h3>
+                
+                <div className="space-y-4 max-h-96 overflow-y-auto">
+                  {inboxMessages.length > 0 ? (
+                    inboxMessages.map((msg) => (
+                      <div key={msg.id} className="bg-slate-50 p-6 rounded-2xl border border-slate-200 relative group">
+                        <button 
+                          onClick={() => handleDeleteMessage(msg.id)}
+                          className="absolute top-4 left-4 text-slate-300 hover:text-red-500 transition-colors"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                        <div className="flex items-center gap-3 mb-3">
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                            msg.type === 'partner_request' 
+                              ? 'bg-purple-100 text-purple-600' 
+                              : 'bg-blue-100 text-blue-600'
+                          }`}>
+                            {msg.type === 'partner_request' ? 'طلب شراكة' : 'رسالة تواصل'}
+                          </span>
+                          <span className="text-sm text-slate-500">
+                            {new Date(msg.timestamp).toLocaleDateString('ar-SA')}
+                          </span>
+                        </div>
+                        <h4 className="font-black text-lg text-slate-900 mb-2">
+                          {msg.type === 'partner_request' ? msg.store : msg.name}
+                        </h4>
+                        <p className="text-blue-600 font-bold mb-2" dir="ltr">{msg.email}</p>
+                        {msg.message && (
+                          <p className="text-slate-600 text-sm bg-white p-4 rounded-xl border border-slate-100">
+                            "{msg.message}"
+                          </p>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-12 text-slate-400">
+                      <MessageCircle size={48} className="mx-auto mb-4 opacity-30" />
+                      <p className="font-bold">لا توجد رسائل جديدة</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* إدارة المتاجر */}
+              <div className="bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl p-6 md:p-8 border border-slate-100">
+                <h3 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-2">
+                  <Store className="text-green-600" />
+                  {t.stores}
+                </h3>
+                
+                <div className="mb-8">
+                  <h4 className="font-bold text-slate-700 mb-4">روابط المتاجر الحالية</h4>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {adminConfig.affiliateLinks?.map((store, index) => (
+                      <div key={index} className="bg-slate-50 p-4 rounded-2xl flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="bg-white p-2 rounded-xl">
+                            <Store size={18} className="text-slate-600" />
+                          </div>
+                          <div>
+                            <p className="font-bold text-slate-900">{store.name.toUpperCase()}</p>
+                            <p className="text-xs text-slate-500 truncate max-w-[200px]" dir="ltr">
+                              {store.link}
+                            </p>
+                          </div>
+                        </div>
+                        <button 
+                          onClick={() => handleDeleteStore(index)}
+                          className="text-red-400 hover:text-red-600 p-2"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="bg-green-50 p-6 rounded-2xl border border-green-100">
+                  <h4 className="font-bold text-green-700 mb-4">إضافة متجر جديد</h4>
+                  <div className="grid md:grid-cols-2 gap-4 mb-4">
+                    <input 
+                      type="text" 
+                      placeholder="اسم المتجر" 
+                      className="p-3 rounded-xl border border-green-200"
+                      value={newStoreName}
+                      onChange={(e) => setNewStoreName(e.target.value)}
+                    />
+                    <input 
+                      type="text" 
+                      placeholder="رابط الشركة" 
+                      className="p-3 rounded-xl border border-green-200 text-left"
+                      dir="ltr"
+                      value={newStoreLink}
+                      onChange={(e) => setNewStoreLink(e.target.value)}
+                    />
+                  </div>
+                  <button 
+                    onClick={handleAddStore}
+                    className="w-full bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 flex items-center justify-center gap-2"
+                  >
+                    <Plus size={20} /> إضافة متجر
+                  </button>
+                </div>
+              </div>
+
+              {/* إدارة العروض */}
+              <div className="bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl p-6 md:p-8 border border-slate-100">
+                <h3 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-2">
+                  <Tag className="text-orange-600" />
+                  {t.offers}
+                </h3>
+                
+                <div className="mb-8">
+                  <h4 className="font-bold text-slate-700 mb-4">العروض الحالية</h4>
+                  <div className="space-y-4">
+                    {adminConfig.exclusiveOffers?.map((offer, index) => (
+                      <div key={index} className="bg-orange-50 p-4 rounded-2xl relative">
+                        <button 
+                          onClick={() => handleDeleteOffer(index)}
+                          className="absolute top-4 left-4 text-orange-300 hover:text-red-500"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                        <div className="ml-8">
+                          <p className="font-black text-orange-900">كلمة البحث: {offer.keyword}</p>
+                          <p className="text-sm text-slate-600 mt-2">{offer.message}</p>
+                          <p className="text-xs text-slate-500 mt-1" dir="ltr">{offer.link}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="bg-orange-50 p-6 rounded-2xl border border-orange-100">
+                  <h4 className="font-bold text-orange-700 mb-4">إضافة عرض جديد</h4>
+                  <div className="space-y-4 mb-4">
+                    <input 
+                      type="text" 
+                      placeholder="كلمة البحث (مثل: آيفون)" 
+                      className="w-full p-3 rounded-xl border border-orange-200"
+                      value={newOfferKeyword}
+                      onChange={(e) => setNewOfferKeyword(e.target.value)}
+                    />
+                    <input 
+                      type="text" 
+                      placeholder="رسالة العرض" 
+                      className="w-full p-3 rounded-xl border border-orange-200"
+                      value={newOfferMessage}
+                      onChange={(e) => setNewOfferMessage(e.target.value)}
+                    />
+                    <input 
+                      type="text" 
+                      placeholder="رابط العرض" 
+                      className="w-full p-3 rounded-xl border border-orange-200 text-left"
+                      dir="ltr"
+                      value={newOfferLink}
+                      onChange={(e) => setNewOfferLink(e.target.value)}
+                    />
+                  </div>
+                  <button 
+                    onClick={handleAddOffer}
+                    className="w-full bg-orange-600 text-white py-3 rounded-xl font-bold hover:bg-orange-700 flex items-center justify-center gap-2"
+                  >
+                    <Plus size={20} /> إضافة عرض
+                  </button>
+                </div>
+              </div>
+
+              {/* إحصائيات البحث */}
+              <div className="bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl p-6 md:p-8 border border-slate-100">
+                <h3 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-2">
+                  <BarChart2 className="text-indigo-600" />
+                  {t.analytics}
+                </h3>
+                
+                <div className="grid md:grid-cols-2 gap-8">
+                  {/* الكلمات الأكثر بحثاً */}
+                  <div>
+                    <h4 className="font-bold text-slate-700 mb-4">الكلمات الأكثر بحثاً</h4>
+                    <div className="bg-slate-50 rounded-2xl p-6">
+                      {topSearchTerms.length > 0 ? (
+                        <div className="space-y-3">
+                          {topSearchTerms.slice(0, 5).map((term, idx) => (
+                            <div key={idx} className="flex items-center justify-between">
+                              <span className="font-bold text-slate-700">{term.term}</span>
+                              <span className="bg-indigo-100 text-indigo-600 px-3 py-1 rounded-full text-sm font-bold">
+                                {term.count} بحث
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-slate-400">
+                          <BarChart2 size={32} className="mx-auto mb-2 opacity-50" />
+                          <p className="font-bold">لا توجد بيانات كافية</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* سجل البحث المباشر */}
+                  <div>
+                    <h4 className="font-bold text-slate-700 mb-4">آخر عمليات البحث</h4>
+                    <div className="bg-slate-50 rounded-2xl p-4 max-h-64 overflow-y-auto">
+                      {searchLogs.length > 0 ? (
+                        <div className="space-y-2">
+                          {searchLogs.slice(0, 10).map((log, idx) => (
+                            <div key={idx} className="flex items-center justify-between p-3 bg-white rounded-xl">
+                              <div>
+                                <p className="font-bold text-slate-700">{log.term}</p>
+                                <p className="text-xs text-slate-500">
+                                  {new Date(log.timestamp).toLocaleDateString('ar-SA')}
+                                </p>
+                              </div>
+                              <span className="text-xs font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded-full">
+                                {log.device || 'Desktop'}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-slate-400">
+                          <Clock size={32} className="mx-auto mb-2 opacity-50" />
+                          <p className="font-bold">لا توجد عمليات بحث حديثة</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -1884,13 +1870,13 @@ const App = () => {
                <input type="email" className="w-full p-4 md:p-5 rounded-2xl bg-slate-50 font-bold border" placeholder="إيميل التواصل" required value={merchantForm.email} onChange={e => setMerchantForm({...merchantForm, email: e.target.value})} />
                <button type="submit" className="w-full bg-blue-600 text-white py-4 md:py-5 rounded-2xl font-black text-lg md:text-xl shadow-xl hover:bg-blue-700 transition-colors">إرسال الطلب</button>
              </form>
-             <button onClick={resetToHome} className="mt-8 text-slate-400 font-bold underline">الرجوع للرئيسية</button>
+             <button onClick={resetToHome} className="mt-8 text-slate-400 font-bold underline">الرجوع</button>
            </div>
         </div>
       )}
 
       {/* Footer */}
-      <footer className="bg-slate-900 text-slate-400 py-12 md:py-16 mt-16 md:mt-32 rounded-t-[2rem] md:rounded-t-[3rem] relative overflow-hidden">
+      <footer className="bg-slate-900 text-slate-400 py-12 md:py-16 mt-16 md:mt-32 rounded-t-[2rem] md:rounded-t-[3rem] relative overflow-hidden mb-16 md:mb-0">
         <div className="absolute top-0 right-0 w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-blue-600/10 rounded-full blur-[60px] md:blur-[100px] pointer-events-none"></div>
         <div className="absolute bottom-0 left-0 w-[200px] md:w-[400px] h-[200px] md:h-[400px] bg-indigo-600/10 rounded-full blur-[50px] md:blur-[100px] pointer-events-none"></div>
         <div className="max-w-7xl mx-auto px-4 md:px-8 relative z-10">
@@ -1975,6 +1961,7 @@ const App = () => {
         
         .custom-scrollbar::-webkit-scrollbar {
           width: 6px;
+          height: 6px;
         }
         
         .custom-scrollbar::-webkit-scrollbar-track {

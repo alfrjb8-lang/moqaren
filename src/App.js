@@ -6,7 +6,7 @@ import {
   Instagram, Twitter, Send, Settings, Eye, EyeOff, Save, ArrowLeft, Plus, Trash2, X,
   FileText, Activity, Globe, ChevronLeft, Coins, Database, Bell, MessageCircle, BarChart2, Flame, Languages, Link, Server,
   ChevronRight, Clock, XCircle, Share2, Calendar, TrendingUp, Filter, UserCheck, LogOut,
-  Brain, Hexagon, Menu, X as XIcon, Home, CreditCard, Store
+  Brain, Hexagon, Menu, X as XIcon, Home, CreditCard, Store, FileCheck, ArrowRight
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, onSnapshot, collection, increment, updateDoc, addDoc, deleteDoc, getDocs, arrayUnion } from 'firebase/firestore';
@@ -117,7 +117,9 @@ const translations = {
     inbox: 'الوارد',
     stores: 'المتاجر',
     offers: 'العروض',
-    configuration: 'الإعدادات'
+    configuration: 'الإعدادات',
+    pages: 'الصفحات',
+    swipeHint: 'اسحب للمقارنة'
   },
   en: {
     // SEO Data
@@ -217,7 +219,9 @@ const translations = {
     inbox: 'Inbox',
     stores: 'Stores',
     offers: 'Offers',
-    configuration: 'Configuration'
+    configuration: 'Configuration',
+    pages: 'Pages Content',
+    swipeHint: 'Swipe to compare'
   }
 };
 
@@ -369,6 +373,8 @@ const App = () => {
     whatsappNumber: "+966500000000",
     twitterLink: "https://twitter.com/moqaren",
     instagramLink: "https://instagram.com/moqaren",
+    privacyText: "نحن في مقارن نحترم خصوصيتك. يتم جمع البيانات لأغراض تحسين الخدمة فقط ولا يتم مشاركتها مع أطراف ثالثة دون موافقتك.",
+    termsText: "باستخدامك لموقع مقارن أنت توافق على الشروط والأحكام. نحن لسنا مسؤولين عن تغيير الأسعار في المتاجر الأصلية.",
     trendingKeywords: ['آيفون 15', 'سوني 5', 'ماك بوك', 'سماعات ابل'],
     customApis: [],
     affiliateLinks: [
@@ -723,14 +729,8 @@ const App = () => {
   // Admin CRUD Functions
   const handleAddStore = () => { if (newStoreName && newStoreLink) { setAdminConfig({ ...adminConfig, affiliateLinks: [...adminConfig.affiliateLinks, { name: newStoreName, link: newStoreLink }] }); setNewStoreName(''); setNewStoreLink(''); }};
   const handleDeleteStore = (i) => { const u = [...adminConfig.affiliateLinks]; u.splice(i, 1); setAdminConfig({ ...adminConfig, affiliateLinks: u }); };
-  const handleAddPartner = () => { if (newPartnerName) { setAdminConfig({ ...adminConfig, trustedPartners: [...adminConfig.trustedPartners, { name: newPartnerName }] }); setNewPartnerName(''); }};
-  const handleDeletePartner = (i) => { const u = [...adminConfig.trustedPartners]; u.splice(i, 1); setAdminConfig({ ...adminConfig, trustedPartners: u }); };
-  const handleAddOffer = () => { if (newOfferKeyword && newOfferMessage && newOfferLink) { setAdminConfig({ ...adminConfig, exclusiveOffers: [...adminConfig.exclusiveOffers, { keyword: newOfferKeyword, message: newOfferMessage, link: newOfferLink }] }); setNewOfferKeyword(''); setNewOfferMessage(''); setNewOfferLink(''); }};
   const handleDeleteOffer = (i) => { const u = [...adminConfig.exclusiveOffers]; u.splice(i, 1); setAdminConfig({ ...adminConfig, exclusiveOffers: u }); };
-  const handleAddTrendingKeyword = () => { if (newTrendingKeyword) { setAdminConfig({ ...adminConfig, trendingKeywords: [...(adminConfig.trendingKeywords || []), newTrendingKeyword] }); setNewTrendingKeyword(''); }};
-  const handleDeleteTrendingKeyword = (index) => { const updated = [...(adminConfig.trendingKeywords || [])]; updated.splice(index, 1); setAdminConfig({ ...adminConfig, trendingKeywords: updated }); };
-  const handleAddApi = () => { if (newApiName && newApiUrl) { setAdminConfig({ ...adminConfig, customApis: [...(adminConfig.customApis || []), { name: newApiName, url: newApiUrl }] }); setNewApiName(''); setNewApiUrl(''); }};
-  const handleDeleteApi = (index) => { const updated = [...(adminConfig.customApis || [])]; updated.splice(index, 1); setAdminConfig({ ...adminConfig, customApis: updated }); };
+  const handleAddOffer = () => { if (newOfferKeyword && newOfferMessage && newOfferLink) { setAdminConfig({ ...adminConfig, exclusiveOffers: [...adminConfig.exclusiveOffers, { keyword: newOfferKeyword, message: newOfferMessage, link: newOfferLink }] }); setNewOfferKeyword(''); setNewOfferMessage(''); setNewOfferLink(''); }};
 
   // --- AI ---
   const callGeminiAI = async (product, stores) => {
@@ -962,77 +962,79 @@ const App = () => {
         </div>
       )}
 
-      {/* Navigation - إصلاح كامل */}
-      <nav className="fixed top-0 left-0 right-0 z-50 px-4 pt-4">
-        <div className="bg-white/90 backdrop-blur-xl shadow-2xl shadow-blue-900/10 rounded-2xl flex items-center justify-between p-3 border border-white/50">
-          <div 
-            className="flex items-center gap-2 px-2 cursor-pointer group select-none" 
-            onClick={handleLogoClick}
-          >
-            <div className="bg-gradient-to-tr from-blue-600 to-indigo-600 p-1.5 rounded-full text-white shadow-lg group-hover:scale-110 transition-transform">
-                <Brain size={18} />
-            </div>
-            <span className="text-lg font-black text-slate-800 tracking-tighter">مقارن</span>
-          </div>
-          
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-1">
-            {navItems.map((item) => (
+      {/* Navigation - Fixed Centering Issue */}
+      <nav className="fixed top-0 left-0 right-0 z-50 px-4 pt-4 pointer-events-none">
+        <div className="max-w-7xl mx-auto pointer-events-auto">
+            <div className="bg-white/90 backdrop-blur-xl shadow-2xl shadow-blue-900/10 rounded-2xl flex items-center justify-between p-3 border border-white/50">
+              <div 
+                className="flex items-center gap-2 px-2 cursor-pointer group select-none" 
+                onClick={handleLogoClick}
+              >
+                <div className="bg-gradient-to-tr from-blue-600 to-indigo-600 p-1.5 rounded-full text-white shadow-lg group-hover:scale-110 transition-transform">
+                    <Brain size={18} />
+                </div>
+                <span className="text-lg font-black text-slate-800 tracking-tighter">مقارن</span>
+              </div>
+              
+              {/* Desktop Navigation */}
+              <div className="hidden md:flex items-center gap-1">
+                {navItems.map((item) => (
+                    <button 
+                      key={item.id} 
+                      onClick={() => {
+                        item.action();
+                        setIsMobileMenuOpen(false);
+                      }} 
+                      className={`px-3 py-2 rounded-full font-bold text-sm flex items-center gap-2 transition-all duration-300 ${
+                        view === 'home' ? 'hover:bg-blue-50 hover:text-blue-600 text-slate-600' : ''
+                      }`}
+                    >
+                        <item.icon size={14} className="opacity-70" />
+                        <span className="whitespace-nowrap">{item.label}</span>
+                    </button>
+                ))}
+                <div className="h-6 w-px bg-slate-200 mx-2"></div>
                 <button 
-                  key={item.id} 
                   onClick={() => {
-                    item.action();
+                    setView('merchant');
                     setIsMobileMenuOpen(false);
                   }} 
-                  className={`px-3 py-2 rounded-full font-bold text-sm flex items-center gap-2 transition-all duration-300 ${
-                    view === 'home' ? 'hover:bg-blue-50 hover:text-blue-600 text-slate-600' : ''
-                  }`}
+                  className="bg-slate-900 text-white px-5 py-2 rounded-full font-bold text-xs hover:bg-slate-800 shadow-lg flex items-center gap-2 active:scale-95 transition-all whitespace-nowrap"
                 >
-                    <item.icon size={14} className="opacity-70" />
-                    <span className="whitespace-nowrap">{item.label}</span>
+                  <Store size={14} /> {t.merchant}
                 </button>
-            ))}
-            <div className="h-6 w-px bg-slate-200 mx-2"></div>
-            <button 
-              onClick={() => {
-                setView('merchant');
-                setIsMobileMenuOpen(false);
-              }} 
-              className="bg-slate-900 text-white px-5 py-2 rounded-full font-bold text-xs hover:bg-slate-800 shadow-lg flex items-center gap-2 active:scale-95 transition-all whitespace-nowrap"
-            >
-              <Store size={14} /> {t.merchant}
-            </button>
-          </div>
+              </div>
 
-          {/* Mobile Menu Button */}
-          <button 
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
-            className="md:hidden bg-slate-100 p-2 rounded-lg text-slate-700 hover:bg-slate-200 transition-colors"
-          >
-            {isMobileMenuOpen ? <XIcon size={24} /> : <Menu size={24} />}
-          </button>
+              {/* Mobile Menu Button */}
+              <button 
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
+                className="md:hidden bg-slate-100 p-2 rounded-lg text-slate-700 hover:bg-slate-200 transition-colors"
+              >
+                {isMobileMenuOpen ? <XIcon size={24} /> : <Menu size={24} />}
+              </button>
+            </div>
+
+            {/* Mobile Menu Dropdown */}
+            {isMobileMenuOpen && (
+              <div className="mt-2 bg-white/90 backdrop-blur-xl shadow-2xl rounded-2xl border border-white/50 p-4 animate-in slide-in-from-top-4 pointer-events-auto">
+                <div className="space-y-2">
+                  {[...navItems, { id: 'merchant', label: t.merchant, icon: Store, action: () => setView('merchant') }].map((item) => (
+                    <button 
+                      key={item.id} 
+                      onClick={() => {
+                        item.action();
+                        setIsMobileMenuOpen(false);
+                      }} 
+                      className="w-full text-right flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition-colors"
+                    >
+                      <span className="font-bold text-slate-700">{item.label}</span>
+                      <item.icon size={18} className="text-slate-400" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
         </div>
-
-        {/* Mobile Menu Dropdown */}
-        {isMobileMenuOpen && (
-          <div className="mt-2 bg-white/90 backdrop-blur-xl shadow-2xl rounded-2xl border border-white/50 p-4 animate-in slide-in-from-top-4">
-            <div className="space-y-2">
-              {[...navItems, { id: 'merchant', label: t.merchant, icon: Store, action: () => setView('merchant') }].map((item) => (
-                <button 
-                  key={item.id} 
-                  onClick={() => {
-                    item.action();
-                    setIsMobileMenuOpen(false);
-                  }} 
-                  className="w-full text-right flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition-colors"
-                >
-                  <span className="font-bold text-slate-700">{item.label}</span>
-                  <item.icon size={18} className="text-slate-400" />
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
       </nav>
 
       {/* الصفحة الرئيسية */}
@@ -1125,7 +1127,7 @@ const App = () => {
               </div>
             )}
 
-            {/* --- تحسين تصميم البطاقات --- */}
+            {/* --- عرض النتائج (تم تعديل تصميم الجوال) --- */}
             {results && !isSearching && (
               <div className="space-y-8 md:space-y-12 animate-in fade-in slide-in-from-bottom-10 duration-700 mb-16 md:mb-32">
                 {aiSummary && (
@@ -1145,10 +1147,15 @@ const App = () => {
                     </div>
                 )}
                 
-                {/* تصميم جديد للبطاقات */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+                {/* تلميح السحب للجوال */}
+                <div className="md:hidden text-center animate-pulse flex items-center justify-center gap-2 text-slate-400 text-sm font-bold mb-2">
+                    <ArrowRight size={16} /> {t.swipeHint} <ArrowLeft size={16} />
+                </div>
+
+                {/* حاوية البطاقات: أفقية للجوال (Scroll)، شبكية للديسكتوب */}
+                <div className="flex overflow-x-auto md:grid md:grid-cols-3 gap-4 md:gap-8 pb-8 md:pb-0 snap-x snap-mandatory md:snap-none px-4 md:px-0 -mx-4 md:mx-0 custom-scrollbar md:overflow-visible">
                   {results.map((item) => (
-                    <div key={item.id} className="bg-white rounded-[2rem] md:rounded-[2.5rem] shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border border-slate-100 overflow-hidden flex flex-col group">
+                    <div key={item.id} className="min-w-[85vw] md:min-w-0 snap-center bg-white rounded-[2rem] md:rounded-[2.5rem] shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border border-slate-100 overflow-hidden flex flex-col group">
                       {/* Header */}
                       <div className={`${item.storeColor} py-6 md:py-8 px-6 md:px-8 text-white relative overflow-hidden`}>
                         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
@@ -1327,6 +1334,50 @@ const App = () => {
         </>
       )}
 
+      {/* صفحة الخصوصية */}
+      {view === 'privacy' && (
+        <div className="max-w-4xl mx-auto px-4 py-32 animate-in fade-in">
+           <div className="bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl p-6 md:p-12 border border-slate-100">
+             <div className="flex items-center gap-4 mb-8">
+               <div className="bg-blue-100 p-3 rounded-2xl text-blue-600"><Lock size={32} /></div>
+               <h1 className="text-2xl md:text-4xl font-black text-slate-900">{t.privacy}</h1>
+             </div>
+             <div className="prose prose-lg text-slate-600 font-medium">
+                <p className="whitespace-pre-line">{adminConfig.privacyText}</p>
+             </div>
+             <button onClick={resetToHome} className="mt-8 text-blue-600 font-black flex items-center gap-2 hover:underline"><ArrowRight size={16} /> {t.back}</button>
+           </div>
+        </div>
+      )}
+
+      {/* صفحة تواصل معنا */}
+      {view === 'contact' && (
+        <div className="max-w-4xl mx-auto px-4 py-32 animate-in fade-in">
+           <div className="bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl p-6 md:p-12 border border-slate-100">
+             <div className="flex items-center gap-4 mb-8">
+               <div className="bg-green-100 p-3 rounded-2xl text-green-600"><MessageSquare size={32} /></div>
+               <h1 className="text-2xl md:text-4xl font-black text-slate-900">{t.contactTitle}</h1>
+             </div>
+             <div className="grid md:grid-cols-2 gap-12">
+               <div>
+                  <p className="text-slate-500 font-bold mb-6">يسعدنا سماع صوتك! تواصل معنا عبر النموذج أو القنوات الرسمية.</p>
+                  <ul className="space-y-4 font-bold text-slate-700">
+                    <li className="flex items-center gap-3"><Mail className="text-blue-500" /> {adminConfig.supportEmail}</li>
+                    <li className="flex items-center gap-3"><Phone className="text-green-500" /> {adminConfig.whatsappNumber}</li>
+                  </ul>
+               </div>
+               <form onSubmit={handleContactSubmit} className="space-y-4">
+                  <input type="text" placeholder="الاسم" className="w-full p-4 rounded-xl bg-slate-50 border font-bold" value={contactForm.name} onChange={e => setContactForm({...contactForm, name: e.target.value})} required />
+                  <input type="email" placeholder="البريد الإلكتروني" className="w-full p-4 rounded-xl bg-slate-50 border font-bold" value={contactForm.email} onChange={e => setContactForm({...contactForm, email: e.target.value})} required />
+                  <textarea placeholder="رسالتك..." className="w-full p-4 rounded-xl bg-slate-50 border font-bold h-32" value={contactForm.message} onChange={e => setContactForm({...contactForm, message: e.target.value})} required></textarea>
+                  <button type="submit" className="w-full bg-slate-900 text-white py-4 rounded-xl font-black hover:bg-slate-800">إرسال</button>
+               </form>
+             </div>
+             <button onClick={resetToHome} className="mt-8 text-blue-600 font-black flex items-center gap-2 hover:underline"><ArrowRight size={16} /> {t.back}</button>
+           </div>
+        </div>
+      )}
+
       {/* صفحة لوحة التحكم الكاملة */}
       {view === 'admin' && (
         <div className="max-w-7xl mx-auto px-4 py-32 animate-in fade-in">
@@ -1405,6 +1456,32 @@ const App = () => {
                       <Store className="text-orange-500" size={24} />
                     </div>
                   </div>
+                </div>
+              </div>
+
+              {/* تحرير الصفحات (الخصوصية وغيرها) */}
+              <div className="bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl p-6 md:p-8 border border-slate-100">
+                <h3 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-2">
+                  <FileText className="text-slate-600" />
+                  {t.pages}
+                </h3>
+                <div className="space-y-6">
+                    <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2">نص سياسة الخصوصية</label>
+                        <textarea 
+                            className="w-full p-4 rounded-xl bg-slate-50 border font-bold h-32"
+                            value={adminConfig.privacyText || ''}
+                            onChange={(e) => setAdminConfig({...adminConfig, privacyText: e.target.value})}
+                        ></textarea>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2">نص الشروط والأحكام</label>
+                        <textarea 
+                            className="w-full p-4 rounded-xl bg-slate-50 border font-bold h-32"
+                            value={adminConfig.termsText || ''}
+                            onChange={(e) => setAdminConfig({...adminConfig, termsText: e.target.value})}
+                        ></textarea>
+                    </div>
                 </div>
               </div>
 
@@ -1851,6 +1928,7 @@ const App = () => {
         
         .custom-scrollbar::-webkit-scrollbar {
           width: 6px;
+          height: 6px;
         }
         
         .custom-scrollbar::-webkit-scrollbar-track {

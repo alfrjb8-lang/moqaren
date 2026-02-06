@@ -6,7 +6,7 @@ import {
   Instagram, Twitter, Send, Settings, Eye, EyeOff, Save, ArrowLeft, Plus, Trash2, X,
   FileText, Activity, Globe, ChevronLeft, Coins, Database, Bell, MessageCircle, BarChart2, Flame, Languages, Link, Server,
   ChevronRight, Clock, XCircle, Share2, Calendar, TrendingUp, Filter, UserCheck, LogOut,
-  Brain, Hexagon, Menu, X as XIcon // تم إضافة أيقونة القائمة للجوال
+  Brain, Hexagon, Menu, X as XIcon, Home, CreditCard, Store
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, onSnapshot, collection, increment, updateDoc, addDoc, deleteDoc, getDocs, arrayUnion } from 'firebase/firestore';
@@ -108,7 +108,16 @@ const translations = {
     subscribe: 'اشتراك',
     thanksSubscribe: 'شكراً لاشتراكك! بنرسل لك الزين.',
     emailPlaceholder: 'اكتب إيميلك هنا',
-    menu: 'القائمة'
+    menu: 'القائمة',
+    contact: 'تواصل',
+    dashboard: 'لوحة التحكم',
+    analytics: 'الإحصائيات',
+    marketing: 'التسويق',
+    subscribers: 'المشتركين',
+    inbox: 'الوارد',
+    stores: 'المتاجر',
+    offers: 'العروض',
+    configuration: 'الإعدادات'
   },
   en: {
     // SEO Data
@@ -199,11 +208,20 @@ const translations = {
     subscribe: 'Subscribe',
     thanksSubscribe: 'Thanks! We\'ll keep you posted.',
     emailPlaceholder: 'Enter your email',
-    menu: 'Menu'
+    menu: 'Menu',
+    contact: 'Contact',
+    dashboard: 'Dashboard',
+    analytics: 'Analytics',
+    marketing: 'Marketing',
+    subscribers: 'Subscribers',
+    inbox: 'Inbox',
+    stores: 'Stores',
+    offers: 'Offers',
+    configuration: 'Configuration'
   }
 };
 
-// --- استدعاء المفاتيح السرية من البيئة (Direct process.env access) ---
+// --- استدعاء المفاتيح السرية من البيئة ---
 const ADMIN_UID = process.env.REACT_APP_ADMIN_ID; 
 const GEMINI_API_KEY = process.env.REACT_APP_GEMINI_KEY; 
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
@@ -323,6 +341,7 @@ const App = () => {
   const [realSearchCount, setRealSearchCount] = useState(0);
   const [adminClickCount, setAdminClickCount] = useState(0);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   
   const clickTimeoutRef = useRef(null); 
   const t = translations[lang];
@@ -371,6 +390,18 @@ const App = () => {
   };
 
   const [adminConfig, setAdminConfig] = useState(defaultAdminConfig);
+
+  // --- كشف حجم الشاشة ---
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type });
@@ -755,8 +786,13 @@ const App = () => {
       );
   });
 
-  // استعلام للكشف عن الجوال
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const navItems = [
+    { id: 'home', label: t.home, icon: Home, action: resetToHome },
+    { id: 'about', label: t.about, icon: Info, action: () => scrollToSection('about') },
+    { id: 'features', label: t.features, icon: Star, action: () => scrollToSection('why-trust') },
+    { id: 'earn', label: t.earn, icon: CreditCard, action: () => scrollToSection('how-we-earn') },
+    { id: 'partners', label: t.partners, icon: Users, action: () => scrollToSection('partners') }
+  ];
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-blue-200 selection:text-blue-900" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
@@ -772,7 +808,7 @@ const App = () => {
 
       {/* إشعار النظام الموحد */}
       {notification && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-top-4 duration-300">
+        <div className={`fixed ${isMobile ? 'top-20' : 'top-6'} left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-top-4 duration-300`}>
           <div className={`px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 border-2 ${notification.type === 'error' ? 'bg-red-50 border-red-100 text-red-600' : 'bg-white border-green-100 text-green-700'}`}>
             {notification.type === 'error' ? <AlertCircle size={24} /> : <CheckCircle size={24} className="text-green-500" />}
             <span className="font-black text-sm">{notification.message}</span>
@@ -902,7 +938,7 @@ const App = () => {
       {/* زر اللغة العائم */}
       <button 
         onClick={toggleLanguage} 
-        className={`fixed top-6 ${lang === 'ar' ? 'left-6' : 'right-6'} z-[100] bg-white/90 backdrop-blur-xl shadow-xl border border-white/50 p-3 rounded-full hover:scale-110 transition-all active:scale-95 group`}
+        className={`fixed ${isMobile ? 'top-20' : 'top-6'} ${lang === 'ar' ? 'left-4' : 'right-4'} z-[100] bg-white/90 backdrop-blur-xl shadow-xl border border-white/50 p-3 rounded-full hover:scale-110 transition-all active:scale-95 group`}
         title="Switch Language"
       >
         <Languages size={20} className="text-slate-600 group-hover:text-blue-600 transition-colors" />
@@ -926,10 +962,13 @@ const App = () => {
         </div>
       )}
 
-      {/* Navigation Mobile-Friendly */}
-      <nav className="fixed top-0 left-0 right-0 z-50 px-4 pt-4 pointer-events-none">
-        <div className="bg-white/90 backdrop-blur-xl shadow-2xl shadow-blue-900/10 rounded-2xl flex items-center justify-between p-3 pointer-events-auto border border-white/50">
-          <div className="flex items-center gap-2 px-2 cursor-pointer group select-none" onClick={handleLogoClick}>
+      {/* Navigation - إصلاح كامل */}
+      <nav className="fixed top-0 left-0 right-0 z-50 px-4 pt-4">
+        <div className="bg-white/90 backdrop-blur-xl shadow-2xl shadow-blue-900/10 rounded-2xl flex items-center justify-between p-3 border border-white/50">
+          <div 
+            className="flex items-center gap-2 px-2 cursor-pointer group select-none" 
+            onClick={handleLogoClick}
+          >
             <div className="bg-gradient-to-tr from-blue-600 to-indigo-600 p-1.5 rounded-full text-white shadow-lg group-hover:scale-110 transition-transform">
                 <Brain size={18} />
             </div>
@@ -938,14 +977,31 @@ const App = () => {
           
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-1">
-            {[{ id: 'home', label: t.home, icon: Globe, action: resetToHome }, { id: 'about', label: t.about, icon: Info, action: () => scrollToSection('about') }, { id: 'features', label: t.features, icon: Star, action: () => scrollToSection('why-trust') }, { id: 'earn', label: t.earn, icon: Coins, action: () => scrollToSection('how-we-earn') }, { id: 'partners', label: t.partners, icon: Users, action: () => scrollToSection('partners') }].map((item) => (
-                <button key={item.id} onClick={item.action} className={`px-3 py-2 rounded-full font-bold text-sm flex items-center gap-2 transition-all duration-300 ${view === 'home' ? 'hover:bg-blue-50 hover:text-blue-600 text-slate-600' : ''}`}>
+            {navItems.map((item) => (
+                <button 
+                  key={item.id} 
+                  onClick={() => {
+                    item.action();
+                    setIsMobileMenuOpen(false);
+                  }} 
+                  className={`px-3 py-2 rounded-full font-bold text-sm flex items-center gap-2 transition-all duration-300 ${
+                    view === 'home' ? 'hover:bg-blue-50 hover:text-blue-600 text-slate-600' : ''
+                  }`}
+                >
                     <item.icon size={14} className="opacity-70" />
                     <span className="whitespace-nowrap">{item.label}</span>
                 </button>
             ))}
             <div className="h-6 w-px bg-slate-200 mx-2"></div>
-            <button onClick={() => setView('merchant')} className="bg-slate-900 text-white px-5 py-2 rounded-full font-bold text-xs hover:bg-slate-800 shadow-lg items-center gap-2 active:scale-95 transition-all whitespace-nowrap"><Award size={14} /> {t.merchant}</button>
+            <button 
+              onClick={() => {
+                setView('merchant');
+                setIsMobileMenuOpen(false);
+              }} 
+              className="bg-slate-900 text-white px-5 py-2 rounded-full font-bold text-xs hover:bg-slate-800 shadow-lg flex items-center gap-2 active:scale-95 transition-all whitespace-nowrap"
+            >
+              <Store size={14} /> {t.merchant}
+            </button>
           </div>
 
           {/* Mobile Menu Button */}
@@ -959,10 +1015,17 @@ const App = () => {
 
         {/* Mobile Menu Dropdown */}
         {isMobileMenuOpen && (
-          <div className="mt-2 bg-white/90 backdrop-blur-xl shadow-2xl rounded-2xl border border-white/50 p-4 pointer-events-auto animate-in slide-in-from-top-4">
+          <div className="mt-2 bg-white/90 backdrop-blur-xl shadow-2xl rounded-2xl border border-white/50 p-4 animate-in slide-in-from-top-4">
             <div className="space-y-2">
-              {[{ id: 'home', label: t.home, icon: Globe, action: resetToHome }, { id: 'about', label: t.about, icon: Info, action: () => scrollToSection('about') }, { id: 'features', label: t.features, icon: Star, action: () => scrollToSection('why-trust') }, { id: 'earn', label: t.earn, icon: Coins, action: () => scrollToSection('how-we-earn') }, { id: 'partners', label: t.partners, icon: Users, action: () => scrollToSection('partners') }, { id: 'merchant', label: t.merchant, icon: Award, action: () => setView('merchant') }].map((item) => (
-                <button key={item.id} onClick={item.action} className="w-full text-right flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition-colors">
+              {[...navItems, { id: 'merchant', label: t.merchant, icon: Store, action: () => setView('merchant') }].map((item) => (
+                <button 
+                  key={item.id} 
+                  onClick={() => {
+                    item.action();
+                    setIsMobileMenuOpen(false);
+                  }} 
+                  className="w-full text-right flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition-colors"
+                >
                   <span className="font-bold text-slate-700">{item.label}</span>
                   <item.icon size={18} className="text-slate-400" />
                 </button>
@@ -975,7 +1038,7 @@ const App = () => {
       {/* الصفحة الرئيسية */}
       {view === 'home' && (
         <>
-          {/* --- قسم الـ Hero Section المحدث للجوال --- */}
+          {/* --- قسم الـ Hero Section المحدث --- */}
           <div className="bg-gradient-to-b from-slate-950 via-blue-950 to-indigo-900 text-white pt-28 pb-20 px-4 relative overflow-hidden rounded-b-[2rem] md:rounded-b-[5rem] shadow-2xl">
             
             {/* طبقات الخلفية */}
@@ -991,26 +1054,12 @@ const App = () => {
               <rect width="100%" height="100%" fill="url(#data-grid)" />
             </svg>
 
-            <svg className="absolute inset-0 w-full h-full text-indigo-300/10 mix-blend-overlay pointer-events-none animate-pulse" style={{animationDuration: '8s'}} xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                    <pattern id="circuit-pattern" x="0" y="0" width="200" height="200" patternUnits="userSpaceOnUse">
-                        <path d="M0 20 L20 20 L20 0 M20 20 L40 40 M40 40 L60 40 M60 40 L60 60 M100 100 L120 100 L120 80 M150 150 L180 150 L180 180" stroke="currentColor" strokeWidth="0.5" fill="none"/>
-                        <circle cx="20" cy="20" r="2" fill="currentColor"/>
-                        <circle cx="60" cy="40" r="2" fill="currentColor"/>
-                        <circle cx="120" cy="100" r="2" fill="currentColor"/>
-                    </pattern>
-                </defs>
-                <rect width="100%" height="100%" fill="url(#circuit-pattern)" />
-            </svg>
-
             <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
                 <Hexagon size={64} className="text-blue-300/10 absolute top-[10%] left-[5%] animate-spin-slow blur-sm" />
-                <Cpu size={48} className="text-indigo-300/10 absolute bottom-[20%] right-[10%] animate-bounce-slow blur-sm" />
-                <Database size={32} className="text-blue-400/10 absolute top-[30%] right-[25%] animate-pulse blur-sm" />
                 <Brain size={80} className="text-indigo-500/5 absolute bottom-[10%] left-[20%] animate-pulse blur-xl rotate-12" />
             </div>
 
-            {/* المحتوى الرئيسي للنص والبحث */}
+            {/* المحتوى الرئيسي */}
             <div className="max-w-4xl mx-auto text-center relative z-10">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/10 text-blue-200 text-xs font-black mb-6 backdrop-blur-md shadow-lg animate-in fade-in slide-in-from-top-4 duration-700">
                 <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span></span>
@@ -1076,6 +1125,7 @@ const App = () => {
               </div>
             )}
 
+            {/* --- تحسين تصميم البطاقات --- */}
             {results && !isSearching && (
               <div className="space-y-8 md:space-y-12 animate-in fade-in slide-in-from-bottom-10 duration-700 mb-16 md:mb-32">
                 {aiSummary && (
@@ -1094,63 +1144,108 @@ const App = () => {
                         </div>
                     </div>
                 )}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                
+                {/* تصميم جديد للبطاقات */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
                   {results.map((item) => (
-                    <div key={item.id} className="bg-white rounded-[2rem] md:rounded-[2.5rem] shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border border-slate-100 overflow-hidden flex flex-col group relative">
-                      {item.store.includes('شريك') && (<div className="absolute top-4 md:top-6 right-4 md:right-6 bg-red-500 text-white px-3 md:px-4 py-1 rounded-full text-[10px] font-black z-20 animate-pulse shadow-lg ring-2 md:ring-4 ring-red-100">{t.specialOffer}</div>)}
-                      <div className={`${item.storeColor} py-6 md:py-8 px-6 md:px-8 text-white flex justify-between items-start relative overflow-hidden`}>
-                        <div className="absolute top-0 right-0 w-24 md:w-32 h-24 md:h-32 bg-white/10 rounded-full blur-2xl -mr-6 md:-mr-10 -mt-6 md:-mt-10"></div>
-                        <div>
-                          <span className="font-black text-xl md:text-2xl tracking-tighter block mb-1">{item.store}</span>
-                          <div className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase backdrop-blur-md inline-flex items-center gap-1"><Shield size={10} /> {t.trusted}</div>
-                        </div>
-                        <div className="relative z-10 flex gap-2">
-                            <button onClick={() => handleShare(item)} className="bg-white/20 hover:bg-white hover:text-blue-600 p-2 rounded-full transition-all text-white backdrop-blur-md" title="مشاركة">
-                                <Share2 size={18} />
+                    <div key={item.id} className="bg-white rounded-[2rem] md:rounded-[2.5rem] shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border border-slate-100 overflow-hidden flex flex-col group">
+                      {/* Header */}
+                      <div className={`${item.storeColor} py-6 md:py-8 px-6 md:px-8 text-white relative overflow-hidden`}>
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="font-black text-xl md:text-2xl tracking-tighter mb-2">{item.store}</h3>
+                            <div className="flex items-center gap-2">
+                              <div className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase backdrop-blur-md inline-flex items-center gap-1">
+                                <Shield size={10} /> {t.trusted}
+                              </div>
+                              {item.store.includes('شريك') && (
+                                <div className="bg-red-500 text-white px-2 py-1 rounded-full text-[10px] font-black animate-pulse">
+                                  {t.specialOffer}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <button onClick={() => handleShare(item)} className="bg-white/20 hover:bg-white hover:text-blue-600 p-2 rounded-full transition-all text-white backdrop-blur-md">
+                              <Share2 size={18} />
                             </button>
-                            <button onClick={() => toggleFavorite(item)} className="bg-white/20 hover:bg-white hover:text-red-500 p-2 rounded-full transition-all text-white backdrop-blur-md" title="مفضلتي">
-                                <Heart size={18} className={isFavorite(item) ? 'fill-red-500 text-red-500' : ''} />
+                            <button onClick={() => toggleFavorite(item)} className="bg-white/20 hover:bg-white hover:text-red-500 p-2 rounded-full transition-all text-white backdrop-blur-md">
+                              <Heart size={18} className={isFavorite(item) ? 'fill-red-500 text-red-500' : ''} />
                             </button>
+                          </div>
                         </div>
                       </div>
-                      <div className="p-6 md:p-8 flex-grow flex flex-col">
-                        <div className="flex justify-between items-end mb-6 md:mb-8 border-b border-dashed border-slate-200 pb-4 md:pb-6">
+
+                      {/* Price Section */}
+                      <div className="p-6 md:p-8 border-b border-dashed border-slate-200">
+                        <div className="flex justify-between items-end">
                           <div>
-                            <span className="text-4xl md:text-5xl font-black text-slate-900 leading-none tracking-tighter">{item.price}</span>
-                            <span className="text-lg text-slate-400 font-bold mx-2 uppercase">{item.currency}</span>
+                            <span className="text-4xl md:text-5xl font-black text-slate-900 leading-none">{item.price}</span>
+                            <span className="text-lg text-slate-400 font-bold mx-2">{item.currency}</span>
                           </div>
-                          <div className="text-xs text-red-400 line-through font-black opacity-50 mb-2">{item.originalPrice}</div>
-                        </div>
-                        <div className="space-y-4 md:space-y-5 mb-6 md:mb-8 flex-grow">
-                          <div className="flex items-center gap-3 md:gap-4 text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-2xl">
-                            <Star size={18} className="text-yellow-400 fill-yellow-400 shrink-0" />
-                            <div>
-                              <span className="block text-slate-900">{item.rating} {t.rating}</span>
-                              <span className="text-slate-400 font-medium text-xs">{t.from} {item.reviewsCount.toLocaleString()} {t.client}</span>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3 md:gap-4 text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-2xl">
-                            <Shield size={18} className="text-blue-500 shrink-0" />
-                            <div>
-                              <span className="block text-slate-900">{t.warrantyTitle}</span>
-                              <span className="text-slate-400 font-medium text-xs">{item.warranty}</span>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3 md:gap-4 text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-2xl">
-                            <ShoppingCart size={18} className="text-indigo-500 shrink-0" />
-                            <div>
-                              <span className="block text-slate-900">{t.deliveryTitle}</span>
-                              <span className="text-slate-400 font-medium text-xs">{item.delivery}</span>
-                            </div>
+                          <div className="text-sm text-red-400 line-through font-black opacity-50">
+                            {item.originalPrice} {item.currency}
                           </div>
                         </div>
-                        <div className="bg-blue-50 p-4 md:p-5 rounded-2xl text-xs text-blue-800 mb-6 md:mb-8 font-bold leading-relaxed flex gap-3 items-start">
-                          <Info size={16} className="shrink-0 mt-0.5" />
-                          "{item.aiAnalysis}"
+                      </div>
+
+                      {/* Details */}
+                      <div className="p-6 md:p-8 flex-grow">
+                        <div className="space-y-4 mb-6">
+                          {/* Rating */}
+                          <div className="flex items-center gap-3">
+                            <div className="bg-yellow-100 p-2 rounded-xl">
+                              <Star size={20} className="text-yellow-500 fill-yellow-500" />
+                            </div>
+                            <div>
+                              <div className="font-black text-slate-900">{item.rating} {t.rating}</div>
+                              <div className="text-xs text-slate-500">{item.reviewsCount.toLocaleString()} {t.client}</div>
+                            </div>
+                          </div>
+
+                          {/* Warranty */}
+                          <div className="flex items-center gap-3">
+                            <div className="bg-blue-100 p-2 rounded-xl">
+                              <Shield size={20} className="text-blue-500" />
+                            </div>
+                            <div>
+                              <div className="font-black text-slate-900">{t.warrantyTitle}</div>
+                              <div className="text-xs text-slate-500">{item.warranty}</div>
+                            </div>
+                          </div>
+
+                          {/* Delivery */}
+                          <div className="flex items-center gap-3">
+                            <div className="bg-green-100 p-2 rounded-xl">
+                              <ShoppingCart size={20} className="text-green-500" />
+                            </div>
+                            <div>
+                              <div className="font-black text-slate-900">{t.deliveryTitle}</div>
+                              <div className="text-xs text-slate-500">{item.delivery}</div>
+                            </div>
+                          </div>
                         </div>
-                        <a href={getStoreLink(item.storeKey)} target="_blank" rel="noopener noreferrer" className="w-full bg-slate-900 text-white py-4 md:py-5 rounded-[1.5rem] font-black text-base md:text-lg hover:bg-blue-600 transition-all flex justify-center items-center gap-2 shadow-xl hover:shadow-blue-200 active:scale-95 text-center group/btn">
-                          {t.visitStore}
-                          <ExternalLink size={18} className="group-hover/btn:translate-x-1 transition-transform rtl:group-hover/btn:-translate-x-1" />
+
+                        {/* AI Analysis */}
+                        <div className="bg-blue-50 p-4 rounded-2xl mb-6">
+                          <div className="flex items-start gap-2">
+                            <Brain size={16} className="text-blue-600 mt-0.5" />
+                            <p className="text-sm text-blue-800 font-bold leading-relaxed">"{item.aiAnalysis}"</p>
+                          </div>
+                        </div>
+
+                        {/* CTA Button */}
+                        <a 
+                          href={getStoreLink(item.storeKey)} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="block w-full bg-slate-900 hover:bg-blue-600 text-white py-4 rounded-[1.5rem] font-black text-center transition-all shadow-lg hover:shadow-xl active:scale-95 group/btn"
+                        >
+                          <div className="flex items-center justify-center gap-2">
+                            {t.visitStore}
+                            <ExternalLink size={18} className="group-hover/btn:translate-x-1 transition-transform" />
+                          </div>
                         </a>
                       </div>
                     </div>
@@ -1232,9 +1327,9 @@ const App = () => {
         </>
       )}
 
-      {/* Admin View */}
+      {/* صفحة لوحة التحكم الكاملة */}
       {view === 'admin' && (
-        <div className="max-w-5xl mx-auto px-4 py-32 animate-in fade-in">
+        <div className="max-w-7xl mx-auto px-4 py-32 animate-in fade-in">
           {!isAdminAuthenticated ? (
             <div className="bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl p-6 md:p-12 max-w-sm mx-auto text-center border border-slate-100">
                <Lock size={40} className="mx-auto mb-6 text-slate-900" />
@@ -1249,34 +1344,411 @@ const App = () => {
                <button onClick={resetToHome} className="mt-6 text-slate-400 font-bold text-sm">{t.back}</button>
             </div>
           ) : (
-            <div className="bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl p-6 md:p-16 border border-slate-100">
-              <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8 md:mb-10 border-b pb-6">
-                <div className="flex items-center gap-4">
-                    <h1 className="text-xl md:text-2xl font-black">الإعدادات ⚙️</h1>
-                    <div className="relative bg-slate-100 p-2 rounded-xl">
-                      <Bell className={`w-6 h-6 ${inboxMessages.length > 0 ? 'text-red-500 animate-pulse' : 'text-slate-400'}`} />
-                      {inboxMessages.length > 0 && <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-black">{inboxMessages.length}</span>}
+            <div className="space-y-8">
+              {/* Header */}
+              <div className="bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl p-6 md:p-8 border border-slate-100">
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+                  <div className="flex items-center gap-4">
+                    <div className="bg-blue-100 p-3 rounded-2xl">
+                      <Settings className="text-blue-600" size={28} />
                     </div>
+                    <div>
+                      <h1 className="text-2xl md:text-3xl font-black text-slate-900">{t.dashboard}</h1>
+                      <p className="text-slate-500 font-bold">لوحة تحكم إدارة الموقع</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <button onClick={handleSaveAllChanges} className="px-6 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 shadow-lg flex items-center gap-2">
+                      <Save size={18} /> {t.save || "حفظ التغييرات"}
+                    </button>
+                    <button onClick={handleLogout} className="px-6 py-3 bg-red-100 text-red-600 rounded-xl font-bold hover:bg-red-200 flex items-center gap-2">
+                      <LogOut size={18} /> {t.logout || "خروج"}
+                    </button>
+                  </div>
                 </div>
-                <div className="flex gap-3">
-                    <button onClick={handleSaveAllChanges} className="px-4 md:px-6 py-2 bg-green-600 text-white rounded-xl font-black text-xs hover:bg-green-700 shadow-lg flex items-center gap-2">
-                      <Save size={14} /> حفظ التغييرات
-                    </button>
-                    <button onClick={handleLogout} className="text-red-500 font-bold text-sm flex items-center gap-1">
-                      <LogOut size={14} /> خروج
-                    </button>
+                
+                {/* Stats Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="bg-blue-50 p-6 rounded-2xl">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-blue-600 font-bold">عمليات البحث</p>
+                        <h3 className="text-2xl font-black text-slate-900">{realSearchCount.toLocaleString()}</h3>
+                      </div>
+                      <Activity className="text-blue-500" size={24} />
+                    </div>
+                  </div>
+                  <div className="bg-green-50 p-6 rounded-2xl">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-green-600 font-bold">المشتركين</p>
+                        <h3 className="text-2xl font-black text-slate-900">{subscribersList.length}</h3>
+                      </div>
+                      <Users className="text-green-500" size={24} />
+                    </div>
+                  </div>
+                  <div className="bg-purple-50 p-6 rounded-2xl">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-purple-600 font-bold">الرسائل</p>
+                        <h3 className="text-2xl font-black text-slate-900">{inboxMessages.length}</h3>
+                      </div>
+                      <MessageCircle className="text-purple-500" size={24} />
+                    </div>
+                  </div>
+                  <div className="bg-orange-50 p-6 rounded-2xl">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-orange-600 font-bold">المتاجر</p>
+                        <h3 className="text-2xl font-black text-slate-900">{adminConfig.affiliateLinks?.length || 0}</h3>
+                      </div>
+                      <Store className="text-orange-500" size={24} />
+                    </div>
+                  </div>
                 </div>
               </div>
-              
-              {/* ... باقي محتوى لوحة التحكم ... */}
-              {/* تم الحفاظ على نفس محتوى لوحة التحكم مع تعديلات للجوال */}
-              
+
+              {/* التسويق والترويج */}
+              <div className="bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl p-6 md:p-8 border border-slate-100">
+                <h3 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-2">
+                  <Mail className="text-purple-600" />
+                  {t.marketing}
+                </h3>
+                
+                <div className="grid md:grid-cols-2 gap-8">
+                  <div>
+                    <div className="mb-6">
+                      <label className="block text-sm font-bold text-slate-700 mb-2">فرز المشتركين حسب الاهتمام</label>
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <input 
+                            type="text" 
+                            placeholder="اكتب كلمة للفلترة (مثل: آيفون، سوني)" 
+                            className="w-full p-3 pl-10 rounded-xl border border-slate-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 font-bold"
+                            value={marketingFilter}
+                            onChange={(e) => setMarketingFilter(e.target.value)}
+                          />
+                          <Filter size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-slate-50 rounded-2xl border border-slate-200 h-64 overflow-y-auto p-4">
+                      <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-200">
+                        <span className="text-sm font-bold text-slate-600">{t.subscribers}</span>
+                        <span className="text-xs font-black bg-purple-100 text-purple-600 px-2 py-1 rounded-full">
+                          {filteredSubscribers.length} مشترك
+                        </span>
+                      </div>
+                      {filteredSubscribers.length > 0 ? (
+                        filteredSubscribers.map((sub, idx) => (
+                          <div key={idx} className="flex items-center justify-between p-3 hover:bg-white rounded-lg transition-colors">
+                            <div className="flex items-center gap-3">
+                              <div className="bg-white p-2 rounded-full">
+                                <UserCheck size={14} className="text-slate-400" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-bold text-slate-700" dir="ltr">{sub.email}</p>
+                                {sub.interests && sub.interests.length > 0 && (
+                                  <p className="text-xs text-slate-500">مهتم بـ: {sub.interests.slice(-2).join(', ')}</p>
+                                )}
+                              </div>
+                            </div>
+                            <span className="text-xs text-slate-400">
+                              {new Date(sub.joined_at).toLocaleDateString('ar-SA')}
+                            </span>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="h-full flex flex-col items-center justify-center text-slate-400">
+                          <Filter size={32} className="mb-2 opacity-50" />
+                          <p className="text-sm font-bold">لا يوجد مشتركين مطابقين</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="mb-6">
+                      <label className="block text-sm font-bold text-slate-700 mb-2">إنشاء حملة ترويجية</label>
+                      <input 
+                        type="text" 
+                        placeholder="عنوان الرسالة" 
+                        className="w-full p-3 rounded-xl bg-slate-50 border-none font-bold text-sm mb-4 focus:ring-2 focus:ring-purple-200"
+                        value={marketingSubject}
+                        onChange={(e) => setMarketingSubject(e.target.value)}
+                      />
+                      <textarea 
+                        placeholder="نص الرسالة..." 
+                        className="w-full p-3 rounded-xl bg-slate-50 border-none font-bold text-sm h-40 focus:ring-2 focus:ring-purple-200 resize-none"
+                        value={marketingBody}
+                        onChange={(e) => setMarketingBody(e.target.value)}
+                      ></textarea>
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
+                      <div className="text-sm text-slate-500">
+                        سيتم الإرسال لـ <span className="font-black text-purple-600">{filteredSubscribers.length}</span> مشترك
+                      </div>
+                      <button 
+                        onClick={handleSendCampaign}
+                        className="bg-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-purple-700 flex items-center gap-2 shadow-lg shadow-purple-200 disabled:opacity-50"
+                        disabled={filteredSubscribers.length === 0}
+                      >
+                        <Send size={18} /> إرسال الحملة
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* الرسائل الواردة */}
+              <div className="bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl p-6 md:p-8 border border-slate-100">
+                <h3 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-2">
+                  <MessageCircle className="text-blue-600" />
+                  {t.inbox}
+                  {inboxMessages.length > 0 && (
+                    <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                      {inboxMessages.length}
+                    </span>
+                  )}
+                </h3>
+                
+                <div className="space-y-4 max-h-96 overflow-y-auto">
+                  {inboxMessages.length > 0 ? (
+                    inboxMessages.map((msg) => (
+                      <div key={msg.id} className="bg-slate-50 p-6 rounded-2xl border border-slate-200 relative group">
+                        <button 
+                          onClick={() => handleDeleteMessage(msg.id)}
+                          className="absolute top-4 left-4 text-slate-300 hover:text-red-500 transition-colors"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                        <div className="flex items-center gap-3 mb-3">
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                            msg.type === 'partner_request' 
+                              ? 'bg-purple-100 text-purple-600' 
+                              : 'bg-blue-100 text-blue-600'
+                          }`}>
+                            {msg.type === 'partner_request' ? 'طلب شراكة' : 'رسالة تواصل'}
+                          </span>
+                          <span className="text-sm text-slate-500">
+                            {new Date(msg.timestamp).toLocaleDateString('ar-SA')}
+                          </span>
+                        </div>
+                        <h4 className="font-black text-lg text-slate-900 mb-2">
+                          {msg.type === 'partner_request' ? msg.store : msg.name}
+                        </h4>
+                        <p className="text-blue-600 font-bold mb-2" dir="ltr">{msg.email}</p>
+                        {msg.message && (
+                          <p className="text-slate-600 text-sm bg-white p-4 rounded-xl border border-slate-100">
+                            "{msg.message}"
+                          </p>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-12 text-slate-400">
+                      <MessageCircle size={48} className="mx-auto mb-4 opacity-30" />
+                      <p className="font-bold">لا توجد رسائل جديدة</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* إدارة المتاجر */}
+              <div className="bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl p-6 md:p-8 border border-slate-100">
+                <h3 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-2">
+                  <Store className="text-green-600" />
+                  {t.stores}
+                </h3>
+                
+                <div className="mb-8">
+                  <h4 className="font-bold text-slate-700 mb-4">روابط المتاجر الحالية</h4>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {adminConfig.affiliateLinks?.map((store, index) => (
+                      <div key={index} className="bg-slate-50 p-4 rounded-2xl flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="bg-white p-2 rounded-xl">
+                            <Store size={18} className="text-slate-600" />
+                          </div>
+                          <div>
+                            <p className="font-bold text-slate-900">{store.name.toUpperCase()}</p>
+                            <p className="text-xs text-slate-500 truncate max-w-[200px]" dir="ltr">
+                              {store.link}
+                            </p>
+                          </div>
+                        </div>
+                        <button 
+                          onClick={() => handleDeleteStore(index)}
+                          className="text-red-400 hover:text-red-600 p-2"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="bg-green-50 p-6 rounded-2xl border border-green-100">
+                  <h4 className="font-bold text-green-700 mb-4">إضافة متجر جديد</h4>
+                  <div className="grid md:grid-cols-2 gap-4 mb-4">
+                    <input 
+                      type="text" 
+                      placeholder="اسم المتجر" 
+                      className="p-3 rounded-xl border border-green-200"
+                      value={newStoreName}
+                      onChange={(e) => setNewStoreName(e.target.value)}
+                    />
+                    <input 
+                      type="text" 
+                      placeholder="رابط الشركة" 
+                      className="p-3 rounded-xl border border-green-200 text-left"
+                      dir="ltr"
+                      value={newStoreLink}
+                      onChange={(e) => setNewStoreLink(e.target.value)}
+                    />
+                  </div>
+                  <button 
+                    onClick={handleAddStore}
+                    className="w-full bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 flex items-center justify-center gap-2"
+                  >
+                    <Plus size={20} /> إضافة متجر
+                  </button>
+                </div>
+              </div>
+
+              {/* إدارة العروض */}
+              <div className="bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl p-6 md:p-8 border border-slate-100">
+                <h3 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-2">
+                  <Tag className="text-orange-600" />
+                  {t.offers}
+                </h3>
+                
+                <div className="mb-8">
+                  <h4 className="font-bold text-slate-700 mb-4">العروض الحالية</h4>
+                  <div className="space-y-4">
+                    {adminConfig.exclusiveOffers?.map((offer, index) => (
+                      <div key={index} className="bg-orange-50 p-4 rounded-2xl relative">
+                        <button 
+                          onClick={() => handleDeleteOffer(index)}
+                          className="absolute top-4 left-4 text-orange-300 hover:text-red-500"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                        <div className="ml-8">
+                          <p className="font-black text-orange-900">كلمة البحث: {offer.keyword}</p>
+                          <p className="text-sm text-slate-600 mt-2">{offer.message}</p>
+                          <p className="text-xs text-slate-500 mt-1" dir="ltr">{offer.link}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="bg-orange-50 p-6 rounded-2xl border border-orange-100">
+                  <h4 className="font-bold text-orange-700 mb-4">إضافة عرض جديد</h4>
+                  <div className="space-y-4 mb-4">
+                    <input 
+                      type="text" 
+                      placeholder="كلمة البحث (مثل: آيفون)" 
+                      className="w-full p-3 rounded-xl border border-orange-200"
+                      value={newOfferKeyword}
+                      onChange={(e) => setNewOfferKeyword(e.target.value)}
+                    />
+                    <input 
+                      type="text" 
+                      placeholder="رسالة العرض" 
+                      className="w-full p-3 rounded-xl border border-orange-200"
+                      value={newOfferMessage}
+                      onChange={(e) => setNewOfferMessage(e.target.value)}
+                    />
+                    <input 
+                      type="text" 
+                      placeholder="رابط العرض" 
+                      className="w-full p-3 rounded-xl border border-orange-200 text-left"
+                      dir="ltr"
+                      value={newOfferLink}
+                      onChange={(e) => setNewOfferLink(e.target.value)}
+                    />
+                  </div>
+                  <button 
+                    onClick={handleAddOffer}
+                    className="w-full bg-orange-600 text-white py-3 rounded-xl font-bold hover:bg-orange-700 flex items-center justify-center gap-2"
+                  >
+                    <Plus size={20} /> إضافة عرض
+                  </button>
+                </div>
+              </div>
+
+              {/* إحصائيات البحث */}
+              <div className="bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl p-6 md:p-8 border border-slate-100">
+                <h3 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-2">
+                  <BarChart2 className="text-indigo-600" />
+                  {t.analytics}
+                </h3>
+                
+                <div className="grid md:grid-cols-2 gap-8">
+                  {/* الكلمات الأكثر بحثاً */}
+                  <div>
+                    <h4 className="font-bold text-slate-700 mb-4">الكلمات الأكثر بحثاً</h4>
+                    <div className="bg-slate-50 rounded-2xl p-6">
+                      {topSearchTerms.length > 0 ? (
+                        <div className="space-y-3">
+                          {topSearchTerms.slice(0, 5).map((term, idx) => (
+                            <div key={idx} className="flex items-center justify-between">
+                              <span className="font-bold text-slate-700">{term.term}</span>
+                              <span className="bg-indigo-100 text-indigo-600 px-3 py-1 rounded-full text-sm font-bold">
+                                {term.count} بحث
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-slate-400">
+                          <BarChart2 size={32} className="mx-auto mb-2 opacity-50" />
+                          <p className="font-bold">لا توجد بيانات كافية</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* سجل البحث المباشر */}
+                  <div>
+                    <h4 className="font-bold text-slate-700 mb-4">آخر عمليات البحث</h4>
+                    <div className="bg-slate-50 rounded-2xl p-4 max-h-64 overflow-y-auto">
+                      {searchLogs.length > 0 ? (
+                        <div className="space-y-2">
+                          {searchLogs.slice(0, 10).map((log, idx) => (
+                            <div key={idx} className="flex items-center justify-between p-3 bg-white rounded-xl">
+                              <div>
+                                <p className="font-bold text-slate-700">{log.term}</p>
+                                <p className="text-xs text-slate-500">
+                                  {new Date(log.timestamp).toLocaleDateString('ar-SA')}
+                                </p>
+                              </div>
+                              <span className="text-xs font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded-full">
+                                {log.device || 'Desktop'}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-slate-400">
+                          <Clock size={32} className="mx-auto mb-2 opacity-50" />
+                          <p className="font-bold">لا توجد عمليات بحث حديثة</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>
       )}
 
-      {/* باقي الصفحات */}
+      {/* صفحة التجار */}
       {view === 'merchant' && (
         <div className="max-w-4xl mx-auto px-4 py-32 animate-in fade-in">
            <div className="bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl p-6 md:p-20 border border-slate-100 text-center">
@@ -1356,6 +1828,61 @@ const App = () => {
           </div>
         </div>
       </footer>
+      
+      {/* CSS للملاحقات */}
+      <style jsx>{`
+        @keyframes spin-slow {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        
+        @keyframes bounce-slow {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
+        }
+        
+        .animate-spin-slow {
+          animation: spin-slow 20s linear infinite;
+        }
+        
+        .animate-bounce-slow {
+          animation: bounce-slow 3s ease-in-out infinite;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #f1f5f9;
+          border-radius: 10px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 10px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #94a3b8;
+        }
+        
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        
+        .line-clamp-2 {
+          overflow: hidden;
+          display: -webkit-box;
+          -webkit-box-orient: vertical;
+          -webkit-line-clamp: 2;
+        }
+      `}</style>
     </div>
   );
 };

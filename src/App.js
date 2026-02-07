@@ -6,7 +6,7 @@ import {
   Instagram, Twitter, Send, Settings, Eye, EyeOff, Save, ArrowLeft, Plus, Trash2, X,
   FileText, Activity, Globe, ChevronLeft, Coins, Database, Bell, MessageCircle, BarChart2, Flame, Languages, Link, Server,
   ChevronRight, Clock, XCircle, Share2, Calendar, TrendingUp, Filter, UserCheck, LogOut,
-  Brain, Hexagon, Menu, X as XIcon, Home, CreditCard, Store, ChevronDown, MapPin
+  Brain, Hexagon // تم التأكد من وجود الأيقونات الهندسية
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, onSnapshot, collection, increment, updateDoc, addDoc, deleteDoc, getDocs, arrayUnion } from 'firebase/firestore';
@@ -40,7 +40,7 @@ const translations = {
     searchPlaceholder: 'وش بخاطرك تشتري اليوم؟ (آيفون، سماعة، عطر..)',
     searchBtn: 'بحث ذكي',
     analyzing: 'جاري التحليل...',
-    realSearch: 'عملية بحث رائجة',
+    realSearch: 'عملية بحث حقيقية',
     trendingLabel: '🔥 طلبات رائجة:',
     partnersTitle: 'نبحث في المتاجر الموثوقة فقط',
     loadingTitle: 'جالس أفرّ لك السوق..',
@@ -107,27 +107,7 @@ const translations = {
     promoDesc: 'سجل إيميلك عشان نرسل لك العروض اللي تهمك أول بأول.',
     subscribe: 'اشتراك',
     thanksSubscribe: 'شكراً لاشتراكك! بنرسل لك الزين.',
-    emailPlaceholder: 'اكتب إيميلك هنا',
-    menu: 'القائمة',
-    contact: 'تواصل',
-    dashboard: 'لوحة التحكم',
-    analytics: 'الإحصائيات',
-    marketing: 'التسويق',
-    subscribers: 'المشتركين',
-    inbox: 'الوارد',
-    stores: 'المتاجر',
-    offers: 'العروض',
-    configuration: 'الإعدادات',
-    privacyPolicy: 'سياسة الخصوصية',
-    viewResults: 'عرض النتائج',
-    comparison: 'المقارنة',
-    allResults: 'جميع النتائج',
-    sortBy: 'ترتيب حسب',
-    price: 'السعر',
-    rating: 'التقييم',
-    bestMatch: 'الأفضل',
-    showMore: 'عرض المزيد',
-    showLess: 'عرض أقل'
+    emailPlaceholder: 'اكتب إيميلك هنا'
   },
   en: {
     // SEO Data
@@ -150,7 +130,7 @@ const translations = {
     searchPlaceholder: 'What are you looking for today? (iPhone, Headset...)',
     searchBtn: 'Smart Search',
     analyzing: 'Analyzing...',
-    realSearch: 'Trending Searches',
+    realSearch: 'Real Searches',
     trendingLabel: '🔥 Trending:',
     partnersTitle: 'We search trusted stores only',
     loadingTitle: 'Scanning the market...',
@@ -217,33 +197,17 @@ const translations = {
     promoDesc: 'Subscribe to receive offers tailored to your interests.',
     subscribe: 'Subscribe',
     thanksSubscribe: 'Thanks! We\'ll keep you posted.',
-    emailPlaceholder: 'Enter your email',
-    menu: 'Menu',
-    contact: 'Contact',
-    dashboard: 'Dashboard',
-    analytics: 'Analytics',
-    marketing: 'Marketing',
-    subscribers: 'Subscribers',
-    inbox: 'Inbox',
-    stores: 'Stores',
-    offers: 'Offers',
-    configuration: 'Configuration',
-    privacyPolicy: 'Privacy Policy',
-    viewResults: 'View Results',
-    comparison: 'Comparison',
-    allResults: 'All Results',
-    sortBy: 'Sort By',
-    price: 'Price',
-    rating: 'Rating',
-    bestMatch: 'Best Match',
-    showMore: 'Show More',
-    showLess: 'Show Less'
+    emailPlaceholder: 'Enter your email'
   }
 };
 
-// --- استدعاء المفاتيح السرية من البيئة ---
+// --- استدعاء المفاتيح السرية من البيئة (Direct process.env access) ---
+// تم التعديل: استخدام المتغيرات البيئية لاسم المستخدم ورمز الدخول
+// ADMIN_UID هو رقم الهوية الذي ستحصل عليه من فايربيس وتضعه في Vercel
 const ADMIN_UID = process.env.REACT_APP_ADMIN_ID; 
+
 const GEMINI_API_KEY = process.env.REACT_APP_GEMINI_KEY; 
+
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
 
 // --- إعدادات Firebase من البيئة ---
@@ -266,6 +230,7 @@ const SEOHead = ({ title, description, keywords, lang }) => {
   useEffect(() => {
     document.title = title;
     
+    // Helper function to update meta tags
     const updateMeta = (name, content, attribute = 'name') => {
       let element = document.querySelector(`meta[${attribute}="${name}"]`);
       if (!element) {
@@ -279,15 +244,18 @@ const SEOHead = ({ title, description, keywords, lang }) => {
     updateMeta('description', description);
     updateMeta('keywords', keywords);
     
+    // Open Graph / Facebook / WhatsApp
     updateMeta('og:title', title, 'property');
     updateMeta('og:description', description, 'property');
     updateMeta('og:type', 'website', 'property');
     updateMeta('og:locale', lang === 'ar' ? 'ar_SA' : 'en_US', 'property');
     
+    // Twitter Card
     updateMeta('twitter:card', 'summary_large_image', 'name');
     updateMeta('twitter:title', title, 'name');
     updateMeta('twitter:description', description, 'name');
 
+    // Language attribute
     document.documentElement.lang = lang;
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
 
@@ -318,7 +286,7 @@ const SchemaMarkup = () => {
       "name": "Moqaren",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://moqaren.com/logo.png"
+        "url": "https://moqaren.com/logo.png" // Placeholder
       }
     }
   };
@@ -333,10 +301,13 @@ const SchemaMarkup = () => {
 
 const App = () => {
   const [user, setUser] = useState(null);
+  
+  // --- حالة تسجيل دخول المدير الجديدة ---
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
   const [adminEmail, setAdminEmail] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
   const [loginError, setLoginError] = useState('');
+
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [results, setResults] = useState(null);
@@ -344,35 +315,46 @@ const App = () => {
   const [view, setView] = useState('home'); 
   const [showExclusiveToast, setShowExclusiveToast] = useState(false);
   const [currentOffer, setCurrentOffer] = useState(null);
+  
+  // --- ميزات القائمة الجانبية (جديد) ---
   const [showSidePanel, setShowSidePanel] = useState(false);
-  const [sidePanelTab, setSidePanelTab] = useState('favorites');
+  const [sidePanelTab, setSidePanelTab] = useState('favorites'); // 'favorites' or 'history'
   const [myFavorites, setMyFavorites] = useState([]);
   const [mySearchHistory, setMySearchHistory] = useState([]);
+
+  // --- ميزات البريد الترويجي (جديد) ---
   const [showPromoPopup, setShowPromoPopup] = useState(false);
   const [promoEmail, setPromoEmail] = useState('');
   const [isSubscribed, setIsSubscribed] = useState(false);
-  const [subscriberEmail, setSubscriberEmail] = useState('');
+  const [subscriberEmail, setSubscriberEmail] = useState(''); // الإيميل المحفوظ في الجلسة
+
+  // --- ميزات إدارة التسويق (جديد) ---
   const [marketingFilter, setMarketingFilter] = useState('');
   const [marketingSubject, setMarketingSubject] = useState('');
   const [marketingBody, setMarketingBody] = useState('');
-  const [subscribersList, setSubscribersList] = useState([]);
+  const [subscribersList, setSubscribersList] = useState([]); // قائمة المشتركين للإدارة
+
+  // اللغة
   const [lang, setLang] = useState('ar');
-  const [notification, setNotification] = useState(null);
-  const [realSearchCount, setRealSearchCount] = useState(0);
-  const [adminClickCount, setAdminClickCount] = useState(0);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  const [sortBy, setSortBy] = useState('bestMatch');
-  const [showComparisonGuide, setShowComparisonGuide] = useState(true);
-  
-  const clickTimeoutRef = useRef(null); 
   const t = translations[lang];
 
+  // إشعارات النظام
+  const [notification, setNotification] = useState(null);
+
+  // حالة العداد الحقيقي (يبدأ من 0)
+  const [realSearchCount, setRealSearchCount] = useState(0);
+
+  // --- حالات لوحة التحكم ---
+  const [adminClickCount, setAdminClickCount] = useState(0);
+  const clickTimeoutRef = useRef(null); 
+
+  // --- البيانات ---
   const [inboxMessages, setInboxMessages] = useState([]);
   const [topSearchTerms, setTopSearchTerms] = useState([]);
   const [searchLogs, setSearchLogs] = useState([]); 
   const [monthlyStats, setMonthlyStats] = useState([]); 
 
+  // حقول الإدخال للإدارة
   const [newStoreName, setNewStoreName] = useState('');
   const [newStoreLink, setNewStoreLink] = useState('');
   const [newPartnerName, setNewPartnerName] = useState('');
@@ -386,6 +368,7 @@ const App = () => {
   const [merchantForm, setMerchantForm] = useState({ store: '', email: '' });
   const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
 
+  // --- الحالة الافتراضية للإعدادات ---
   const defaultAdminConfig = {
     supportEmail: "support@moqaren.com",
     whatsappNumber: "+966500000000",
@@ -413,18 +396,6 @@ const App = () => {
 
   const [adminConfig, setAdminConfig] = useState(defaultAdminConfig);
 
-  // --- كشف حجم الشاشة ---
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 4000);
@@ -434,6 +405,7 @@ const App = () => {
     setLang(prev => prev === 'ar' ? 'en' : 'ar');
   };
 
+  // --- وظائف المفضلة والمشاركة والسجل ---
   const toggleFavorite = (item) => {
     const exists = myFavorites.find(fav => fav.store === item.store && fav.price === item.price);
     if (exists) {
@@ -449,10 +421,7 @@ const App = () => {
     return myFavorites.some(fav => fav.store === item.store && fav.price === item.price);
   };
   
-  const getStoreLink = (key) => { 
-    const store = adminConfig.affiliateLinks?.find(s => s.name === key); 
-    return store ? store.link : "#"; 
-  };
+  const getStoreLink = (key) => { const store = adminConfig.affiliateLinks?.find(s => s.name === key); return store ? store.link : "#"; };
 
   const handleShare = (item) => {
     const link = getStoreLink(item.storeKey);
@@ -475,15 +444,18 @@ const App = () => {
     });
   };
 
-  // --- Firebase Auth Listener ---
+  // --- 1. المصادقة الذكية (Firebase Auth Listener) ---
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       
+      // هنا نقطة التحقق الأمنية:
+      // هل المستخدم مسجل دخول؟ وهل رقم الـ UID الخاص به يطابق الرقم المخزن في Vercel؟
       if (currentUser && currentUser.uid === ADMIN_UID) {
         setIsAdminAuthenticated(true);
       } else {
         setIsAdminAuthenticated(false);
+        // إذا لم يكن مسجلاً، نسجله كزائر مجهول لكي يعمل الفايربيس للزوار العاديين
         if (!currentUser) {
             signInAnonymously(auth).catch((error) => console.log("Anon login err", error));
         }
@@ -492,23 +464,26 @@ const App = () => {
     return () => unsubscribe();
   }, []);
 
-  // --- Promo Popup Timer ---
+  // --- 1.1 إدارة النوافذ المنبثقة والاشتراكات ---
   useEffect(() => {
+    // التحقق من الاشتراك المحلي فور تحميل المكون
     const savedEmail = localStorage.getItem('moqaren_user_email');
     if (savedEmail) {
         setSubscriberEmail(savedEmail);
         setIsSubscribed(true);
     } else {
+        // إذا لم يكن مشتركاً، ابدأ المؤقت لإظهار النافذة
         const timer = setTimeout(() => {
+            // شرط إضافي: التأكد من أننا في الصفحة الرئيسية ولسنا في وضع الإدارة
             if (view === 'home' && !isAdminAuthenticated) {
                 setShowPromoPopup(true);
             }
-        }, 3500);
+        }, 3500); // تقليل الوقت إلى 3.5 ثانية لضمان ظهورها
         return () => clearTimeout(timer);
     }
   }, [view, isAdminAuthenticated]);
 
-  // --- Fetch Settings ---
+  // --- 2. جلب الإعدادات والبيانات ---
   useEffect(() => {
     if (!user) return;
     const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'app_settings', 'main_config');
@@ -518,7 +493,7 @@ const App = () => {
     return () => unsubscribe();
   }, [user]);
 
-  // --- Real Counter ---
+  // --- 3. العداد الحقيقي ---
   useEffect(() => {
     if (!user) return;
     const statsRef = doc(db, 'artifacts', appId, 'public', 'data', 'stats', 'global_counts');
@@ -528,10 +503,12 @@ const App = () => {
     return () => unsubscribe();
   }, [user]);
 
-  // --- Fetch Dashboard Data ---
+  // --- 4. جلب بيانات لوحة التحكم (مؤمنة، تعمل فقط للأدمن) ---
   useEffect(() => {
+    // إذا لم يكن المستخدم هو المدير الحقيقي، لا تحاول جلب البيانات الحساسة
     if (!isAdminAuthenticated) return;
     
+    // Inbox
     const inboxRef = collection(db, 'artifacts', appId, 'public', 'data', 'inbox');
     const unsubInbox = onSnapshot(inboxRef, (snapshot) => {
       const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -539,6 +516,7 @@ const App = () => {
       setInboxMessages(msgs);
     }, (error) => console.log('Inbox error', error));
     
+    // Top Terms
     const fetchStats = async () => {
         try {
             const statsRef = collection(db, 'artifacts', appId, 'public', 'data', 'search_analytics');
@@ -550,6 +528,7 @@ const App = () => {
     };
     fetchStats();
 
+    // Logs
     const logsRef = collection(db, 'artifacts', appId, 'public', 'data', 'search_logs');
     const unsubLogs = onSnapshot(logsRef, (snapshot) => {
         let logs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -557,6 +536,7 @@ const App = () => {
         setSearchLogs(logs.slice(0, 50));
     }, (error) => console.log('Logs error', error));
 
+    // Monthly Stats
     const monthlyRef = collection(db, 'artifacts', appId, 'public', 'data', 'analytics_monthly');
     const unsubMonthly = onSnapshot(monthlyRef, (snapshot) => {
         const stats = snapshot.docs.map(doc => ({ month: doc.id, ...doc.data() }));
@@ -564,6 +544,7 @@ const App = () => {
         setMonthlyStats(stats);
     }, (error) => console.log('Monthly stats error', error));
 
+    // Subscribers
     const subRef = collection(db, 'artifacts', appId, 'public', 'data', 'newsletter_subscribers');
     const unsubSubscribers = onSnapshot(subRef, (snapshot) => {
         const subs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -573,7 +554,7 @@ const App = () => {
     return () => { unsubInbox(); unsubLogs(); unsubMonthly(); unsubSubscribers(); };
   }, [isAdminAuthenticated]);
 
-  // --- وظائف التسويق ---
+  // --- وظائف التسويق (جديد) ---
   const handleSubscribe = async (e) => {
       e.preventDefault();
       if (!promoEmail || !user) return;
@@ -602,15 +583,19 @@ const App = () => {
       const cleanTerm = term.trim().toLowerCase();
       if (cleanTerm.length < 2) return; 
       
+      // 1. Update Term Aggregation
       const termRef = doc(db, 'artifacts', appId, 'public', 'data', 'search_analytics', cleanTerm);
       try { await setDoc(termRef, { term: term.trim(), count: increment(1), lastSearched: new Date().toISOString() }, { merge: true }); } catch (e) { }
 
+      // 2. Log Individual Search
       try { await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'search_logs'), { term: term.trim(), timestamp: new Date().toISOString(), device: /Mobi|Android/i.test(navigator.userAgent) ? 'Mobile' : 'Desktop' }); } catch (e) { }
 
+      // 3. Update Monthly Stats
       const currentMonth = new Date().toISOString().slice(0, 7);
       const monthlyRef = doc(db, 'artifacts', appId, 'public', 'data', 'analytics_monthly', currentMonth);
       try { await setDoc(monthlyRef, { total_searches: increment(1), last_updated: new Date().toISOString() }, { merge: true }); } catch (e) { }
 
+      // 4. Update Subscriber Interests (New)
       if (subscriberEmail) {
           const subDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'newsletter_subscribers', subscriberEmail);
           try {
@@ -639,6 +624,7 @@ const App = () => {
   };
 
   const handleSaveAllChanges = async () => {
+    // تحقق مزدوج قبل الحفظ
     if (!isAdminAuthenticated) {
         showNotification("ليس لديك صلاحية الحفظ", "error");
         return;
@@ -658,15 +644,12 @@ const App = () => {
     setSearchQuery('');
     setAiSummary(null);
     setShowExclusiveToast(false);
-    setIsMobileMenuOpen(false);
-    setShowComparisonGuide(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const scrollToSection = (id) => {
     setView('home');
     setResults(null);
-    setIsMobileMenuOpen(false);
     setTimeout(() => {
       const element = document.getElementById(id);
       if (element) {
@@ -684,10 +667,10 @@ const App = () => {
     if (newCount >= 7) {
       setView('admin');
       setAdminClickCount(0);
+      // مسح حقول الدخول عند فتح الصفحة
       setAdminEmail('');
       setAdminPassword('');
       setLoginError('');
-      setIsMobileMenuOpen(false);
       return;
     } 
     resetToHome();
@@ -717,14 +700,22 @@ const App = () => {
     } catch (err) { showNotification(t.toastError, "error"); }
   };
 
+  // --- تسجيل دخول المدير الحقيقي (Firebase Auth) ---
   const handleAdminLogin = async (e) => {
     e.preventDefault();
     setLoginError('');
     
     try {
+        // محاولة تسجيل الدخول عبر فايربيس
         await signInWithEmailAndPassword(auth, adminEmail, adminPassword);
+        
+        // عند النجاح، الـ useEffect الخاص بالـ onAuthStateChanged سيتحقق من الـ UID 
+        // ويقوم بتحديث حالة isAdminAuthenticated تلقائياً
+        
+        // تنظيف الحقول
         setAdminEmail('');
         setAdminPassword('');
+        
     } catch (error) {
         console.error("Login failed", error);
         setLoginError('فشل الدخول. تأكد من الإيميل وكلمة المرور.');
@@ -776,7 +767,6 @@ const App = () => {
     setAiSummary(null);
     setShowExclusiveToast(false);
     setCurrentOffer(null);
-    setShowComparisonGuide(true);
     incrementGlobalCounter();
     trackSearchTerm(searchQuery);
     addToHistory(searchQuery); 
@@ -805,245 +795,11 @@ const App = () => {
   const filteredSubscribers = subscribersList.filter(sub => {
       if (!marketingFilter) return true;
       const keywords = marketingFilter.toLowerCase().split(' ');
+      // Check if any of the subscriber's interests match any of the filter keywords
       return sub.interests && sub.interests.some(interest => 
           keywords.some(keyword => interest.toLowerCase().includes(keyword))
       );
   });
-
-  // Sort results
-  const sortedResults = results ? [...results].sort((a, b) => {
-    switch(sortBy) {
-      case 'price':
-        return a.price - b.price;
-      case 'rating':
-        return b.rating - a.rating;
-      case 'bestMatch':
-      default:
-        return 0;
-    }
-  }) : [];
-
-  const navItems = [
-    { id: 'home', label: t.home, icon: Home, action: resetToHome },
-    { id: 'about', label: t.about, icon: Info, action: () => scrollToSection('about') },
-    { id: 'features', label: t.features, icon: Star, action: () => scrollToSection('why-trust') },
-    { id: 'earn', label: t.earn, icon: CreditCard, action: () => scrollToSection('how-we-earn') },
-    { id: 'partners', label: t.partners, icon: Users, action: () => scrollToSection('partners') }
-  ];
-
-  // --- صفحة سياسة الخصوصية ---
-  const PrivacyPage = () => (
-    <div className="max-w-4xl mx-auto px-4 py-32 animate-in fade-in">
-      <div className="bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl p-6 md:p-12 border border-slate-100 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-3xl -mr-40 -mt-40"></div>
-        <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="bg-blue-100 p-3 rounded-2xl">
-              <Lock className="text-blue-600" size={28} />
-            </div>
-            <div>
-              <h1 className="text-2xl md:text-3xl font-black text-slate-900">{t.privacyPolicy}</h1>
-              <p className="text-slate-500 font-bold">آخر تحديث: يناير 2026</p>
-            </div>
-          </div>
-          
-          <div className="space-y-8">
-            <section className="bg-blue-50 p-6 rounded-2xl">
-              <h2 className="text-xl font-black text-slate-900 mb-4 flex items-center gap-2">
-                <Shield className="text-blue-600" size={20} />
-                1. مقدمة
-              </h2>
-              <p className="text-slate-600 leading-relaxed">
-                في "مقارن"، نأخذ خصوصيتك على محمل الجد. تشرح هذه الوثيقة كيف نجمع بياناتك ونستخدمها ونحميها عند استخدامك لموقعنا.
-              </p>
-            </section>
-
-            <section className="bg-green-50 p-6 rounded-2xl">
-              <h2 className="text-xl font-black text-slate-900 mb-4 flex items-center gap-2">
-                <Database className="text-green-600" size={20} />
-                2. البيانات التي نجمعها
-              </h2>
-              <ul className="list-disc list-inside space-y-2 text-slate-600 leading-relaxed ml-4">
-                <li><strong>بيانات البحث:</strong> نقوم بتخزين كلمات البحث (بدون هوية) لتحسين خوارزمياتنا واقتراح منتجات أفضل.</li>
-                <li><strong>بيانات الجهاز:</strong> مثل نوع المتصفح والجهاز لضمان أفضل تجربة تصفح.</li>
-                <li><strong>بيانات الاشتراك:</strong> إذا اشتركت في نشرتنا البريدية، نخزن إيميلك فقط لإرسال العروض.</li>
-              </ul>
-            </section>
-
-            <section className="bg-yellow-50 p-6 rounded-2xl">
-              <h2 className="text-xl font-black text-slate-900 mb-4 flex items-center gap-2">
-                <FileText className="text-yellow-600" size={20} />
-                3. ملفات تعريف الارتباط (Cookies)
-              </h2>
-              <p className="text-slate-600 leading-relaxed">
-                نستخدم الكوكيز لتحسين تجربتك وتذكر تفضيلاتك. يمكنك تعطيل الكوكيز من إعدادات متصفحك، لكن قد يؤثر ذلك على بعض وظائف الموقع.
-              </p>
-            </section>
-
-            <section className="bg-purple-50 p-6 rounded-2xl">
-              <h2 className="text-xl font-black text-slate-900 mb-4 flex items-center gap-2">
-                <Link className="text-purple-600" size={20} />
-                4. الروابط الخارجية والعمولات
-              </h2>
-              <p className="text-slate-600 leading-relaxed">
-                يحتوي موقعنا على روابط لمتاجر خارجية (مثل أمازون ونون). عند النقر عليها، قد نتحصل على عمولة بسيطة دون أي تكلفة إضافية عليك. نحن غير مسؤولين عن سياسات الخصوصية الخاصة بتلك المتاجر.
-              </p>
-            </section>
-
-            <section className="bg-red-50 p-6 rounded-2xl">
-              <h2 className="text-xl font-black text-slate-900 mb-4 flex items-center gap-2">
-                <Shield className="text-red-600" size={20} />
-                5. أمان البيانات
-              </h2>
-              <p className="text-slate-600 leading-relaxed">
-                نستخدم بروتوكولات تشفير متقدمة (SSL) لحماية اتصالك بالموقع. لا نقوم ببيع بياناتك لأي طرف ثالث. نحتفظ ببياناتك فقط طالما كنت تستخدم خدماتنا.
-              </p>
-            </section>
-
-            <section className="bg-slate-50 p-6 rounded-2xl">
-              <h2 className="text-xl font-black text-slate-900 mb-4 flex items-center gap-2">
-                <Mail className="text-slate-600" size={20} />
-                6. تواصل معنا
-              </h2>
-              <p className="text-slate-600 leading-relaxed">
-                إذا كان لديك أي استفسار حول سياسة الخصوصية، يمكنك التواصل معنا عبر:
-              </p>
-              <div className="mt-4 space-y-2">
-                <p className="font-bold text-slate-700">البريد الإلكتروني: <span className="text-blue-600" dir="ltr">{adminConfig.supportEmail}</span></p>
-                <p className="font-bold text-slate-700">رقم الواتساب: <span className="text-green-600" dir="ltr">{adminConfig.whatsappNumber}</span></p>
-              </div>
-            </section>
-          </div>
-
-          <div className="mt-12 pt-8 border-t border-slate-200">
-            <button 
-              onClick={resetToHome}
-              className="bg-slate-900 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-600 transition-colors flex items-center gap-2"
-            >
-              <ArrowLeft size={18} />
-              العودة للرئيسية
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  // --- صفحة تواصل معنا ---
-  const ContactPage = () => (
-    <div className="max-w-6xl mx-auto px-4 py-32 animate-in fade-in">
-      <div className="text-center mb-16">
-        <h1 className="text-3xl md:text-4xl font-black text-slate-900 mb-4">{t.contactTitle} 📞</h1>
-        <p className="text-slate-500 font-bold text-lg md:text-xl">حنا هنا عشان نسمعك، سواء عندك اقتراح أو مشكلة أو سؤال.</p>
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-10">
-        <div className="space-y-6">
-          <div className="bg-white p-8 rounded-[2.5rem] shadow-lg border border-slate-50 flex items-center gap-6 hover:-translate-y-1 transition-transform">
-            <div className="bg-blue-100 text-blue-600 p-4 rounded-2xl">
-              <Mail size={28} />
-            </div>
-            <div>
-              <h3 className="font-black text-lg text-slate-800">البريد الإلكتروني</h3>
-              <p className="text-blue-600 font-bold" dir="ltr">{adminConfig.supportEmail}</p>
-              <p className="text-sm text-slate-500 mt-1">ردنا خلال 24 ساعة</p>
-            </div>
-          </div>
-
-          <div className="bg-white p-8 rounded-[2.5rem] shadow-lg border border-slate-50 flex items-center gap-6 hover:-translate-y-1 transition-transform">
-            <div className="bg-green-100 text-green-600 p-4 rounded-2xl">
-              <MessageSquare size={28} />
-            </div>
-            <div>
-              <h3 className="font-black text-lg text-slate-800">واتساب</h3>
-              <p className="text-green-600 font-bold" dir="ltr">{adminConfig.whatsappNumber}</p>
-              <p className="text-sm text-slate-500 mt-1">خدمة العملاء 24/7</p>
-            </div>
-          </div>
-
-          <div className="bg-white p-8 rounded-[2.5rem] shadow-lg border border-slate-50 flex items-center gap-6 hover:-translate-y-1 transition-transform">
-            <div className="bg-purple-100 text-purple-600 p-4 rounded-2xl">
-              <MapPin size={28} />
-            </div>
-            <div>
-              <h3 className="font-black text-lg text-slate-800">العنوان</h3>
-              <p className="text-slate-700 font-bold">الرياض، المملكة العربية السعودية</p>
-              <p className="text-sm text-slate-500 mt-1">مقرنا الرئيسي</p>
-            </div>
-          </div>
-
-          <div className="bg-white p-8 rounded-[2.5rem] shadow-lg border border-slate-50 flex items-center gap-6 hover:-translate-y-1 transition-transform">
-            <div className="bg-pink-100 text-pink-600 p-4 rounded-2xl">
-              <Instagram size={28} />
-            </div>
-            <div>
-              <h3 className="font-black text-lg text-slate-800">سوشيال ميديا</h3>
-              <div className="flex gap-4 mt-2">
-                <a href={adminConfig.twitterLink} className="bg-slate-100 hover:bg-blue-100 p-3 rounded-xl transition-colors">
-                  <Twitter size={20} className="text-slate-600 hover:text-blue-500" />
-                </a>
-                <a href={adminConfig.instagramLink} className="bg-slate-100 hover:bg-pink-100 p-3 rounded-xl transition-colors">
-                  <Instagram size={20} className="text-slate-600 hover:text-pink-500" />
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-10 rounded-[2.5rem] shadow-xl border border-slate-50 h-full">
-          <h3 className="text-2xl font-black mb-6 text-slate-900">أرسل رسالة مباشرة ✉️</h3>
-          <form className="space-y-4" onSubmit={handleContactSubmit}>
-            <input 
-              type="text" 
-              className="w-full p-4 rounded-2xl bg-slate-50 border-none font-bold focus:ring-4 focus:ring-blue-100" 
-              placeholder="اسمك الكامل" 
-              required 
-              value={contactForm.name} 
-              onChange={e => setContactForm({...contactForm, name: e.target.value})} 
-            />
-            <input 
-              type="email" 
-              className="w-full p-4 rounded-2xl bg-slate-50 border-none font-bold focus:ring-4 focus:ring-blue-100" 
-              placeholder="البريد الإلكتروني" 
-              required 
-              value={contactForm.email} 
-              onChange={e => setContactForm({...contactForm, email: e.target.value})} 
-            />
-            <textarea 
-              className="w-full p-4 rounded-2xl bg-slate-50 border-none font-bold focus:ring-4 focus:ring-blue-100 h-40 resize-none" 
-              placeholder="اكتب رسالتك هنا..." 
-              required 
-              value={contactForm.message} 
-              onChange={e => setContactForm({...contactForm, message: e.target.value})}
-            ></textarea>
-            <button 
-              type="submit" 
-              className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-lg shadow-lg hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
-            >
-              <Send size={20} />
-              إرسال الرسالة
-            </button>
-          </form>
-          
-          <div className="mt-8 pt-6 border-t border-slate-100">
-            <p className="text-sm text-slate-500 text-center">
-              سنرد على رسالتك في أقرب وقت ممكن. شكراً لتواصلك معنا!
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="text-center mt-16">
-        <button 
-          onClick={resetToHome} 
-          className="text-slate-400 font-bold hover:text-blue-600 flex items-center justify-center gap-2 mx-auto transition-colors"
-        >
-          <ArrowLeft size={16} /> 
-          العودة للرئيسية
-        </button>
-      </div>
-    </div>
-  );
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-blue-200 selection:text-blue-900" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
@@ -1059,7 +815,7 @@ const App = () => {
 
       {/* إشعار النظام الموحد */}
       {notification && (
-        <div className={`fixed ${isMobile ? 'top-20' : 'top-6'} left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-top-4 duration-300`}>
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-top-4 duration-300">
           <div className={`px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 border-2 ${notification.type === 'error' ? 'bg-red-50 border-red-100 text-red-600' : 'bg-white border-green-100 text-green-700'}`}>
             {notification.type === 'error' ? <AlertCircle size={24} /> : <CheckCircle size={24} className="text-green-500" />}
             <span className="font-black text-sm">{notification.message}</span>
@@ -1067,7 +823,7 @@ const App = () => {
         </div>
       )}
 
-      {/* --- نافذة الاشتراك البريدي --- */}
+      {/* --- نافذة الاشتراك البريدي (جديد) --- */}
       {showPromoPopup && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
               <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={() => setShowPromoPopup(false)}></div>
@@ -1098,33 +854,17 @@ const App = () => {
           </div>
       )}
 
-      {/* --- زر القائمة الجانبية للجوال --- */}
-      {isMobile && (
-        <button 
-          onClick={() => setShowSidePanel(true)}
-          className="fixed bottom-6 left-6 z-40 bg-white/90 backdrop-blur-md p-4 rounded-full shadow-xl border border-slate-200 hover:scale-110 transition-all active:scale-95"
-          title={t.mySpace}
-        >
-          <div className="relative">
-              {myFavorites.length > 0 && <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>}
-              <Heart size={24} className={myFavorites.length > 0 ? 'text-red-500' : 'text-slate-600'} />
-          </div>
-        </button>
-      )}
-
-      {/* --- زر القائمة الجانبية للديسكتوب --- */}
-      {!isMobile && (
-        <button 
-          onClick={() => setShowSidePanel(true)}
-          className="fixed left-0 top-1/2 -translate-y-1/2 bg-white/80 backdrop-blur-md p-3 rounded-r-2xl shadow-lg border border-slate-200 z-40 hover:pl-5 transition-all group border-l-0"
-          title={t.mySpace}
-        >
-          <div className="relative">
-              {myFavorites.length > 0 && <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>}
-              <ChevronRight className="text-slate-600 group-hover:text-blue-600 transition-colors" size={24} />
-          </div>
-        </button>
-      )}
+      {/* --- زر القائمة الجانبية --- */}
+      <button 
+        onClick={() => setShowSidePanel(true)}
+        className="fixed left-0 top-1/2 -translate-y-1/2 bg-white/80 backdrop-blur-md p-3 rounded-r-2xl shadow-lg border border-slate-200 z-40 hover:pl-5 transition-all group border-l-0"
+        title={t.mySpace}
+      >
+        <div className="relative">
+            {myFavorites.length > 0 && <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>}
+            <ChevronRight className="text-slate-600 group-hover:text-blue-600 transition-colors" size={24} />
+        </div>
+      </button>
 
       {/* --- القائمة الجانبية (Slide Panel) --- */}
       <div className={`fixed inset-0 z-[60] transition-all duration-500 ${showSidePanel ? 'visible' : 'invisible'}`}>
@@ -1133,7 +873,7 @@ const App = () => {
             <div className="h-full flex flex-col p-6">
                 <div className="flex justify-between items-center mb-8">
                     <h2 className="text-2xl font-black text-slate-800 flex items-center gap-2"><Award className="text-blue-600" /> {t.mySpace}</h2>
-                    <button onClick={() => setShowSidePanel(false)} className="p-2 bg-slate-100 rounded-full hover:bg-slate-200 transition-colors"><XIcon size={20} /></button>
+                    <button onClick={() => setShowSidePanel(false)} className="p-2 bg-slate-100 rounded-full hover:bg-slate-200 transition-colors"><X size={20} /></button>
                 </div>
                 <div className="flex bg-slate-100 p-1 rounded-2xl mb-6">
                     <button onClick={() => setSidePanelTab('favorites')} className={`flex-1 py-3 rounded-xl text-sm font-black transition-all flex items-center justify-center gap-2 ${sidePanelTab === 'favorites' ? 'bg-white shadow-md text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>
@@ -1189,7 +929,7 @@ const App = () => {
       {/* زر اللغة العائم */}
       <button 
         onClick={toggleLanguage} 
-        className={`fixed ${isMobile ? 'top-20' : 'top-6'} ${lang === 'ar' ? 'left-4' : 'right-4'} z-[100] bg-white/90 backdrop-blur-xl shadow-xl border border-white/50 p-3 rounded-full hover:scale-110 transition-all active:scale-95 group`}
+        className={`fixed top-6 ${lang === 'ar' ? 'left-6' : 'right-6'} z-[100] bg-white/90 backdrop-blur-xl shadow-xl border border-white/50 p-3 rounded-full hover:scale-110 transition-all active:scale-95 group`}
         title="Switch Language"
       >
         <Languages size={20} className="text-slate-600 group-hover:text-blue-600 transition-colors" />
@@ -1200,7 +940,7 @@ const App = () => {
 
       {/* إشعار العرض الخاص */}
       {showExclusiveToast && currentOffer && (
-        <div className={`fixed ${isMobile ? 'bottom-20 left-4 right-4' : 'bottom-6 left-4'} md:max-w-sm z-[100] animate-in slide-in-from-bottom-10 duration-500`}>
+        <div className={`fixed bottom-6 ${lang === 'ar' ? 'left-4' : 'right-4'} md:max-w-sm z-[100] animate-in slide-in-from-bottom-10 duration-500`}>
           <div className="bg-gradient-to-l from-blue-600 to-indigo-600 text-white p-6 rounded-[2rem] shadow-2xl relative border-4 border-white/20 backdrop-blur-md">
             <button onClick={() => setShowExclusiveToast(false)} className={`absolute top-4 ${lang === 'ar' ? 'right-4' : 'left-4'} text-white/50 hover:text-white transition-colors bg-white/10 rounded-full w-8 h-8 flex items-center justify-center`}>✕</button>
             <div className="flex items-center gap-3 mb-3">
@@ -1213,113 +953,42 @@ const App = () => {
         </div>
       )}
 
-      {/* Navigation - إصلاح كامل وتوسيط */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 ${isMobile ? 'px-4 pt-4' : 'flex justify-center px-4 pt-4'}`}>
-        <div className={`bg-white/90 backdrop-blur-xl shadow-2xl shadow-blue-900/10 rounded-2xl flex items-center justify-between p-3 border border-white/50 ${!isMobile ? 'w-auto max-w-4xl' : ''}`}>
-          <div 
-            className="flex items-center gap-2 px-2 cursor-pointer group select-none" 
-            onClick={handleLogoClick}
-          >
+      {/* Navigation */}
+      <nav className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
+        <div className="bg-white/90 backdrop-blur-xl shadow-2xl shadow-blue-900/10 rounded-full px-2 py-2 flex items-center gap-1 md:gap-2 pointer-events-auto border border-white/50 max-w-full overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-2 px-4 cursor-pointer group select-none" onClick={handleLogoClick}>
             <div className="bg-gradient-to-tr from-blue-600 to-indigo-600 p-1.5 rounded-full text-white shadow-lg group-hover:scale-110 transition-transform">
                 <Brain size={18} />
             </div>
-            <span className="text-lg font-black text-slate-800 tracking-tighter">مقارن</span>
+            <span className="text-lg font-black text-slate-800 tracking-tighter hidden md:block">مقارن</span>
           </div>
-          
-          {/* Desktop Navigation - توسيط */}
-          <div className="hidden md:flex items-center gap-1">
-            {navItems.map((item) => (
-                <button 
-                  key={item.id} 
-                  onClick={() => {
-                    item.action();
-                    setIsMobileMenuOpen(false);
-                  }} 
-                  className={`px-3 py-2 rounded-full font-bold text-sm flex items-center gap-2 transition-all duration-300 ${
-                    view === 'home' ? 'hover:bg-blue-50 hover:text-blue-600 text-slate-600' : ''
-                  }`}
-                >
+          <div className="h-6 w-px bg-slate-200 mx-1"></div>
+          <div className="flex items-center">
+            {[{ id: 'home', label: t.home, icon: Globe, action: resetToHome }, { id: 'about', label: t.about, icon: Info, action: () => scrollToSection('about') }, { id: 'features', label: t.features, icon: Star, action: () => scrollToSection('why-trust') }, { id: 'earn', label: t.earn, icon: Coins, action: () => scrollToSection('how-we-earn') }, { id: 'partners', label: t.partners, icon: Users, action: () => scrollToSection('partners') }].map((item) => (
+                <button key={item.id} onClick={item.action} className={`px-3 md:px-5 py-2 rounded-full font-bold text-xs md:text-sm flex items-center gap-2 transition-all duration-300 ${view === 'home' ? 'hover:bg-blue-50 hover:text-blue-600 text-slate-600' : ''}`}>
                     <item.icon size={14} className="opacity-70" />
                     <span className="whitespace-nowrap">{item.label}</span>
                 </button>
             ))}
-            <div className="h-6 w-px bg-slate-200 mx-2"></div>
-            <button 
-              onClick={() => {
-                setView('privacy');
-                setIsMobileMenuOpen(false);
-              }} 
-              className="px-3 py-2 rounded-full font-bold text-sm flex items-center gap-2 hover:bg-blue-50 hover:text-blue-600 text-slate-600 transition-all"
-            >
-              <Lock size={14} /> {t.privacy}
-            </button>
-            <button 
-              onClick={() => {
-                setView('contact');
-                setIsMobileMenuOpen(false);
-              }} 
-              className="px-3 py-2 rounded-full font-bold text-sm flex items-center gap-2 hover:bg-blue-50 hover:text-blue-600 text-slate-600 transition-all"
-            >
-              <MessageSquare size={14} /> {t.contact}
-            </button>
-            <button 
-              onClick={() => {
-                setView('merchant');
-                setIsMobileMenuOpen(false);
-              }} 
-              className="bg-slate-900 text-white px-5 py-2 rounded-full font-bold text-xs hover:bg-slate-800 shadow-lg flex items-center gap-2 active:scale-95 transition-all whitespace-nowrap"
-            >
-              <Store size={14} /> {t.merchant}
-            </button>
           </div>
-
-          {/* Mobile Menu Button */}
-          <button 
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
-            className="md:hidden bg-slate-100 p-2 rounded-lg text-slate-700 hover:bg-slate-200 transition-colors"
-          >
-            {isMobileMenuOpen ? <XIcon size={24} /> : <Menu size={24} />}
-          </button>
+          <div className="h-6 w-px bg-slate-200 mx-1 hidden md:block"></div>
+          <button onClick={() => setView('merchant')} className="hidden md:flex bg-slate-900 text-white px-5 py-2 rounded-full font-bold text-xs hover:bg-slate-800 shadow-lg items-center gap-2 active:scale-95 transition-all whitespace-nowrap"><Award size={14} /> {t.merchant}</button>
         </div>
-
-        {/* Mobile Menu Dropdown */}
-        {isMobileMenuOpen && (
-          <div className="mt-2 bg-white/90 backdrop-blur-xl shadow-2xl rounded-2xl border border-white/50 p-4 animate-in slide-in-from-top-4">
-            <div className="space-y-2">
-              {[...navItems, 
-                { id: 'privacy', label: t.privacy, icon: Lock, action: () => setView('privacy') },
-                { id: 'contact', label: t.contact, icon: MessageSquare, action: () => setView('contact') },
-                { id: 'merchant', label: t.merchant, icon: Store, action: () => setView('merchant') }
-              ].map((item) => (
-                <button 
-                  key={item.id} 
-                  onClick={() => {
-                    item.action();
-                    setIsMobileMenuOpen(false);
-                  }} 
-                  className="w-full text-right flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition-colors"
-                >
-                  <span className="font-bold text-slate-700">{item.label}</span>
-                  <item.icon size={18} className="text-slate-400" />
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
       </nav>
 
       {/* الصفحة الرئيسية */}
       {view === 'home' && (
         <>
           {/* --- قسم الـ Hero Section المحدث --- */}
-          <div className="bg-gradient-to-b from-slate-950 via-blue-950 to-indigo-900 text-white pt-28 pb-20 px-4 relative overflow-hidden rounded-b-[2rem] md:rounded-b-[5rem] shadow-2xl">
+          <div className="bg-gradient-to-b from-slate-950 via-blue-950 to-indigo-900 text-white pt-40 pb-32 px-4 relative overflow-hidden rounded-b-[3rem] md:rounded-b-[5rem] shadow-2xl">
             
-            {/* طبقات الخلفية */}
+            {/* 1. الطبقة الموجودة سابقاً (الدوائر المضببة الكبيرة) */}
             <div className="absolute top-0 left-0 w-full h-full opacity-30 pointer-events-none">
                 <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-blue-500 rounded-full blur-[120px] animate-pulse"></div>
                 <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-indigo-500 rounded-full blur-[120px] animate-pulse" style={{animationDelay: '1s'}}></div>
             </div>
 
+            {/* 2. طبقة جديدة: شبكة بيانات رقمية دقيقة (Data Grid Dots) */}
             <svg className="absolute inset-0 w-full h-full text-white/5 mix-blend-overlay pointer-events-none" xmlns="http://www.w3.org/2000/svg">
               <pattern id="data-grid" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
                 <circle cx="1" cy="1" r="1" fill="currentColor" />
@@ -1327,452 +996,150 @@ const App = () => {
               <rect width="100%" height="100%" fill="url(#data-grid)" />
             </svg>
 
+            {/* 3. طبقة جديدة: خطوط شبكية هندسية / دوائر إلكترونية (Circuit Lines) */}
+            <svg className="absolute inset-0 w-full h-full text-indigo-300/10 mix-blend-overlay pointer-events-none animate-pulse" style={{animationDuration: '8s'}} xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <pattern id="circuit-pattern" x="0" y="0" width="200" height="200" patternUnits="userSpaceOnUse">
+                        <path d="M0 20 L20 20 L20 0 M20 20 L40 40 M40 40 L60 40 M60 40 L60 60 M100 100 L120 100 L120 80 M150 150 L180 150 L180 180" stroke="currentColor" strokeWidth="0.5" fill="none"/>
+                        <circle cx="20" cy="20" r="2" fill="currentColor"/>
+                        <circle cx="60" cy="40" r="2" fill="currentColor"/>
+                        <circle cx="120" cy="100" r="2" fill="currentColor"/>
+                    </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#circuit-pattern)" />
+            </svg>
+
+            {/* 4. طبقة جديدة: أيقونات تقنية عائمة وضبابية (Floating Tech Icons) */}
             <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
                 <Hexagon size={64} className="text-blue-300/10 absolute top-[10%] left-[5%] animate-spin-slow blur-sm" />
+                <Cpu size={48} className="text-indigo-300/10 absolute bottom-[20%] right-[10%] animate-bounce-slow blur-sm" />
+                <Database size={32} className="text-blue-400/10 absolute top-[30%] right-[25%] animate-pulse blur-sm" />
                 <Brain size={80} className="text-indigo-500/5 absolute bottom-[10%] left-[20%] animate-pulse blur-xl rotate-12" />
             </div>
 
-            {/* المحتوى الرئيسي */}
+            {/* المحتوى الرئيسي للنص والبحث */}
             <div className="max-w-4xl mx-auto text-center relative z-10">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/10 text-blue-200 text-xs font-black mb-6 backdrop-blur-md shadow-lg animate-in fade-in slide-in-from-top-4 duration-700">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/10 text-blue-200 text-xs font-black mb-8 backdrop-blur-md shadow-lg animate-in fade-in slide-in-from-top-4 duration-700">
                 <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span></span>
                 <span>{realSearchCount.toLocaleString()} {t.realSearch}</span>
               </div>
-              <h1 className="text-3xl md:text-7xl font-black mb-4 leading-tight drop-shadow-2xl text-white tracking-tight animate-in fade-in slide-in-from-bottom-8 duration-700">{t.heroTitlePart1} <br/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-indigo-300">{t.heroTitlePart2}</span></h1>
-              <p className="text-blue-100 text-base md:text-2xl mb-8 max-w-2xl mx-auto font-medium leading-relaxed opacity-90 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100">{t.heroDesc}</p>
+              <h1 className="text-4xl md:text-7xl font-black mb-6 leading-tight drop-shadow-2xl text-white tracking-tight animate-in fade-in slide-in-from-bottom-8 duration-700">{t.heroTitlePart1} <br/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-indigo-300">{t.heroTitlePart2}</span></h1>
+              <p className="text-blue-100 text-lg md:text-2xl mb-12 max-w-2xl mx-auto font-medium leading-relaxed opacity-90 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100">{t.heroDesc}</p>
               <form onSubmit={handleSearch} className="relative max-w-3xl mx-auto group animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
-                <div className="absolute inset-0 bg-blue-400/20 blur-2xl rounded-[2rem] md:rounded-[2.5rem] group-hover:bg-blue-400/30 transition-all duration-500"></div>
-                <input 
-                  type="text" 
-                  placeholder={t.searchPlaceholder} 
-                  className="w-full py-4 md:py-8 px-4 md:px-16 rounded-[2rem] md:rounded-[2.5rem] text-slate-900 shadow-2xl text-base md:text-xl focus:outline-none focus:ring-4 focus:ring-blue-400/50 transition-all font-bold border-none relative z-10 placeholder:text-slate-400 text-center md:text-right" 
-                  value={searchQuery} 
-                  onChange={(e) => setSearchQuery(e.target.value)} 
-                />
-                <Search className={`absolute ${lang === 'ar' ? 'right-4 md:right-8' : 'left-4 md:left-8'} top-1/2 -translate-y-1/2 text-slate-400 z-20`} size={24} />
-                <button type="submit" disabled={isSearching} className={`absolute ${lang === 'ar' ? 'left-2 md:left-3' : 'right-2 md:right-3'} top-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white px-4 md:px-8 py-3 md:py-4 rounded-[1.5rem] md:rounded-[2rem] font-black transition-all flex items-center gap-2 disabled:bg-slate-400 shadow-xl active:scale-95 z-20 text-sm md:text-base group-hover:shadow-blue-500/50`}>
+                <div className="absolute inset-0 bg-blue-400/20 blur-2xl rounded-[2.5rem] group-hover:bg-blue-400/30 transition-all duration-500"></div>
+                <input type="text" placeholder={t.searchPlaceholder} className="w-full py-6 md:py-8 px-16 rounded-[2.5rem] text-slate-900 shadow-2xl text-lg md:text-xl focus:outline-none focus:ring-4 focus:ring-blue-400/50 transition-all font-bold border-none relative z-10 placeholder:text-slate-400" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                <Search className={`absolute ${lang === 'ar' ? 'right-8' : 'left-8'} top-1/2 -translate-y-1/2 text-slate-400 z-20`} size={28} />
+                <button type="submit" disabled={isSearching} className={`absolute ${lang === 'ar' ? 'left-3' : 'right-3'} top-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-[2rem] font-black transition-all flex items-center gap-2 disabled:bg-slate-400 shadow-xl active:scale-95 z-20 text-sm md:text-base group-hover:shadow-blue-500/50`}>
                   {isSearching ? <span className="animate-pulse">{t.analyzing}</span> : <>{t.searchBtn} <Rocket size={18} /></>}
                 </button>
               </form>
-              <div className="mt-8 flex flex-wrap justify-center gap-2 text-sm font-bold text-blue-200/60 animate-in fade-in duration-1000 delay-300">
+              <div className="mt-10 flex flex-wrap justify-center gap-3 text-sm font-bold text-blue-200/60 animate-in fade-in duration-1000 delay-300">
                 <span>{t.trendingLabel}</span>
                 {adminConfig.trendingKeywords && adminConfig.trendingKeywords.length > 0 ? (
-                  adminConfig.trendingKeywords.slice(0, 3).map((keyword, index) => (
-                    <button key={index} onClick={() => setSearchQuery(keyword)} className="hover:text-white transition-all bg-white/5 px-3 py-1 rounded-full border border-white/5 hover:bg-white/10 hover:border-white/20 active:scale-95 text-xs">
+                  adminConfig.trendingKeywords.map((keyword, index) => (
+                    <button key={index} onClick={() => setSearchQuery(keyword)} className="hover:text-white transition-all bg-white/5 px-3 py-1 rounded-full border border-white/5 hover:bg-white/10 hover:border-white/20 active:scale-95">
                       {keyword}
                     </button>
                   ))
                 ) : (
                   <>
-                    <button onClick={() => setSearchQuery('آيفون 15')} className="hover:text-white transition-all bg-white/5 px-3 py-1 rounded-full border border-white/5 hover:bg-white/10 text-xs">آيفون 15</button>
-                    <button onClick={() => setSearchQuery('سوني 5')} className="hover:text-white transition-all bg-white/5 px-3 py-1 rounded-full border border-white/5 hover:bg-white/10 text-xs">سوني 5</button>
+                    <button onClick={() => setSearchQuery('آيفون 15')} className="hover:text-white transition-all bg-white/5 px-3 py-1 rounded-full border border-white/5 hover:bg-white/10">آيفون 15</button>
+                    <button onClick={() => setSearchQuery('سوني 5')} className="hover:text-white transition-all bg-white/5 px-3 py-1 rounded-full border border-white/5 hover:bg-white/10">سوني 5</button>
                   </>
                 )}
               </div>
             </div>
           </div>
 
-          <main className="max-w-7xl mx-auto px-4 -mt-16 md:-mt-20 relative z-20">
+          <main className="max-w-7xl mx-auto px-4 -mt-20 relative z-20">
             {!results && !isSearching && (
-              <section id="partners" className="bg-white/80 backdrop-blur-md rounded-[2rem] md:rounded-[2.5rem] shadow-xl border border-white/50 p-6 md:p-8 mb-16 md:mb-24 flex flex-col items-center gap-6 md:gap-8 scroll-mt-32">
-                <div className="flex items-center gap-3 text-slate-400 font-black text-xs uppercase tracking-[0.1em] shrink-0 w-full justify-center"><div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>{t.partnersTitle}</div>
-                <div className="flex flex-wrap justify-center items-center gap-4 md:gap-8 lg:gap-16 opacity-50 grayscale hover:grayscale-0 transition-all duration-500 cursor-pointer font-black w-full">
-                    {adminConfig.trustedPartners?.map((partner, idx) => (
-                      <div key={idx} className="text-lg md:text-xl lg:text-2xl font-black italic tracking-tighter hover:text-blue-900 transition-colors transform hover:scale-110">
-                        {partner.name}
-                      </div>
-                    ))}
+              <section id="partners" className="bg-white/80 backdrop-blur-md rounded-[2.5rem] shadow-xl border border-white/50 p-8 mb-24 flex flex-col md:flex-row items-center justify-between gap-8 scroll-mt-32">
+                <div className="flex items-center gap-3 text-slate-400 font-black text-xs uppercase tracking-[0.1em] shrink-0 w-full md:w-auto justify-center md:justify-start"><div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>{t.partnersTitle}</div>
+                <div className="flex flex-wrap justify-center md:justify-end items-center gap-8 md:gap-16 opacity-50 grayscale hover:grayscale-0 transition-all duration-500 cursor-pointer font-black w-full">
+                    {adminConfig.trustedPartners?.map((partner, idx) => (<div key={idx} className="text-xl md:text-2xl font-black italic tracking-tighter hover:text-blue-900 transition-colors transform hover:scale-110">{partner.name}</div>))}
                 </div>
               </section>
             )}
 
             {isSearching && (
-              <div className="bg-white rounded-[2rem] md:rounded-[3rem] p-8 md:p-20 shadow-xl border border-slate-100 text-center mb-16 md:mb-32">
-                <div className="relative w-20 h-20 md:w-24 md:h-24 mx-auto mb-6 md:mb-8">
+              <div className="bg-white rounded-[3rem] p-20 shadow-xl border border-slate-100 text-center mb-32">
+                <div className="relative w-24 h-24 mx-auto mb-8">
                     <div className="absolute inset-0 border-8 border-slate-100 rounded-full"></div>
                     <div className="absolute inset-0 border-8 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                    <Brain className="absolute inset-0 m-auto text-blue-600 animate-pulse" size={28} />
+                    <Brain className="absolute inset-0 m-auto text-blue-600 animate-pulse" size={32} />
                 </div>
-                <h3 className="text-slate-900 font-black text-xl md:text-3xl animate-pulse tracking-tight mb-2">{t.loadingTitle}</h3>
-                <p className="text-slate-400 font-medium text-sm md:text-base">{t.loadingDesc}</p>
+                <h3 className="text-slate-900 font-black text-2xl md:text-3xl animate-pulse tracking-tight mb-2">{t.loadingTitle}</h3>
+                <p className="text-slate-400 font-medium">{t.loadingDesc}</p>
               </div>
             )}
 
-            {/* --- تصميم جديد للبطاقات مع دليل المقارنة --- */}
             {results && !isSearching && (
-              <div className="animate-in fade-in slide-in-from-bottom-10 duration-700 mb-16 md:mb-32">
+              <div className="space-y-12 animate-in fade-in slide-in-from-bottom-10 duration-700 mb-32">
                 {aiSummary && (
-                    <div className="bg-gradient-to-br from-slate-900 to-blue-950 text-white p-6 md:p-12 rounded-[2rem] md:rounded-[3rem] shadow-2xl mb-8 relative overflow-hidden border border-white/10">
+                    <div className="bg-gradient-to-br from-slate-900 to-blue-950 text-white p-8 md:p-12 rounded-[3rem] shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-8 relative overflow-hidden border border-white/10">
                         <div className="absolute top-0 right-0 w-full h-full opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-                        <div className="relative z-10">
-                          <div className="flex items-center gap-3 mb-4 md:mb-6 text-blue-300 font-black text-sm uppercase tracking-widest bg-white/10 w-fit px-4 py-1.5 rounded-full backdrop-blur-sm"><BarChart3 size={16} /> {t.aiTitle}</div>
-                          <p className="text-white text-xl md:text-4xl font-black leading-snug tracking-tight mb-4">"{aiSummary.summary}"</p>
+                        <div className="relative z-10 flex-1">
+                          <div className="flex items-center gap-3 mb-6 text-blue-300 font-black text-sm uppercase tracking-widest bg-white/10 w-fit px-4 py-1.5 rounded-full backdrop-blur-sm"><BarChart3 size={16} /> {t.aiTitle}</div>
+                          <p className="text-white text-2xl md:text-4xl font-black leading-snug tracking-tight mb-4">"{aiSummary.summary}"</p>
+                        </div>
+                        <div className="relative z-10 bg-white/10 backdrop-blur-md border border-white/10 p-8 rounded-[2.5rem] shadow-2xl shrink-0 text-center min-w-[220px]">
+                            <span className="text-xs font-bold text-blue-200 block mb-3 uppercase tracking-widest">{t.winner}</span>
+                            <div className="flex flex-col items-center justify-center gap-2 font-black text-3xl">
+                                <div className="bg-green-500 rounded-full p-2 mb-2 shadow-lg shadow-green-500/30"><CheckCircle size={32} className="text-white" /></div>
+                                {aiSummary.verdict}
+                            </div>
                         </div>
                     </div>
                 )}
-
-                {/* دليل المقارنة */}
-                {showComparisonGuide && (
-                  <div className="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-[2rem] border-2 border-blue-100">
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                      <div className="flex items-center gap-3">
-                        <div className="bg-blue-100 p-3 rounded-2xl">
-                          <BarChart3 className="text-blue-600" size={24} />
-                        </div>
-                        <div>
-                          <h3 className="font-black text-slate-900 text-lg">🔍 كيف تقارن بين النتائج؟</h3>
-                          <p className="text-slate-600 text-sm">استخدم الأزرار بالأسفل لتغيير طريقة عرض النتائج</p>
-                        </div>
-                      </div>
-                      <button 
-                        onClick={() => setShowComparisonGuide(false)}
-                        className="text-blue-600 font-bold text-sm hover:text-blue-800 flex items-center gap-1"
-                      >
-                        <XIcon size={16} /> إخفاء التلميح
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* عناصر التحكم */}
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-                  <div>
-                    <h2 className="text-2xl md:text-3xl font-black text-slate-900">{t.comparison}</h2>
-                    <p className="text-slate-500 font-bold">{sortedResults.length} {t.allResults}</p>
-                  </div>
-                  
-                  <div className="flex flex-wrap gap-3">
-                    <div className="bg-white border border-slate-200 rounded-xl p-2">
-                      <select 
-                        className="bg-transparent font-bold text-slate-700 focus:outline-none"
-                        value={sortBy}
-                        onChange={(e) => setSortBy(e.target.value)}
-                      >
-                        <option value="bestMatch">{t.bestMatch}</option>
-                        <option value="price">{t.price} ↑</option>
-                        <option value="rating">{t.rating} ↓</option>
-                      </select>
-                    </div>
-                    
-                    {/* أزرار عرض مختلفة */}
-                    <div className="flex gap-2">
-                      <button 
-                        onClick={() => setIsMobile(!isMobile)}
-                        className={`px-4 py-2 rounded-xl font-bold text-sm transition-colors ${isMobile ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-                      >
-                        {isMobile ? 'عرض الجوال' : 'عرض الديسكتوب'}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* تصميم البطاقات للجوال - Horizontal Scroll */}
-                {isMobile ? (
-                  <>
-                    {/* عرض بطاقة واحدة كبيرة أولاً */}
-                    <div className="mb-8 bg-white rounded-[2rem] shadow-xl border border-slate-100 overflow-hidden">
-                      <div className="p-6 border-b border-slate-200">
-                        <h3 className="font-black text-xl text-slate-900 mb-2">أفضل نتيجة</h3>
-                        <p className="text-slate-500 text-sm">النتيجة الأفضل بناءً على السعر والجودة</p>
-                      </div>
-                      {sortedResults.slice(0, 1).map((item) => (
-                        <div key={item.id} className="p-6">
-                          <div className={`${item.storeColor} text-white p-6 rounded-2xl mb-6`}>
-                            <div className="flex justify-between items-center">
-                              <h4 className="font-black text-2xl">{item.store}</h4>
-                              <div className="bg-white/20 px-3 py-1 rounded-full text-xs font-black uppercase">
-                                {t.trusted}
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="space-y-6">
-                            <div className="flex justify-between items-center">
-                              <div>
-                                <div className="text-4xl font-black text-slate-900">{item.price}</div>
-                                <div className="text-lg text-slate-400">{item.currency}</div>
-                              </div>
-                              <div className="text-red-400 line-through font-black">
-                                {item.originalPrice} {item.currency}
-                              </div>
-                            </div>
-                            
-                            <button 
-                              onClick={() => document.getElementById('allResultsMobile').scrollIntoView({ behavior: 'smooth' })}
-                              className="w-full bg-blue-600 text-white py-4 rounded-xl font-black text-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-                            >
-                              <ChevronDown size={20} />
-                              عرض جميع النتائج ({sortedResults.length})
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  {results.map((item) => (
+                    <div key={item.id} className="bg-white rounded-[2.5rem] shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border border-slate-100 overflow-hidden flex flex-col group relative">
+                      {item.store.includes('شريك') && (<div className="absolute top-6 right-6 bg-red-500 text-white px-4 py-1.5 rounded-full text-[10px] font-black z-20 animate-pulse shadow-lg ring-4 ring-red-100">{t.specialOffer}</div>)}
+                      <div className={`${item.storeColor} py-8 px-8 text-white flex justify-between items-start relative overflow-hidden`}>
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                        <div><span className="font-black text-2xl tracking-tighter block mb-1">{item.store}</span><div className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase backdrop-blur-md inline-flex items-center gap-1"><Shield size={10} /> {t.trusted}</div></div>
+                        <div className="relative z-10 flex gap-2">
+                            <button onClick={() => handleShare(item)} className="bg-white/20 hover:bg-white hover:text-blue-600 p-2 rounded-full transition-all text-white backdrop-blur-md" title="مشاركة">
+                                <Share2 size={20} />
                             </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* جميع النتائج في Horizontal Scroll */}
-                    <div id="allResultsMobile" className="mb-8">
-                      <h3 className="font-black text-xl text-slate-900 mb-4">جميع النتائج ({sortedResults.length})</h3>
-                      <div className="relative">
-                        <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 snap-x snap-mandatory">
-                          {sortedResults.map((item) => (
-                            <div key={item.id} className="min-w-[85vw] bg-white rounded-2xl shadow-lg border border-slate-100 p-6 snap-center">
-                              <div className={`${item.storeColor} text-white p-4 rounded-2xl mb-4`}>
-                                <div className="flex justify-between items-center">
-                                  <h4 className="font-black text-xl">{item.store}</h4>
-                                  <div className="flex gap-2">
-                                    <button onClick={() => toggleFavorite(item)} className="bg-white/20 hover:bg-white hover:text-red-500 p-2 rounded-full transition-all text-white">
-                                      <Heart size={18} className={isFavorite(item) ? 'fill-red-500 text-red-500' : ''} />
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
-                              
-                              <div className="space-y-4">
-                                <div className="text-center">
-                                  <div className="text-3xl font-black text-slate-900">{item.price}</div>
-                                  <div className="text-slate-400">{item.currency}</div>
-                                  <div className="text-sm text-red-400 line-through mt-1">
-                                    {item.originalPrice} {item.currency}
-                                  </div>
-                                </div>
-                                
-                                <div className="grid grid-cols-2 gap-3">
-                                  <div className="bg-slate-50 p-3 rounded-xl text-center">
-                                    <Star size={16} className="text-yellow-500 fill-yellow-500 inline-block mb-1" />
-                                    <div className="text-sm font-bold text-slate-900">{item.rating}</div>
-                                    <div className="text-xs text-slate-500">{t.rating}</div>
-                                  </div>
-                                  <div className="bg-slate-50 p-3 rounded-xl text-center">
-                                    <Shield size={16} className="text-blue-500 inline-block mb-1" />
-                                    <div className="text-sm font-bold text-slate-900">{item.warranty}</div>
-                                    <div className="text-xs text-slate-500">{t.warrantyTitle}</div>
-                                  </div>
-                                </div>
-                                
-                                <a 
-                                  href={getStoreLink(item.storeKey)} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer" 
-                                  className="block w-full bg-slate-900 text-white py-3 rounded-xl font-bold text-center hover:bg-blue-600 transition-colors"
-                                >
-                                  {t.visitStore}
-                                </a>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                        
-                        {/* مؤشر التمرير */}
-                        <div className="flex justify-center gap-2 mt-4">
-                          {sortedResults.map((_, idx) => (
-                            <div key={idx} className="w-2 h-2 rounded-full bg-slate-300"></div>
-                          ))}
+                            <button onClick={() => toggleFavorite(item)} className="bg-white/20 hover:bg-white hover:text-red-500 p-2 rounded-full transition-all text-white backdrop-blur-md" title="مفضلتي">
+                                <Heart size={20} className={isFavorite(item) ? 'fill-red-500 text-red-500' : ''} />
+                            </button>
                         </div>
                       </div>
-                      
-                      <div className="text-center mt-6">
-                        <p className="text-slate-500 text-sm">اسحب لليمين لرؤية المزيد ←</p>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  /* تصميم البطاقات للديسكتوب - Grid */
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-                    {sortedResults.map((item) => (
-                      <div key={item.id} className="bg-white rounded-[2rem] md:rounded-[2.5rem] shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border border-slate-100 overflow-hidden flex flex-col group">
-                        {/* Header */}
-                        <div className={`${item.storeColor} py-6 md:py-8 px-6 md:px-8 text-white relative overflow-hidden`}>
-                          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h3 className="font-black text-xl md:text-2xl tracking-tighter mb-2">{item.store}</h3>
-                              <div className="flex items-center gap-2">
-                                <div className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase backdrop-blur-md inline-flex items-center gap-1">
-                                  <Shield size={10} /> {t.trusted}
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex gap-2">
-                              <button onClick={() => handleShare(item)} className="bg-white/20 hover:bg-white hover:text-blue-600 p-2 rounded-full transition-all text-white backdrop-blur-md">
-                                <Share2 size={18} />
-                              </button>
-                              <button onClick={() => toggleFavorite(item)} className="bg-white/20 hover:bg-white hover:text-red-500 p-2 rounded-full transition-all text-white backdrop-blur-md">
-                                <Heart size={18} className={isFavorite(item) ? 'fill-red-500 text-red-500' : ''} />
-                              </button>
-                            </div>
-                          </div>
+                      <div className="p-8 flex-grow flex flex-col">
+                        <div className="flex justify-between items-end mb-8 border-b border-dashed border-slate-200 pb-6">
+                          <div><span className="text-5xl font-black text-slate-900 leading-none tracking-tighter">{item.price}</span><span className="text-lg text-slate-400 font-bold mx-2 uppercase">{item.currency}</span></div>
+                          <div className="text-xs text-red-400 line-through font-black opacity-50 mb-2">{item.originalPrice}</div>
                         </div>
-
-                        {/* Price Section */}
-                        <div className="p-6 md:p-8 border-b border-dashed border-slate-200">
-                          <div className="flex justify-between items-end">
-                            <div>
-                              <span className="text-4xl md:text-5xl font-black text-slate-900 leading-none">{item.price}</span>
-                              <span className="text-lg text-slate-400 font-bold mx-2">{item.currency}</span>
-                            </div>
-                            <div className="text-sm text-red-400 line-through font-black opacity-50">
-                              {item.originalPrice} {item.currency}
-                            </div>
-                          </div>
+                        <div className="space-y-5 mb-8 flex-grow">
+                          <div className="flex items-center gap-4 text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-2xl"><Star size={20} className="text-yellow-400 fill-yellow-400 shrink-0" /><div><span className="block text-slate-900">{item.rating} {t.rating}</span><span className="text-slate-400 font-medium text-xs">{t.from} {item.reviewsCount.toLocaleString()} {t.client}</span></div></div>
+                          <div className="flex items-center gap-4 text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-2xl"><Shield size={20} className="text-blue-500 shrink-0" /><div><span className="block text-slate-900">{t.warrantyTitle}</span><span className="text-slate-400 font-medium text-xs">{item.warranty}</span></div></div>
+                          <div className="flex items-center gap-4 text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-2xl"><ShoppingCart size={20} className="text-indigo-500 shrink-0" /><div><span className="block text-slate-900">{t.deliveryTitle}</span><span className="text-slate-400 font-medium text-xs">{item.delivery}</span></div></div>
                         </div>
-
-                        {/* Details */}
-                        <div className="p-6 md:p-8 flex-grow">
-                          <div className="space-y-4 mb-6">
-                            {/* Rating */}
-                            <div className="flex items-center gap-3">
-                              <div className="bg-yellow-100 p-2 rounded-xl">
-                                <Star size={20} className="text-yellow-500 fill-yellow-500" />
-                              </div>
-                              <div>
-                                <div className="font-black text-slate-900">{item.rating} {t.rating}</div>
-                                <div className="text-xs text-slate-500">{item.reviewsCount.toLocaleString()} {t.client}</div>
-                              </div>
-                            </div>
-
-                            {/* Warranty */}
-                            <div className="flex items-center gap-3">
-                              <div className="bg-blue-100 p-2 rounded-xl">
-                                <Shield size={20} className="text-blue-500" />
-                              </div>
-                              <div>
-                                <div className="font-black text-slate-900">{t.warrantyTitle}</div>
-                                <div className="text-xs text-slate-500">{item.warranty}</div>
-                              </div>
-                            </div>
-
-                            {/* Delivery */}
-                            <div className="flex items-center gap-3">
-                              <div className="bg-green-100 p-2 rounded-xl">
-                                <ShoppingCart size={20} className="text-green-500" />
-                              </div>
-                              <div>
-                                <div className="font-black text-slate-900">{t.deliveryTitle}</div>
-                                <div className="text-xs text-slate-500">{item.delivery}</div>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* AI Analysis */}
-                          <div className="bg-blue-50 p-4 rounded-2xl mb-6">
-                            <div className="flex items-start gap-2">
-                              <Brain size={16} className="text-blue-600 mt-0.5" />
-                              <p className="text-sm text-blue-800 font-bold leading-relaxed">"{item.aiAnalysis}"</p>
-                            </div>
-                          </div>
-
-                          {/* CTA Button */}
-                          <a 
-                            href={getStoreLink(item.storeKey)} 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            className="block w-full bg-slate-900 hover:bg-blue-600 text-white py-4 rounded-[1.5rem] font-black text-center transition-all shadow-lg hover:shadow-xl active:scale-95 group/btn"
-                          >
-                            <div className="flex items-center justify-center gap-2">
-                              {t.visitStore}
-                              <ExternalLink size={18} className="group-hover/btn:translate-x-1 transition-transform" />
-                            </div>
-                          </a>
-                        </div>
+                        <div className="bg-blue-50 p-5 rounded-2xl text-xs text-blue-800 mb-8 font-bold leading-relaxed flex gap-3 items-start"><Info size={16} className="shrink-0 mt-0.5" />"{item.aiAnalysis}"</div>
+                        <a href={getStoreLink(item.storeKey)} target="_blank" rel="noopener noreferrer" className="w-full bg-slate-900 text-white py-5 rounded-[1.5rem] font-black text-lg hover:bg-blue-600 transition-all flex justify-center items-center gap-2 shadow-xl hover:shadow-blue-200 active:scale-95 text-center group/btn">{t.visitStore}<ExternalLink size={20} className="group-hover/btn:translate-x-1 transition-transform rtl:group-hover/btn:-translate-x-1" /></a>
                       </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* ملخص النتائج */}
-                <div className="mt-12 bg-gradient-to-r from-slate-50 to-blue-50 p-8 rounded-[2rem] border border-slate-200">
-                  <h3 className="font-black text-xl text-slate-900 mb-4 flex items-center gap-2">
-                    <CheckCircle className="text-green-600" size={24} />
-                    ملخص المقارنة
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="text-center p-4 bg-white rounded-2xl">
-                      <div className="text-3xl font-black text-blue-600">
-                        {sortedResults.reduce((min, item) => Math.min(min, item.price), Infinity)}
-                      </div>
-                      <div className="text-slate-600 font-bold">أقل سعر</div>
                     </div>
-                    <div className="text-center p-4 bg-white rounded-2xl">
-                      <div className="text-3xl font-black text-green-600">
-                        {sortedResults.reduce((max, item) => Math.max(max, item.rating), 0)}
-                      </div>
-                      <div className="text-slate-600 font-bold">أعلى تقييم</div>
-                    </div>
-                    <div className="text-center p-4 bg-white rounded-2xl">
-                      <div className="text-3xl font-black text-purple-600">{sortedResults.length}</div>
-                      <div className="text-slate-600 font-bold">عدد المتاجر</div>
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </div>
             )}
 
             {!results && !isSearching && (
               <>
-                <section id="about" className="mb-16 md:mb-32 scroll-mt-32">
-                  <div className="text-center mb-8 md:mb-16">
-                    <h2 className="text-2xl md:text-5xl font-black text-slate-900 mb-4 md:mb-6">{t.howItWorksTitle}</h2>
-                    <p className="text-slate-500 font-bold text-base md:text-xl">ثلاث خطوات بسيطة.. وتوفر فلوسك</p>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-                    {[{ icon: MousePointer2, title: t.step1Title, desc: t.step1Desc, color: 'blue' }, { icon: Cpu, title: t.step2Title, desc: t.step2Desc, color: 'indigo' }, { icon: Rocket, title: t.step3Title, desc: t.step3Desc, color: 'green' }].map((item, i) => (
-                      <div key={i} className="bg-white p-6 md:p-12 rounded-[2rem] md:rounded-[3rem] shadow-xl border border-slate-100 hover:-translate-y-2 transition-all text-center group">
-                        <div className={`bg-${item.color}-50 text-${item.color}-600 w-16 h-16 md:w-24 md:h-24 rounded-[1.5rem] md:rounded-[2rem] flex items-center justify-center mx-auto mb-6 md:mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
-                          <item.icon size={32} />
-                        </div>
-                        <h3 className="text-xl md:text-2xl font-black mb-3 md:mb-4 text-slate-900">{item.title}</h3>
-                        <p className="text-slate-500 font-bold leading-relaxed text-sm md:text-base">{item.desc}</p>
-                      </div>
-                    ))}
-                  </div>
+                <section id="about" className="mb-32 scroll-mt-32">
+                  <div className="text-center mb-16"><h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-6">{t.howItWorksTitle}</h2><p className="text-slate-500 font-bold text-xl">ثلاث خطوات بسيطة.. وتوفر فلوسك</p></div>
+                  <div className="grid md:grid-cols-3 gap-8">{[{ icon: MousePointer2, title: t.step1Title, desc: t.step1Desc, color: 'blue' }, { icon: Cpu, title: t.step2Title, desc: t.step2Desc, color: 'indigo' }, { icon: Rocket, title: t.step3Title, desc: t.step3Desc, color: 'green' }].map((item, i) => (<div key={i} className="bg-white p-12 rounded-[3rem] shadow-xl border border-slate-100 hover:-translate-y-2 transition-all text-center group"><div className={`bg-${item.color}-50 text-${item.color}-600 w-24 h-24 rounded-[2rem] flex items-center justify-center mx-auto mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}><item.icon size={48} /></div><h3 className="text-2xl font-black mb-4 text-slate-900">{item.title}</h3><p className="text-slate-500 font-bold leading-relaxed">{item.desc}</p></div>))}</div>
                 </section>
-                
-                <section id="how-we-earn" className="bg-slate-900 rounded-[2rem] md:rounded-[3rem] p-8 md:p-24 text-white text-center shadow-2xl mb-16 md:mb-32 scroll-mt-32 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-blue-600/20 rounded-full blur-[60px] md:blur-[120px]"></div>
-                    <div className="absolute bottom-0 left-0 w-[200px] md:w-[400px] h-[200px] md:h-[400px] bg-indigo-600/20 rounded-full blur-[50px] md:blur-[100px]"></div>
-                    <h2 className="text-2xl md:text-5xl font-black mb-6 md:mb-8 relative z-10">{t.earnTitle}</h2>
-                    <p className="text-blue-100 text-base md:text-2xl max-w-4xl mx-auto leading-relaxed mb-8 md:mb-16 relative z-10 font-medium">{t.earnDesc}</p>
-                    <div className="flex flex-col md:flex-row justify-center gap-4 md:gap-6 relative z-10 font-black">
-                      <div className="bg-white/10 px-6 md:px-10 py-4 md:py-6 rounded-[1.5rem] md:rounded-[2rem] backdrop-blur-md border border-white/10 flex items-center justify-center gap-3 hover:bg-white/20 transition-colors">
-                        <CheckCircle size={20} className="text-green-400" /> {t.neutrality}
-                      </div>
-                      <div className="bg-white/10 px-6 md:px-10 py-4 md:py-6 rounded-[1.5rem] md:rounded-[2rem] backdrop-blur-md border border-white/10 flex items-center justify-center gap-3 hover:bg-white/20 transition-colors">
-                        <CheckCircle size={20} className="text-green-400" /> {t.noExtraCost}
-                      </div>
-                    </div>
+                <section id="how-we-earn" className="bg-slate-900 rounded-[3rem] p-10 md:p-24 text-white text-center shadow-2xl mb-32 scroll-mt-32 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-600/20 rounded-full blur-[120px]"></div><div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-indigo-600/20 rounded-full blur-[100px]"></div>
+                    <h2 className="text-3xl md:text-5xl font-black mb-8 relative z-10">{t.earnTitle}</h2><p className="text-blue-100 text-lg md:text-2xl max-w-4xl mx-auto leading-relaxed mb-16 relative z-10 font-medium">{t.earnDesc}</p>
+                    <div className="flex flex-wrap justify-center gap-6 relative z-10 font-black"><div className="bg-white/10 px-10 py-6 rounded-[2rem] backdrop-blur-md border border-white/10 flex items-center gap-3 hover:bg-white/20 transition-colors"><CheckCircle size={24} className="text-green-400" /> {t.neutrality}</div><div className="bg-white/10 px-10 py-6 rounded-[2rem] backdrop-blur-md border border-white/10 flex items-center gap-3 hover:bg-white/20 transition-colors"><CheckCircle size={24} className="text-green-400" /> {t.noExtraCost}</div></div>
                 </section>
-                
-                <section id="why-trust" className="mb-16 md:mb-32 scroll-mt-32">
-                    <div className="text-center mb-8 md:mb-16">
-                      <h2 className="text-2xl md:text-5xl font-black text-slate-900 mb-4 md:mb-6">{t.trustTitle}</h2>
-                      <div className="inline-flex items-center gap-3 bg-blue-50 text-blue-900 px-4 md:px-6 py-2 md:py-3 rounded-full font-black text-base md:text-lg animate-bounce">
-                        <Activity size={20} className="text-blue-600" />
-                        <span>{realSearchCount.toLocaleString()} {t.realSearch}</span>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-                      <div className="bg-white p-6 md:p-12 rounded-[2rem] md:rounded-[3rem] shadow-xl border border-slate-100 hover:shadow-2xl transition-all">
-                        <div className="bg-blue-50 text-blue-600 w-16 h-16 md:w-20 md:h-20 rounded-[1.5rem] md:rounded-[2rem] flex items-center justify-center mb-6 md:mb-8">
-                          <BarChart3 size={28} />
-                        </div>
-                        <h3 className="text-xl md:text-2xl font-black mb-3 md:mb-4 text-slate-900">{t.trust1Title}</h3>
-                        <p className="text-slate-500 font-bold leading-relaxed text-sm md:text-base">{t.trust1Desc}</p>
-                      </div>
-                      <div className="bg-white p-6 md:p-12 rounded-[2rem] md:rounded-[3rem] shadow-xl border border-slate-100 hover:shadow-2xl transition-all">
-                        <div className="bg-green-50 text-green-600 w-16 h-16 md:w-20 md:h-20 rounded-[1.5rem] md:rounded-[2rem] flex items-center justify-center mb-6 md:mb-8">
-                          <Shield size={28} />
-                        </div>
-                        <h3 className="text-xl md:text-2xl font-black mb-3 md:mb-4 text-slate-900">{t.trust2Title}</h3>
-                        <p className="text-slate-500 font-bold leading-relaxed text-sm md:text-base">{t.trust2Desc}</p>
-                      </div>
-                      <div className="bg-white p-6 md:p-12 rounded-[2rem] md:rounded-[3rem] shadow-xl border border-slate-100 hover:shadow-2xl transition-all">
-                        <div className="bg-purple-50 text-purple-600 w-16 h-16 md:w-20 md:h-20 rounded-[1.5rem] md:rounded-[2rem] flex items-center justify-center mb-6 md:mb-8">
-                          <Heart size={28} />
-                        </div>
-                        <h3 className="text-xl md:text-2xl font-black mb-3 md:mb-4 text-slate-900">{t.trust3Title}</h3>
-                        <p className="text-slate-500 font-bold leading-relaxed text-sm md:text-base">{t.trust3Desc}</p>
-                      </div>
-                    </div>
+                <section id="why-trust" className="mb-32 scroll-mt-32">
+                    <div className="text-center mb-16"><h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-6">{t.trustTitle}</h2><div className="inline-flex items-center gap-3 bg-blue-50 text-blue-900 px-6 py-3 rounded-full font-black text-lg animate-bounce"><Activity size={24} className="text-blue-600" /><span>{realSearchCount.toLocaleString()} {t.realSearch}</span></div></div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8"><div className="bg-white p-12 rounded-[3rem] shadow-xl border border-slate-100 hover:shadow-2xl transition-all"><div className="bg-blue-50 text-blue-600 w-20 h-20 rounded-[2rem] flex items-center justify-center mb-8"><BarChart3 size={40} /></div><h3 className="text-2xl font-black mb-4 text-slate-900">{t.trust1Title}</h3><p className="text-slate-500 font-bold leading-relaxed">{t.trust1Desc}</p></div><div className="bg-white p-12 rounded-[3rem] shadow-xl border border-slate-100 hover:shadow-2xl transition-all"><div className="bg-green-50 text-green-600 w-20 h-20 rounded-[2rem] flex items-center justify-center mb-8"><Shield size={40} /></div><h3 className="text-2xl font-black mb-4 text-slate-900">{t.trust2Title}</h3><p className="text-slate-500 font-bold leading-relaxed">{t.trust2Desc}</p></div><div className="bg-white p-12 rounded-[3rem] shadow-xl border border-slate-100 hover:shadow-2xl transition-all"><div className="bg-purple-50 text-purple-600 w-20 h-20 rounded-[2rem] flex items-center justify-center mb-8"><Heart size={40} /></div><h3 className="text-2xl font-black mb-4 text-slate-900">{t.trust3Title}</h3><p className="text-slate-500 font-bold leading-relaxed">{t.trust3Desc}</p></div></div>
                 </section>
               </>
             )}
@@ -1780,19 +1147,13 @@ const App = () => {
         </>
       )}
 
-      {/* صفحة سياسة الخصوصية */}
-      {view === 'privacy' && <PrivacyPage />}
-
-      {/* صفحة تواصل معنا */}
-      {view === 'contact' && <ContactPage />}
-
-      {/* صفحة لوحة التحكم */}
+      {/* Admin View */}
       {view === 'admin' && (
-        <div className="max-w-7xl mx-auto px-4 py-32 animate-in fade-in">
+        <div className="max-w-5xl mx-auto px-4 py-32 animate-in fade-in">
           {!isAdminAuthenticated ? (
-            <div className="bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl p-6 md:p-12 max-w-sm mx-auto text-center border border-slate-100">
+            <div className="bg-white rounded-[3rem] shadow-2xl p-12 max-w-sm mx-auto text-center border border-slate-100">
                <Lock size={40} className="mx-auto mb-6 text-slate-900" />
-               <h1 className="text-xl md:text-2xl font-black mb-6">{t.adminLogin}</h1>
+               <h1 className="text-2xl font-black mb-6">{t.adminLogin}</h1>
                <p className="text-slate-400 mb-6 font-bold text-sm">استخدم بيانات حساب الفايربيس (Firebase) الخاصة بك</p>
                {loginError && <p className="text-red-500 font-bold text-xs mb-4">{loginError}</p>}
                <form onSubmit={handleAdminLogin} className="space-y-4">
@@ -1803,210 +1164,327 @@ const App = () => {
                <button onClick={resetToHome} className="mt-6 text-slate-400 font-bold text-sm">{t.back}</button>
             </div>
           ) : (
-            <div className="space-y-8">
-              {/* Header */}
-              <div className="bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl p-6 md:p-8 border border-slate-100">
-                <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
-                  <div className="flex items-center gap-4">
-                    <div className="bg-blue-100 p-3 rounded-2xl">
-                      <Settings className="text-blue-600" size={28} />
-                    </div>
-                    <div>
-                      <h1 className="text-2xl md:text-3xl font-black text-slate-900">{t.dashboard}</h1>
-                      <p className="text-slate-500 font-bold">لوحة تحكم إدارة الموقع</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-3">
-                    <button onClick={handleSaveAllChanges} className="px-6 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 shadow-lg flex items-center gap-2">
-                      <Save size={18} /> حفظ التغييرات
-                    </button>
-                    <button onClick={handleLogout} className="px-6 py-3 bg-red-100 text-red-600 rounded-xl font-bold hover:bg-red-200 flex items-center gap-2">
-                      <LogOut size={18} /> خروج
-                    </button>
-                  </div>
+            <div className="bg-white rounded-[3rem] shadow-2xl p-10 md:p-16 border border-slate-100">
+              <div className="flex justify-between items-center mb-10 border-b pb-6">
+                <div className="flex items-center gap-4">
+                    <h1 className="text-2xl font-black">الإعدادات ⚙️</h1>
+                    <div className="relative bg-slate-100 p-2 rounded-xl"><Bell className={`w-6 h-6 ${inboxMessages.length > 0 ? 'text-red-500 animate-pulse' : 'text-slate-400'}`} />{inboxMessages.length > 0 && <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-black">{inboxMessages.length}</span>}</div>
                 </div>
-                
-                {/* إدارة صفحات الموقع */}
-                <div className="mt-8 bg-blue-50 p-6 rounded-2xl">
-                  <h3 className="font-black text-blue-900 mb-4">إدارة صفحات الموقع</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <button 
-                      onClick={() => setView('privacy')}
-                      className="bg-white p-4 rounded-xl hover:shadow-lg transition-shadow flex items-center gap-3"
-                    >
-                      <Lock className="text-blue-600" size={20} />
-                      <div className="text-right">
-                        <div className="font-bold text-slate-900">{t.privacy}</div>
-                        <div className="text-xs text-slate-500">إدارة سياسة الخصوصية</div>
-                      </div>
-                    </button>
-                    <button 
-                      onClick={() => setView('contact')}
-                      className="bg-white p-4 rounded-xl hover:shadow-lg transition-shadow flex items-center gap-3"
-                    >
-                      <MessageSquare className="text-green-600" size={20} />
-                      <div className="text-right">
-                        <div className="font-bold text-slate-900">{t.contact}</div>
-                        <div className="text-xs text-slate-500">إدارة صفحة التواصل</div>
-                      </div>
-                    </button>
-                    <button 
-                      onClick={() => setView('merchant')}
-                      className="bg-white p-4 rounded-xl hover:shadow-lg transition-shadow flex items-center gap-3"
-                    >
-                      <Store className="text-orange-600" size={20} />
-                      <div className="text-right">
-                        <div className="font-bold text-slate-900">{t.merchant}</div>
-                        <div className="text-xs text-slate-500">صفحة الشركاء</div>
-                      </div>
-                    </button>
-                  </div>
+                <div className="flex gap-3">
+                    <button onClick={handleSaveAllChanges} className="px-6 py-2 bg-green-600 text-white rounded-xl font-black text-xs hover:bg-green-700 shadow-lg flex items-center gap-2"><Save size={14} /> حفظ التغييرات</button>
+                    <button onClick={handleLogout} className="text-red-500 font-bold text-sm flex items-center gap-1"><LogOut size={14} /> خروج</button>
                 </div>
               </div>
-
-              {/* باقي لوحة التحكم... */}
-              {/* ... (نفس محتوى لوحة التحكم السابق) ... */}
               
+              {/* Marketing & Promotion (New Section) */}
+              <div className="mb-12 bg-purple-50 border border-purple-100 rounded-[2rem] p-8">
+                  <h3 className="font-black text-purple-900 border-b border-purple-200 pb-4 mb-6 flex items-center gap-2">
+                      <Mail className="text-purple-600" />
+                      التسويق والترويج (Email Marketing)
+                  </h3>
+                  <div className="grid md:grid-cols-2 gap-8">
+                      <div>
+                          <div className="mb-4">
+                              <label className="text-xs font-bold text-slate-500 mb-2 block">فرز حسب الاهتمام (مثل: آيفون، سوني)</label>
+                              <div className="flex gap-2">
+                                  <div className="relative flex-1">
+                                      <input 
+                                          type="text" 
+                                          placeholder="اكتب كلمة للفلترة..." 
+                                          className="w-full p-3 pl-10 rounded-xl border border-purple-100 focus:border-purple-400 font-bold text-sm"
+                                          value={marketingFilter}
+                                          onChange={(e) => setMarketingFilter(e.target.value)}
+                                      />
+                                      <Filter size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-purple-300" />
+                                  </div>
+                              </div>
+                          </div>
+                          
+                          <div className="bg-white rounded-xl border border-purple-100 h-64 overflow-y-auto custom-scrollbar p-2">
+                              <div className="flex justify-between items-center px-2 pb-2 border-b border-slate-50 mb-2">
+                                  <span className="text-xs font-bold text-slate-400">القائمة المستهدفة</span>
+                                  <span className="text-[10px] font-black bg-purple-100 text-purple-600 px-2 py-1 rounded-full">{filteredSubscribers.length} مشترك</span>
+                              </div>
+                              {filteredSubscribers.length > 0 ? (
+                                  filteredSubscribers.map((sub, idx) => (
+                                      <div key={idx} className="flex items-center justify-between p-2 hover:bg-purple-50 rounded-lg transition-colors">
+                                          <div className="flex items-center gap-2 overflow-hidden">
+                                              <div className="bg-slate-100 p-1.5 rounded-full"><UserCheck size={12} className="text-slate-400" /></div>
+                                              <span className="text-xs font-bold text-slate-700 truncate" dir="ltr">{sub.email}</span>
+                                          </div>
+                                          {sub.interests && sub.interests.length > 0 && (
+                                              <span className="text-[9px] font-bold bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded ml-2 truncate max-w-[80px]">
+                                                  {sub.interests[sub.interests.length-1]}
+                                              </span>
+                                          )}
+                                      </div>
+                                  ))
+                              ) : (
+                                  <div className="h-full flex flex-col items-center justify-center text-slate-300">
+                                      <Filter size={32} className="mb-2 opacity-50" />
+                                      <span className="text-xs font-bold">لا يوجد نتائج</span>
+                                  </div>
+                              )}
+                          </div>
+                      </div>
+
+                      <div className="bg-white p-6 rounded-2xl border border-purple-100 shadow-sm flex flex-col">
+                          <h4 className="font-bold text-purple-800 text-sm mb-4">إنشاء حملة ترويجية</h4>
+                          <input 
+                              type="text" 
+                              placeholder="عنوان الرسالة (Subject)" 
+                              className="w-full p-3 rounded-xl bg-slate-50 border-none font-bold text-sm mb-3 focus:ring-2 focus:ring-purple-200"
+                              value={marketingSubject}
+                              onChange={(e) => setMarketingSubject(e.target.value)}
+                          />
+                          <textarea 
+                              placeholder="نص الرسالة..." 
+                              className="w-full p-3 rounded-xl bg-slate-50 border-none font-bold text-sm mb-4 focus:ring-2 focus:ring-purple-200 h-32 resize-none"
+                              value={marketingBody}
+                              onChange={(e) => setMarketingBody(e.target.value)}
+                          ></textarea>
+                          <div className="mt-auto flex justify-between items-center">
+                              <span className="text-[10px] font-bold text-slate-400">سيتم الإرسال لـ {filteredSubscribers.length} شخص</span>
+                              <button 
+                                  onClick={handleSendCampaign}
+                                  className="bg-purple-600 text-white px-6 py-2 rounded-xl font-bold text-sm hover:bg-purple-700 flex items-center gap-2 shadow-lg shadow-purple-200"
+                                  disabled={filteredSubscribers.length === 0}
+                              >
+                                  <Send size={16} /> إرسال الحملة
+                              </button>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+
+              {/* API Settings */}
+              <div className="mb-12 bg-cyan-50 border border-cyan-100 rounded-[2rem] p-8">
+                  <h3 className="font-black text-cyan-900 border-b border-cyan-200 pb-4 mb-6 flex items-center gap-2">
+                      <Link className="text-cyan-600" />
+                      إعدادات الربط البرمجي (APIs)
+                  </h3>
+                  <div className="space-y-4">
+                      {adminConfig.customApis?.map((api, idx) => (
+                          <div key={idx} className="flex items-center gap-3 bg-white p-3 rounded-xl shadow-sm">
+                              <span className="font-bold text-cyan-800">{api.name}</span>
+                              <span className="flex-1 text-xs text-slate-500 truncate" dir="ltr">{api.url}</span>
+                              <button onClick={() => handleDeleteApi(idx)} className="text-cyan-300 hover:text-red-500"><Trash2 size={16} /></button>
+                          </div>
+                      ))}
+                      <div className="flex gap-2">
+                          <input type="text" placeholder="اسم المتجر" className="w-1/4 p-3 rounded-xl text-sm font-bold border-none" value={newApiName} onChange={(e) => setNewApiName(e.target.value)} />
+                          <input type="text" placeholder="رابط البحث (API URL)" className="flex-1 p-3 rounded-xl text-sm font-bold border-none text-left" dir="ltr" value={newApiUrl} onChange={(e) => setNewApiUrl(e.target.value)} />
+                          <button onClick={handleAddApi} className="bg-cyan-600 text-white px-6 rounded-xl font-bold text-sm hover:bg-cyan-700"><Plus size={20} /></button>
+                      </div>
+                      <p className="text-[10px] text-cyan-600 font-bold mt-2">* يجب أن يدعم الرابط بروتوكول CORS ويعيد بيانات بصيغة JSON.</p>
+                  </div>
+              </div>
+              
+              {/* Analytics - Advanced */}
+              <div className="mb-12 bg-indigo-50 border border-indigo-100 rounded-[2rem] p-8">
+                  <h3 className="font-black text-indigo-900 border-b border-indigo-200 pb-4 mb-6 flex items-center gap-2"><BarChart2 className="text-indigo-600" />إحصائيات البحث المتقدمة</h3>
+                  
+                  {/* Monthly Growth Chart */}
+                  <div className="mb-8">
+                      <p className="text-sm font-bold text-indigo-400 mb-4 flex items-center gap-2"><TrendingUp size={16} /> النمو الشهري (Monthly Growth)</p>
+                      <div className="bg-white p-6 rounded-2xl shadow-sm border border-indigo-50 h-64 flex items-end gap-4 overflow-x-auto custom-scrollbar">
+                          {monthlyStats.length > 0 ? (
+                              (() => {
+                                  const maxMonthly = Math.max(...monthlyStats.map(s => s.total_searches));
+                                  return monthlyStats.map((stat, idx) => {
+                                      const heightPercent = (stat.total_searches / maxMonthly) * 100;
+                                      return (
+                                          <div key={idx} className="flex flex-col items-center gap-2 group min-w-[50px]">
+                                              <div className="w-12 bg-gradient-to-t from-indigo-500 to-blue-400 rounded-t-xl transition-all duration-500 relative shadow-md group-hover:scale-105" style={{ height: `${heightPercent}%` }}>
+                                                  <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity font-bold whitespace-nowrap">{stat.total_searches}</span>
+                                              </div>
+                                              <span className="text-[10px] font-black text-slate-400" dir="ltr">{stat.month}</span>
+                                          </div>
+                                      );
+                                  });
+                              })()
+                          ) : (
+                              <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs font-bold">جاري جمع بيانات شهرية...</div>
+                          )}
+                      </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      {/* Top Terms (Pie-like) */}
+                      <div>
+                          <p className="text-sm font-bold text-indigo-400 mb-4">الكلمات الأكثر بحثاً</p>
+                          <div className="flex items-end gap-2 h-64 mt-6 bg-white p-4 rounded-xl border border-indigo-50 shadow-inner">
+                            {topSearchTerms.length > 0 ? (
+                                (() => {
+                                    const maxCount = Math.max(...topSearchTerms.map(t => t.count));
+                                    return topSearchTerms.map((item, idx) => {
+                                        const heightPercent = (item.count / maxCount) * 100;
+                                        return (
+                                            <div key={idx} className="flex-1 flex flex-col items-center group relative h-full justify-end">
+                                                <div className="w-full bg-indigo-500 rounded-t-lg transition-all duration-500 hover:bg-indigo-600 relative shadow-sm" style={{ height: `${heightPercent}%` }}>
+                                                    <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 font-bold">{item.count} بحث</span>
+                                                </div>
+                                            </div>
+                                        );
+                                    });
+                                })()
+                            ) : (<div className="w-full h-full flex items-center justify-center text-slate-400 text-xs font-bold">لا توجد بيانات كافية</div>)}
+                          </div>
+                          <div className="flex gap-2 mt-2">{topSearchTerms.map((item, idx) => (<span key={idx} className="flex-1 text-[8px] text-center text-slate-500 font-bold truncate block">{item.term}</span>))}</div>
+                      </div>
+                      
+                      {/* Live Feed Table */}
+                      <div className="flex flex-col h-[350px]">
+                          <p className="text-sm font-bold text-indigo-400 mb-4 flex items-center gap-2"><Clock size={16} /> سجل البحث المباشر (Live Feed)</p>
+                          <div className="bg-white rounded-2xl shadow-sm border border-indigo-50 flex-1 overflow-hidden flex flex-col">
+                              <div className="flex bg-indigo-50 p-3 text-[10px] font-black text-indigo-800 uppercase tracking-wider">
+                                  <div className="w-1/3">الوقت</div>
+                                  <div className="flex-1">كلمة البحث</div>
+                                  <div className="w-1/4">الجهاز</div>
+                              </div>
+                              <div className="overflow-y-auto custom-scrollbar flex-1 p-2 space-y-1">
+                                  {searchLogs.length > 0 ? (
+                                      searchLogs.map((log, idx) => (
+                                          <div key={idx} className="flex items-center p-3 text-xs border-b border-slate-50 last:border-0 hover:bg-indigo-50/50 transition-colors rounded-lg">
+                                              <div className="w-1/3 text-slate-400 font-bold" dir="ltr">
+                                                  {new Date(log.timestamp).toLocaleDateString('en-GB')} <br/>
+                                                  <span className="text-indigo-300">{new Date(log.timestamp).toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'})}</span>
+                                              </div>
+                                              <div className="flex-1 font-black text-slate-700">{log.term}</div>
+                                              <div className="w-1/4 text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-full text-center">{log.device || 'Desktop'}</div>
+                                          </div>
+                                      ))
+                                  ) : (
+                                      <div className="text-center py-10 text-slate-300 text-xs font-bold">لا توجد عمليات بحث حديثة</div>
+                                  )}
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+
+              {/* Other Configs */}
+               <div className="mb-12"><h3 className="font-black text-slate-900 border-b pb-4 mb-6 flex items-center gap-2"><MessageCircle className="text-blue-600" />الرسائل والطلبات الواردة</h3><div className="bg-slate-50 rounded-[2rem] p-6 max-h-[400px] overflow-y-auto custom-scrollbar">{inboxMessages.length === 0 ? (<div className="text-center py-12 text-slate-400 font-bold">لا توجد رسائل جديدة</div>) : (<div className="space-y-4">{inboxMessages.map((msg) => (<div key={msg.id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative group"><button onClick={() => handleDeleteMessage(msg.id)} className="absolute top-4 left-4 text-slate-300 hover:text-red-500 transition-colors"><Trash2 size={18} /></button><div className="flex items-center gap-3 mb-2"><span className={`text-[10px] font-black px-3 py-1 rounded-full ${msg.type === 'partner_request' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'}`}>{msg.type === 'partner_request' ? 'طلب شراكة' : 'رسالة تواصل'}</span><span className="text-xs text-slate-400 font-bold" dir="ltr">{new Date(msg.timestamp).toLocaleDateString('en-GB')}</span></div><h4 className="font-black text-lg text-slate-900 mb-1">{msg.type === 'partner_request' ? msg.store : msg.name}</h4><p className="text-blue-600 font-bold text-sm mb-2" dir="ltr">{msg.email}</p>{msg.message && (<p className="text-slate-600 text-sm leading-relaxed bg-slate-50 p-3 rounded-xl mt-2">"{msg.message}"</p>)}</div>))}</div>)}</div></div>
+
+               <div className="mb-12 bg-orange-50 border border-orange-100 rounded-[2rem] p-8"><h3 className="font-black text-orange-900 border-b border-orange-200 pb-4 mb-6 flex items-center gap-2"><Flame className="text-orange-600" />إدارة الكلمات الرائجة (تظهر في الرئيسية)</h3><div className="space-y-4"><div className="flex flex-wrap gap-2 mb-4">{adminConfig.trendingKeywords?.map((kw, idx) => (<div key={idx} className="bg-white text-orange-800 px-3 py-2 rounded-xl text-sm font-bold flex items-center gap-2 shadow-sm border border-orange-100">{kw}<button onClick={() => handleDeleteTrendingKeyword(idx)} className="text-orange-300 hover:text-red-500 transition-colors"><X size={14} /></button></div>))}</div><div className="flex gap-2"><input type="text" placeholder="أضف كلمة جديدة" className="flex-1 p-4 rounded-xl text-sm font-bold border-none shadow-sm" value={newTrendingKeyword} onChange={(e) => setNewTrendingKeyword(e.target.value)} /><button onClick={handleAddTrendingKeyword} className="bg-orange-600 text-white px-6 rounded-xl font-bold text-sm hover:bg-orange-700 shadow-lg shadow-orange-200"><Plus size={20} /></button></div></div></div>
+
+               <div className="grid md:grid-cols-2 gap-10 mb-12">
+                 <div className="space-y-6"><h3 className="font-black text-blue-900 border-b pb-2">بيانات التواصل</h3><div className="space-y-2"><label className="text-xs font-bold text-slate-400">الواتساب</label><input type="text" value={adminConfig.whatsappNumber} onChange={(e) => setAdminConfig({...adminConfig, whatsappNumber: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div><div className="space-y-2"><label className="text-xs font-bold text-slate-400">الإيميل</label><input type="email" value={adminConfig.supportEmail} onChange={(e) => setAdminConfig({...adminConfig, supportEmail: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div><div className="space-y-2"><label className="text-xs font-bold text-slate-400">تويتر</label><input type="text" value={adminConfig.twitterLink} onChange={(e) => setAdminConfig({...adminConfig, twitterLink: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div><div className="space-y-2"><label className="text-xs font-bold text-slate-400">إنستقرام</label><input type="text" value={adminConfig.instagramLink} onChange={(e) => setAdminConfig({...adminConfig, instagramLink: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div></div>
+                 <div className="space-y-6"><h3 className="font-black text-green-600 border-b pb-2">روابط المتاجر</h3><div className="max-h-64 overflow-y-auto pr-2 space-y-3 custom-scrollbar">{adminConfig.affiliateLinks?.map((store, index) => (<div key={index} className="flex gap-2"><input type="text" value={store.link} onChange={(e) => { const newLinks = [...adminConfig.affiliateLinks]; newLinks[index].link = e.target.value; setAdminConfig({...adminConfig, affiliateLinks: newLinks}); }} className="w-full p-3 rounded-xl bg-slate-50 font-bold border text-xs" dir="ltr" /><div className="w-24 p-3 rounded-xl bg-slate-100 font-black text-center text-xs flex items-center justify-center">{store.name.toUpperCase()}</div><button onClick={() => handleDeleteStore(index)} className="p-3 rounded-xl bg-red-50 text-red-500 hover:bg-red-100"><Trash2 size={16} /></button></div>))}</div><div className="bg-green-50 p-4 rounded-2xl border border-green-100"><h4 className="font-bold text-green-700 text-sm mb-3">إضافة متجر جديد</h4><div className="flex gap-2 mb-2"><input type="text" placeholder="الاسم" className="w-1/2 p-3 rounded-xl border text-sm font-bold" value={newStoreName} onChange={(e) => setNewStoreName(e.target.value)} /><input type="text" placeholder="الرابط" className="w-1/2 p-3 rounded-xl border text-sm font-bold text-left" dir="ltr" value={newStoreLink} onChange={(e) => setNewStoreLink(e.target.value)} /></div><button onClick={handleAddStore} className="w-full bg-green-600 text-white py-2 rounded-xl font-bold text-sm hover:bg-green-700 flex items-center justify-center gap-2"><Plus size={16} /> إضافة</button></div></div>
+                 <div className="space-y-6"><h3 className="font-black text-blue-900 border-b pb-2">شركاء نثق بهم</h3><div className="space-y-2">{adminConfig.trustedPartners?.map((partner, index) => (<div key={index} className="flex gap-2 items-center"><div className="flex-1 p-3 rounded-xl bg-slate-100 font-black text-center text-xs">{partner.name}</div><button onClick={() => handleDeletePartner(index)} className="p-3 rounded-xl bg-red-50 text-red-500 hover:bg-red-100"><Trash2 size={16} /></button></div>))}</div><div className="flex gap-2"><input type="text" placeholder="اسم الشريك" className="flex-1 p-3 rounded-xl border text-sm font-bold" value={newPartnerName} onChange={(e) => setNewPartnerName(e.target.value)} /><button onClick={handleAddPartner} className="bg-blue-600 text-white px-4 rounded-xl font-bold text-sm hover:bg-blue-700"><Plus size={16} /></button></div></div>
+                 <div className="space-y-6"><h3 className="font-black text-purple-600 border-b pb-2">العروض الخاصة</h3><div className="max-h-64 overflow-y-auto pr-2 space-y-3 custom-scrollbar">{adminConfig.exclusiveOffers?.map((offer, index) => (<div key={index} className="bg-purple-50 p-3 rounded-xl text-xs relative group"><button onClick={() => handleDeleteOffer(index)} className="absolute top-2 left-2 text-red-400 hover:text-red-600"><X size={14} /></button><p className="font-black text-purple-900">كلمة البحث: {offer.keyword}</p><p className="text-slate-600 truncate">{offer.message}</p></div>))}</div><div className="bg-purple-50 p-4 rounded-2xl border border-purple-100"><h4 className="font-bold text-purple-700 text-sm mb-3">إضافة عرض ذكي</h4><input type="text" placeholder="كلمة البحث" className="w-full p-2 mb-2 rounded-lg border text-xs font-bold" value={newOfferKeyword} onChange={(e) => setNewOfferKeyword(e.target.value)} /><input type="text" placeholder="رسالة العرض" className="w-full p-2 mb-2 rounded-lg border text-xs font-bold" value={newOfferMessage} onChange={(e) => setNewOfferMessage(e.target.value)} /><input type="text" placeholder="رابط العرض" className="w-full p-2 mb-2 rounded-lg border text-xs font-bold text-left" dir="ltr" value={newOfferLink} onChange={(e) => setNewOfferLink(e.target.value)} /><button onClick={handleAddOffer} className="w-full bg-purple-600 text-white py-2 rounded-xl font-bold text-sm hover:bg-purple-700 flex items-center justify-center gap-2"><Plus size={16} /> إضافة عرض</button></div></div>
+              </div>
             </div>
           )}
         </div>
       )}
 
-      {/* صفحة التجار */}
+      {/* باقي الصفحات (التجار، الخصوصية، تواصل معنا) */}
       {view === 'merchant' && (
         <div className="max-w-4xl mx-auto px-4 py-32 animate-in fade-in">
-           <div className="bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl p-6 md:p-20 border border-slate-100 text-center">
+           <div className="bg-white rounded-[3rem] shadow-2xl p-10 md:p-20 border border-slate-100 text-center">
              <Award size={48} className="text-blue-600 mx-auto mb-6" />
-             <h1 className="text-2xl md:text-3xl font-black text-slate-900 mb-4">شريك أعمال مقارن</h1>
-             <p className="text-slate-500 font-bold text-base md:text-lg mb-6 md:mb-10">وصل منتجاتك لآلاف العملاء.</p>
-             <form className="space-y-4 md:space-y-6 text-right max-w-xl mx-auto" onSubmit={handleMerchantSubmit}>
-               <input type="text" className="w-full p-4 md:p-5 rounded-2xl bg-slate-50 font-bold border" placeholder="اسم المتجر" required value={merchantForm.store} onChange={e => setMerchantForm({...merchantForm, store: e.target.value})} />
-               <input type="email" className="w-full p-4 md:p-5 rounded-2xl bg-slate-50 font-bold border" placeholder="إيميل التواصل" required value={merchantForm.email} onChange={e => setMerchantForm({...merchantForm, email: e.target.value})} />
-               <button type="submit" className="w-full bg-blue-600 text-white py-4 md:py-5 rounded-2xl font-black text-lg md:text-xl shadow-xl hover:bg-blue-700 transition-colors">إرسال الطلب</button>
+             <h1 className="text-3xl font-black text-slate-900 mb-4">شريك أعمال مقارن</h1>
+             <p className="text-slate-500 font-bold text-lg mb-10">وصل منتجاتك لآلاف العملاء.</p>
+             <form className="space-y-6 text-right max-w-xl mx-auto" onSubmit={handleMerchantSubmit}>
+               <input type="text" className="w-full p-5 rounded-2xl bg-slate-50 font-bold border" placeholder="اسم المتجر" required value={merchantForm.store} onChange={e => setMerchantForm({...merchantForm, store: e.target.value})} />
+               <input type="email" className="w-full p-5 rounded-2xl bg-slate-50 font-bold border" placeholder="إيميل التواصل" required value={merchantForm.email} onChange={e => setMerchantForm({...merchantForm, email: e.target.value})} />
+               <button type="submit" className="w-full bg-blue-600 text-white py-5 rounded-2xl font-black text-xl shadow-xl hover:bg-blue-700 transition-colors">إرسال الطلب</button>
              </form>
-             <button onClick={resetToHome} className="mt-8 text-slate-400 font-bold underline">الرجوع للرئيسية</button>
+             <button onClick={resetToHome} className="mt-8 text-slate-400 font-bold underline">الرجوع</button>
            </div>
         </div>
       )}
 
+      {view === 'privacy' && (
+        <div className="max-w-4xl mx-auto px-4 py-32 animate-in fade-in">
+           <div className="bg-white rounded-[3rem] shadow-2xl p-10 md:p-20 border border-slate-100 relative overflow-hidden">
+             <div className="relative z-10">
+                <h1 className="text-3xl font-black text-slate-900 mb-8 flex items-center gap-3"><Lock className="text-blue-600" /> {t.privacy}</h1>
+                <div className="space-y-8 text-slate-600 font-bold leading-loose text-base md:text-lg">
+                  <div className="bg-slate-50 p-6 rounded-2xl">
+                    <h3 className="text-xl font-black text-slate-900 mb-2">1. مقدمة</h3>
+                    <p>في "مقارن"، نأخذ خصوصيتك على محمل الجد. تشرح هذه الوثيقة كيف نجمع بياناتك ونستخدمها ونحميها عند استخدامك لموقعنا.</p>
+                  </div>
+                  <div className="bg-slate-50 p-6 rounded-2xl">
+                    <h3 className="text-xl font-black text-slate-900 mb-2">2. البيانات التي نجمعها</h3>
+                    <ul className="list-disc list-inside space-y-2">
+                        <li><strong>بيانات البحث:</strong> نقوم بتخزين كلمات البحث (بدون هوية) لتحسين خوارزمياتنا واقتراح منتجات أفضل.</li>
+                        <li><strong>بيانات الجهاز:</strong> مثل نوع المتصفح والجهاز لضمان أفضل تجربة تصفح.</li>
+                    </ul>
+                  </div>
+                  <div className="bg-slate-50 p-6 rounded-2xl">
+                    <h3 className="text-xl font-black text-slate-900 mb-2">3. ملفات تعريف الارتباط (Cookies)</h3>
+                    <p>نستخدم الكوكيز لتحسين تجربتك وتذكر تفضيلاتك. يمكنك تعطيل الكوكيز من إعدادات متصفحك، لكن قد يؤثر ذلك على بعض وظائف الموقع.</p>
+                  </div>
+                  <div className="bg-slate-50 p-6 rounded-2xl">
+                    <h3 className="text-xl font-black text-slate-900 mb-2">4. الروابط الخارجية والعمولات</h3>
+                    <p>يحتوي موقعنا على روابط لمتاجر خارجية (مثل أمازون ونون). عند النقر عليها، قد نتحصل على عمولة بسيطة دون أي تكلفة إضافية عليك. نحن غير مسؤولين عن سياسات الخصوصية الخاصة بتلك المتاجر.</p>
+                  </div>
+                  <div className="bg-slate-50 p-6 rounded-2xl">
+                    <h3 className="text-xl font-black text-slate-900 mb-2">5. أمان البيانات</h3>
+                    <p>نستخدم بروتوكولات تشفير متقدمة (SSL) لحماية اتصالك بالموقع. لا نقوم ببيع بياناتك لأي طرف ثالث.</p>
+                  </div>
+                </div>
+                <button onClick={resetToHome} className="mt-12 bg-slate-900 text-white px-10 py-4 rounded-2xl font-black hover:bg-blue-600 transition-colors">الرجوع للرئيسية</button>
+             </div>
+           </div>
+        </div>
+      )}
+
+      {view === 'contact' && (
+        <div className="max-w-6xl mx-auto px-4 py-32 animate-in fade-in">
+           <div className="text-center mb-16">
+              <h1 className="text-4xl font-black text-slate-900 mb-4">{t.contactTitle} 📞</h1>
+              <p className="text-slate-500 font-bold text-xl">حنا هنا عشان نسمعك، سواء عندك اقتراح أو مشكلة.</p>
+           </div>
+           <div className="grid md:grid-cols-2 gap-10">
+              <div className="space-y-6">
+                 <div className="bg-white p-8 rounded-[2.5rem] shadow-lg border border-slate-50 flex items-center gap-6 hover:-translate-y-1 transition-transform">
+                    <div className="bg-blue-100 text-blue-600 p-4 rounded-2xl"><Mail size={28} /></div>
+                    <div><h3 className="font-black text-lg text-slate-800">الإيميل</h3><p className="text-blue-600 font-bold">{adminConfig.supportEmail}</p></div>
+                 </div>
+                 <div className="bg-white p-8 rounded-[2.5rem] shadow-lg border border-slate-50 flex items-center gap-6 hover:-translate-y-1 transition-transform">
+                    <div className="bg-green-100 text-green-600 p-4 rounded-2xl"><MessageSquare size={28} /></div>
+                    <div><h3 className="font-black text-lg text-slate-800">واتساب</h3><p className="text-green-600 font-bold" dir="ltr">{adminConfig.whatsappNumber}</p></div>
+                 </div>
+                 <div className="bg-white p-8 rounded-[2.5rem] shadow-lg border border-slate-50 flex items-center gap-6 hover:-translate-y-1 transition-transform">
+                    <div className="bg-purple-100 text-purple-600 p-4 rounded-2xl"><Send size={28} /></div>
+                    <div><h3 className="font-black text-lg text-slate-800">سوشيال ميديا</h3><div className="flex gap-3 mt-1"><a href={adminConfig.twitterLink} className="text-slate-400 hover:text-blue-500 transition-colors"><Twitter size={20} /></a><a href={adminConfig.instagramLink} className="text-slate-400 hover:text-pink-500 transition-colors"><Instagram size={20} /></a></div></div>
+                 </div>
+              </div>
+              <div className="bg-white p-10 rounded-[2.5rem] shadow-xl border border-slate-50 h-full">
+                 <h3 className="text-2xl font-black mb-6 text-slate-900">أرسل رسالة مباشرة ✉️</h3>
+                 <form className="space-y-4" onSubmit={handleContactSubmit}>
+                    <input type="text" className="w-full p-4 rounded-2xl bg-slate-50 border-none font-bold focus:ring-4 focus:ring-blue-100" placeholder="الاسم" required value={contactForm.name} onChange={e => setContactForm({...contactForm, name: e.target.value})} />
+                    <input type="email" className="w-full p-4 rounded-2xl bg-slate-50 border-none font-bold focus:ring-4 focus:ring-blue-100" placeholder="الإيميل" required value={contactForm.email} onChange={e => setContactForm({...contactForm, email: e.target.value})} />
+                    <textarea className="w-full p-4 rounded-2xl bg-slate-50 border-none font-bold focus:ring-4 focus:ring-blue-100 h-32 resize-none" placeholder="اكتب رسالتك هنا..." required value={contactForm.message} onChange={e => setContactForm({...contactForm, message: e.target.value})}></textarea>
+                    <button type="submit" className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-lg shadow-lg hover:bg-slate-800 transition-all">إرسال</button>
+                 </form>
+              </div>
+           </div>
+           <div className="text-center mt-16"><button onClick={resetToHome} className="text-slate-400 font-bold hover:text-blue-600 flex items-center justify-center gap-2 mx-auto"><ArrowLeft size={16} /> الرجوع للرئيسية</button></div>
+        </div>
+      )}
+
       {/* Footer */}
-      <footer className="bg-slate-900 text-slate-400 py-12 md:py-16 mt-16 md:mt-32 rounded-t-[2rem] md:rounded-t-[3rem] relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-blue-600/10 rounded-full blur-[60px] md:blur-[100px] pointer-events-none"></div>
-        <div className="absolute bottom-0 left-0 w-[200px] md:w-[400px] h-[200px] md:h-[400px] bg-indigo-600/10 rounded-full blur-[50px] md:blur-[100px] pointer-events-none"></div>
-        <div className="max-w-7xl mx-auto px-4 md:px-8 relative z-10">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12 mb-8 md:mb-16">
+      <footer className="bg-slate-900 text-slate-400 py-16 mt-32 rounded-t-[3rem] relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none"></div>
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-indigo-600/10 rounded-full blur-[100px] pointer-events-none"></div>
+        <div className="max-w-7xl mx-auto px-8 relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
             <div className="col-span-1 md:col-span-1">
-              <div className="flex items-center gap-2 text-white mb-4 md:mb-6">
-                <div className="bg-blue-600 p-2 rounded-xl"><Brain size={24} /></div>
-                <span className="text-2xl md:text-3xl font-black tracking-tighter">مقارن</span>
-              </div>
-              <p className="text-slate-400 text-sm leading-relaxed font-medium mb-4 md:mb-6">{t.footerDesc}</p>
-              <div className="flex gap-4">
-                <a href={adminConfig.twitterLink} className="bg-white/5 hover:bg-blue-500 hover:text-white p-3 rounded-full transition-all">
-                  <Twitter size={18} />
-                </a>
-                <a href={adminConfig.instagramLink} className="bg-white/5 hover:bg-pink-500 hover:text-white p-3 rounded-full transition-all">
-                  <Instagram size={18} />
-                </a>
-              </div>
+              <div className="flex items-center gap-2 text-white mb-6"><div className="bg-blue-600 p-2 rounded-xl"><Brain size={24} /></div><span className="text-3xl font-black tracking-tighter">مقارن</span></div>
+              <p className="text-slate-400 text-sm leading-relaxed font-medium mb-6">{t.footerDesc}</p>
+              <div className="flex gap-4"><a href={adminConfig.twitterLink} className="bg-white/5 hover:bg-blue-500 hover:text-white p-3 rounded-full transition-all"><Twitter size={18} /></a><a href={adminConfig.instagramLink} className="bg-white/5 hover:bg-pink-500 hover:text-white p-3 rounded-full transition-all"><Instagram size={18} /></a></div>
             </div>
-            <div>
-              <h4 className="text-white font-black text-lg mb-4 md:mb-6">{t.quickLinks}</h4>
-              <ul className="space-y-3 md:space-y-4 text-sm font-bold">
-                <li><button onClick={resetToHome} className="hover:text-blue-400 transition-colors">{t.home}</button></li>
-                <li><button onClick={() => scrollToSection('about')} className="hover:text-blue-400 transition-colors">{t.about}</button></li>
-                <li><button onClick={() => scrollToSection('why-trust')} className="hover:text-blue-400 transition-colors">{t.features}</button></li>
-                <li><button onClick={() => scrollToSection('how-we-earn')} className="hover:text-blue-400 transition-colors">{t.earn}</button></li>
-                <li><button onClick={() => setView('merchant')} className="hover:text-blue-400 transition-colors">{t.merchant}</button></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-white font-black text-lg mb-4 md:mb-6">{t.legal}</h4>
-              <ul className="space-y-3 md:space-y-4 text-sm font-bold">
-                <li><button onClick={() => setView('privacy')} className="hover:text-blue-400 transition-colors">{t.privacy}</button></li>
-                <li><button onClick={() => setView('contact')} className="hover:text-blue-400 transition-colors">{t.contactTitle}</button></li>
-                <li><button className="hover:text-blue-400 transition-colors cursor-not-allowed opacity-50">{t.terms}</button></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-white font-black text-lg mb-4 md:mb-6">{t.contact}</h4>
-              <ul className="space-y-3 md:space-y-4 text-sm font-medium">
-                <li className="flex items-center gap-3">
-                  <Mail size={18} className="text-blue-500" />
-                  <span dir="ltr" className="text-xs md:text-sm">{adminConfig.supportEmail}</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Phone size={18} className="text-green-500" />
-                  <span dir="ltr" className="text-xs md:text-sm">{adminConfig.whatsappNumber}</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <MapPinIcon />
-                  <span className="text-xs md:text-sm">الرياض، المملكة العربية السعودية</span>
-                </li>
-              </ul>
-            </div>
+            <div><h4 className="text-white font-black text-lg mb-6">{t.quickLinks}</h4><ul className="space-y-4 text-sm font-bold"><li><button onClick={resetToHome} className="hover:text-blue-400 transition-colors">{t.home}</button></li><li><button onClick={() => scrollToSection('about')} className="hover:text-blue-400 transition-colors">{t.about}</button></li><li><button onClick={() => scrollToSection('why-trust')} className="hover:text-blue-400 transition-colors">{t.features}</button></li><li><button onClick={() => scrollToSection('how-we-earn')} className="hover:text-blue-400 transition-colors">{t.earn}</button></li><li><button onClick={() => setView('merchant')} className="hover:text-blue-400 transition-colors">{t.merchant}</button></li></ul></div>
+             <div><h4 className="text-white font-black text-lg mb-6">{t.legal}</h4><ul className="space-y-4 text-sm font-bold"><li><button onClick={() => setView('privacy')} className="hover:text-blue-400 transition-colors">{t.privacy}</button></li><li><button onClick={() => setView('contact')} className="hover:text-blue-400 transition-colors">{t.contactTitle}</button></li><li><button className="hover:text-blue-400 transition-colors cursor-not-allowed opacity-50">{t.terms}</button></li></ul></div>
+            <div><h4 className="text-white font-black text-lg mb-6">{t.contact}</h4><ul className="space-y-4 text-sm font-medium"><li className="flex items-center gap-3"><Mail size={18} className="text-blue-500" /><span dir="ltr">{adminConfig.supportEmail}</span></li><li className="flex items-center gap-3"><Phone size={18} className="text-green-500" /><span dir="ltr">{adminConfig.whatsappNumber}</span></li><li className="flex items-start gap-3"><MapPinIcon /><span>الرياض، المملكة العربية السعودية</span></li></ul></div>
           </div>
-          <div className="border-t border-white/10 pt-6 md:pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-bold text-slate-500">
-            <p>{t.rights}</p>
-            <div className="flex gap-6"><span>{t.madeIn}</span></div>
-          </div>
+          <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-bold text-slate-500"><p>{t.rights}</p><div className="flex gap-6"><span>{t.madeIn}</span></div></div>
         </div>
       </footer>
-      
-      {/* CSS للملاحقات */}
-      <style jsx>{`
-        @keyframes spin-slow {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        
-        @keyframes bounce-slow {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-10px); }
-        }
-        
-        .animate-spin-slow {
-          animation: spin-slow 20s linear infinite;
-        }
-        
-        .animate-bounce-slow {
-          animation: bounce-slow 3s ease-in-out infinite;
-        }
-        
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: #f1f5f9;
-          border-radius: 10px;
-        }
-        
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #cbd5e1;
-          border-radius: 10px;
-        }
-        
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #94a3b8;
-        }
-        
-        .no-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        
-        .no-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        
-        .line-clamp-2 {
-          overflow: hidden;
-          display: -webkit-box;
-          -webkit-box-orient: vertical;
-          -webkit-line-clamp: 2;
-        }
-      `}</style>
     </div>
   );
 };

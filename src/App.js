@@ -108,9 +108,7 @@ const translations = {
     subscribe: 'اشتراك',
     thanksSubscribe: 'شكراً لاشتراكك! بنرسل لك الزين.',
     emailPlaceholder: 'اكتب إيميلك هنا',
-    swipeHint: 'اسحب لليمين لمشاهدة المزيد ←',
-    demoTitle: 'كيف تشتغل مقارن؟',
-    demoDesc: 'انظر كيف تظهر النتائج عند البحث عن منتج'
+    swipeHint: 'اسحب لليمين ←'
   },
   en: {
     // SEO Data
@@ -201,13 +199,11 @@ const translations = {
     subscribe: 'Subscribe',
     thanksSubscribe: 'Thanks! We\'ll keep you posted.',
     emailPlaceholder: 'Enter your email',
-    swipeHint: 'Swipe right to see more →',
-    demoTitle: 'How Moqaren Works?',
-    demoDesc: 'See how results appear when you search for a product'
+    swipeHint: 'Swipe right →'
   }
 };
 
-// --- استدعاء المفاتيح السرية من البيئة (Direct process.env access) ---
+// --- استدعاء المفاتيح السرية من البيئة ---
 const ADMIN_UID = process.env.REACT_APP_ADMIN_ID; 
 const GEMINI_API_KEY = process.env.REACT_APP_GEMINI_KEY; 
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
@@ -262,7 +258,7 @@ const SEOHead = ({ title, description, keywords, lang }) => {
   return null;
 };
 
-// --- بيانات JSON-LD (Structured Data) لجوجل ---
+// --- بيانات JSON-LD ---
 const SchemaMarkup = () => {
   const jsonLd = {
     "@context": "https://schema.org",
@@ -327,7 +323,7 @@ const App = () => {
   const [realSearchCount, setRealSearchCount] = useState(0);
   const [adminClickCount, setAdminClickCount] = useState(0);
   const clickTimeoutRef = useRef(null);
-  const demoContainerRef = useRef(null);
+  const resultsContainerRef = useRef(null);
   
   const [inboxMessages, setInboxMessages] = useState([]);
   const [topSearchTerms, setTopSearchTerms] = useState([]);
@@ -428,56 +424,10 @@ const App = () => {
     });
   };
 
-  // --- بيانات العرض التوضيحي للمستخدم الجديد ---
-  const demoResults = [
-    { 
-      id: 1, 
-      store: 'أمازون', 
-      storeKey: 'amazon', 
-      storeColor: 'bg-orange-500', 
-      price: '1,499', 
-      originalPrice: '1,799', 
-      currency: 'ر.س', 
-      rating: 4.8, 
-      reviewsCount: 1250, 
-      delivery: t.freeShipping, 
-      warranty: t.agentWarranty, 
-      aiAnalysis: 'أقوى ضمان في السوق مع توصيل مجاني' 
-    },
-    { 
-      id: 2, 
-      store: 'نون', 
-      storeKey: 'noon', 
-      storeColor: 'bg-yellow-400', 
-      price: '1,450', 
-      originalPrice: '1,699', 
-      currency: 'ر.س', 
-      rating: 4.5, 
-      reviewsCount: 890, 
-      delivery: t.fastShipping, 
-      warranty: t.storeWarranty, 
-      aiAnalysis: 'السعر الأفضل حالياً مع توصيل سريع' 
-    },
-    { 
-      id: 3, 
-      store: 'إكس سايت', 
-      storeKey: 'xcite', 
-      storeColor: 'bg-blue-600', 
-      price: '1,420', 
-      originalPrice: '1,750', 
-      currency: 'ر.س', 
-      rating: 4.9, 
-      reviewsCount: 2100, 
-      delivery: t.instantPickup, 
-      warranty: t.comprehensiveWarranty, 
-      aiAnalysis: 'أرخص سعر مع إمكانية الاستلام الفوري' 
-    }
-  ];
-
-  // --- تأثير السحب على العرض التوضيحي ---
+  // تأثير السحب للنتائج في الجوال
   useEffect(() => {
-    const container = demoContainerRef.current;
-    if (!container || results || isSearching) return;
+    const container = resultsContainerRef.current;
+    if (!container || !results || window.innerWidth >= 768) return;
 
     let isDown = false;
     let startX;
@@ -537,7 +487,7 @@ const App = () => {
       container.removeEventListener('touchend', handleMouseUp);
       container.removeEventListener('touchmove', handleMouseMove);
     };
-  }, [results, isSearching]);
+  }, [results]);
 
   // --- 1. المصادقة الذكية ---
   useEffect(() => {
@@ -556,7 +506,7 @@ const App = () => {
     return () => unsubscribe();
   }, []);
 
-  // --- 1.1 إدارة النوافذ المنبثقة والاشتراكات ---
+  // --- 1.1 إدارة النوافذ المنبثقة ---
   useEffect(() => {
     const savedEmail = localStorage.getItem('moqaren_user_email');
     if (savedEmail) {
@@ -1185,9 +1135,10 @@ const App = () => {
         </div>
       </div>
 
+      {/* زر اللغة - تم إصلاح موقعه في الجوال */}
       <button 
         onClick={toggleLanguage} 
-        className={`fixed top-6 ${lang === 'ar' ? 'left-6' : 'right-6'} z-[100] bg-white/90 backdrop-blur-xl shadow-xl border border-white/50 p-3 rounded-full hover:scale-110 transition-all active:scale-95 group`}
+        className={`fixed ${lang === 'ar' ? 'left-4' : 'right-4'} top-24 md:top-6 z-[100] bg-white/90 backdrop-blur-xl shadow-xl border border-white/50 p-3 rounded-full hover:scale-110 transition-all active:scale-95 group`}
         title="Switch Language"
       >
         <Languages size={20} className="text-slate-600 group-hover:text-blue-600 transition-colors" />
@@ -1310,88 +1261,6 @@ const App = () => {
               </section>
             )}
 
-            {/* عرض توضيحي للمستخدم الجديد */}
-            {!results && !isSearching && (
-              <div className="mb-16 animate-in fade-in slide-in-from-bottom-8 duration-700">
-                <div className="text-center mb-8">
-                  <h3 className="text-2xl md:text-3xl font-black text-slate-900 mb-3">{t.demoTitle}</h3>
-                  <p className="text-slate-500 font-bold text-lg">{t.demoDesc}</p>
-                  <div className="flex items-center justify-center gap-2 mt-4 text-sm text-blue-600 font-bold">
-                    <span>{t.swipeHint}</span>
-                    <ChevronRight className="animate-bounce" size={16} />
-                  </div>
-                </div>
-                
-                <div 
-                  ref={demoContainerRef}
-                  className="flex overflow-x-auto pb-6 gap-6 scrollbar-hide snap-x snap-mandatory touch-pan-x"
-                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-                >
-                  {demoResults.map((item) => (
-                    <div 
-                      key={item.id} 
-                      className="bg-white rounded-[2.5rem] shadow-xl hover:shadow-2xl transition-all duration-300 border border-slate-100 overflow-hidden flex-shrink-0 w-[85vw] md:w-[400px] snap-center"
-                    >
-                      <div className={`${item.storeColor} py-8 px-8 text-white flex justify-between items-start relative overflow-hidden`}>
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
-                        <div>
-                          <span className="font-black text-2xl tracking-tighter block mb-1">{item.store}</span>
-                          <div className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase backdrop-blur-md inline-flex items-center gap-1">
-                            <Shield size={10} /> {t.trusted}
-                          </div>
-                        </div>
-                        <div className="relative z-10 flex gap-2">
-                          <button className="bg-white/20 hover:bg-white hover:text-red-500 p-2 rounded-full transition-all text-white backdrop-blur-md" title="مفضلتي">
-                            <Heart size={20} />
-                          </button>
-                        </div>
-                      </div>
-                      <div className="p-8 flex-grow flex flex-col">
-                        <div className="flex justify-between items-end mb-8 border-b border-dashed border-slate-200 pb-6">
-                          <div>
-                            <span className="text-5xl font-black text-slate-900 leading-none tracking-tighter">{item.price}</span>
-                            <span className="text-lg text-slate-400 font-bold mx-2 uppercase">{item.currency}</span>
-                          </div>
-                          <div className="text-xs text-red-400 line-through font-black opacity-50 mb-2">{item.originalPrice}</div>
-                        </div>
-                        <div className="space-y-5 mb-8 flex-grow">
-                          <div className="flex items-center gap-4 text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-2xl">
-                            <Star size={20} className="text-yellow-400 fill-yellow-400 shrink-0" />
-                            <div>
-                              <span className="block text-slate-900">{item.rating} {t.rating}</span>
-                              <span className="text-slate-400 font-medium text-xs">{t.from} {item.reviewsCount.toLocaleString()} {t.client}</span>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-4 text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-2xl">
-                            <Shield size={20} className="text-blue-500 shrink-0" />
-                            <div>
-                              <span className="block text-slate-900">{t.warrantyTitle}</span>
-                              <span className="text-slate-400 font-medium text-xs">{item.warranty}</span>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-4 text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-2xl">
-                            <ShoppingCart size={20} className="text-indigo-500 shrink-0" />
-                            <div>
-                              <span className="block text-slate-900">{t.deliveryTitle}</span>
-                              <span className="text-slate-400 font-medium text-xs">{item.delivery}</span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="bg-blue-50 p-5 rounded-2xl text-xs text-blue-800 mb-8 font-bold leading-relaxed flex gap-3 items-start">
-                          <Info size={16} className="shrink-0 mt-0.5" />
-                          "{item.aiAnalysis}"
-                        </div>
-                        <button className="w-full bg-slate-900 text-white py-5 rounded-[1.5rem] font-black text-lg hover:bg-blue-600 transition-all flex justify-center items-center gap-2 shadow-xl hover:shadow-blue-200 active:scale-95 text-center group/btn">
-                          {t.visitStore}
-                          <ExternalLink size={20} className="group-hover/btn:translate-x-1 transition-transform rtl:group-hover/btn:-translate-x-1" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
             {isSearching && (
               <div className="bg-white rounded-[3rem] p-12 md:p-20 shadow-xl border border-slate-100 text-center mb-32">
                 <div className="relative w-24 h-24 mx-auto mb-8">
@@ -1423,86 +1292,101 @@ const App = () => {
                     </div>
                 )}
                 
-                {/* عرض النتائج في الجوال - عمودي مع تحسينات */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-                  {results.map((item) => (
-                    <div key={item.id} className="bg-white rounded-[2.5rem] shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 border border-slate-100 overflow-hidden flex flex-col group relative">
-                      {item.store.includes('شريك') && (
-                        <div className="absolute top-6 right-6 bg-red-500 text-white px-4 py-1.5 rounded-full text-[10px] font-black z-20 animate-pulse shadow-lg ring-4 ring-red-100">
-                          {t.specialOffer}
-                        </div>
-                      )}
-                      
-                      <div className={`${item.storeColor} py-8 px-8 text-white flex justify-between items-start relative overflow-hidden`}>
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
-                        <div>
-                          <span className="font-black text-2xl tracking-tighter block mb-1">{item.store}</span>
-                          <div className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase backdrop-blur-md inline-flex items-center gap-1">
-                            <Shield size={10} /> {t.trusted}
+                {/* النتائج في الجوال - أفقية مع سحب */}
+                <div className="relative">
+                  <div className="md:hidden mb-6 text-center">
+                    <p className="text-slate-600 text-sm font-bold flex items-center justify-center gap-2 animate-pulse">
+                      <span>{t.swipeHint}</span>
+                      <ChevronRight size={16} />
+                    </p>
+                  </div>
+                  
+                  <div 
+                    ref={resultsContainerRef}
+                    className="flex overflow-x-auto pb-6 gap-6 md:grid md:grid-cols-3 md:gap-8 md:overflow-visible scrollbar-hide snap-x snap-mandatory touch-pan-x"
+                  >
+                    {results.map((item) => (
+                      <div 
+                        key={item.id} 
+                        className="bg-white rounded-[2.5rem] shadow-xl hover:shadow-2xl transition-all duration-300 border border-slate-100 overflow-hidden flex-shrink-0 w-[85vw] md:w-auto md:flex-grow snap-center md:hover:-translate-y-2"
+                      >
+                        {item.store.includes('شريك') && (
+                          <div className="absolute top-6 right-6 bg-red-500 text-white px-4 py-1.5 rounded-full text-[10px] font-black z-20 animate-pulse shadow-lg ring-4 ring-red-100">
+                            {t.specialOffer}
                           </div>
-                        </div>
-                        <div className="relative z-10 flex gap-2">
-                          <button onClick={() => handleShare(item)} className="bg-white/20 hover:bg-white hover:text-blue-600 p-2 rounded-full transition-all text-white backdrop-blur-md" title="مشاركة">
-                            <Share2 size={20} />
-                          </button>
-                          <button onClick={() => toggleFavorite(item)} className="bg-white/20 hover:bg-white hover:text-red-500 p-2 rounded-full transition-all text-white backdrop-blur-md" title="مفضلتي">
-                            <Heart size={20} className={isFavorite(item) ? 'fill-red-500 text-red-500' : ''} />
-                          </button>
-                        </div>
-                      </div>
-                      
-                      <div className="p-6 md:p-8 flex-grow flex flex-col">
-                        <div className="flex justify-between items-end mb-6 md:mb-8 border-b border-dashed border-slate-200 pb-4 md:pb-6">
+                        )}
+                        
+                        <div className={`${item.storeColor} py-8 px-8 text-white flex justify-between items-start relative overflow-hidden`}>
+                          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
                           <div>
-                            <span className="text-4xl md:text-5xl font-black text-slate-900 leading-none tracking-tighter">{item.price}</span>
-                            <span className="text-lg text-slate-400 font-bold mx-2 uppercase">{item.currency}</span>
+                            <span className="font-black text-2xl tracking-tighter block mb-1">{item.store}</span>
+                            <div className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase backdrop-blur-md inline-flex items-center gap-1">
+                              <Shield size={10} /> {t.trusted}
+                            </div>
                           </div>
-                          <div className="text-xs text-red-400 line-through font-black opacity-50 mb-2">{item.originalPrice}</div>
+                          <div className="relative z-10 flex gap-2">
+                            <button onClick={() => handleShare(item)} className="bg-white/20 hover:bg-white hover:text-blue-600 p-2 rounded-full transition-all text-white backdrop-blur-md" title="مشاركة">
+                              <Share2 size={20} />
+                            </button>
+                            <button onClick={() => toggleFavorite(item)} className="bg-white/20 hover:bg-white hover:text-red-500 p-2 rounded-full transition-all text-white backdrop-blur-md" title="مفضلتي">
+                              <Heart size={20} className={isFavorite(item) ? 'fill-red-500 text-red-500' : ''} />
+                            </button>
+                          </div>
                         </div>
                         
-                        <div className="space-y-4 md:space-y-5 mb-6 md:mb-8 flex-grow">
-                          <div className="flex items-center gap-3 md:gap-4 text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-2xl">
-                            <Star size={18} className="text-yellow-400 fill-yellow-400 shrink-0" />
-                            <div className="flex-1">
-                              <span className="block text-slate-900 text-sm md:text-base">{item.rating} {t.rating}</span>
-                              <span className="text-slate-400 font-medium text-xs">{t.from} {item.reviewsCount.toLocaleString()} {t.client}</span>
+                        <div className="p-6 md:p-8 flex-grow flex flex-col">
+                          <div className="flex justify-between items-end mb-6 md:mb-8 border-b border-dashed border-slate-200 pb-4 md:pb-6">
+                            <div>
+                              <span className="text-4xl md:text-5xl font-black text-slate-900 leading-none tracking-tighter">{item.price}</span>
+                              <span className="text-lg text-slate-400 font-bold mx-2 uppercase">{item.currency}</span>
+                            </div>
+                            <div className="text-xs text-red-400 line-through font-black opacity-50 mb-2">{item.originalPrice}</div>
+                          </div>
+                          
+                          <div className="space-y-4 md:space-y-5 mb-6 md:mb-8 flex-grow">
+                            <div className="flex items-center gap-3 md:gap-4 text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-2xl">
+                              <Star size={18} className="text-yellow-400 fill-yellow-400 shrink-0" />
+                              <div className="flex-1">
+                                <span className="block text-slate-900 text-sm md:text-base">{item.rating} {t.rating}</span>
+                                <span className="text-slate-400 font-medium text-xs">{t.from} {item.reviewsCount.toLocaleString()} {t.client}</span>
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-3 md:gap-4 text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-2xl">
+                              <Shield size={18} className="text-blue-500 shrink-0" />
+                              <div className="flex-1">
+                                <span className="block text-slate-900 text-sm md:text-base">{t.warrantyTitle}</span>
+                                <span className="text-slate-400 font-medium text-xs">{item.warranty}</span>
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-3 md:gap-4 text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-2xl">
+                              <ShoppingCart size={18} className="text-indigo-500 shrink-0" />
+                              <div className="flex-1">
+                                <span className="block text-slate-900 text-sm md:text-base">{t.deliveryTitle}</span>
+                                <span className="text-slate-400 font-medium text-xs">{item.delivery}</span>
+                              </div>
                             </div>
                           </div>
                           
-                          <div className="flex items-center gap-3 md:gap-4 text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-2xl">
-                            <Shield size={18} className="text-blue-500 shrink-0" />
-                            <div className="flex-1">
-                              <span className="block text-slate-900 text-sm md:text-base">{t.warrantyTitle}</span>
-                              <span className="text-slate-400 font-medium text-xs">{item.warranty}</span>
-                            </div>
+                          <div className="bg-blue-50 p-4 md:p-5 rounded-2xl text-xs text-blue-800 mb-6 md:mb-8 font-bold leading-relaxed flex gap-3 items-start">
+                            <Info size={16} className="shrink-0 mt-0.5" />
+                            "{item.aiAnalysis}"
                           </div>
                           
-                          <div className="flex items-center gap-3 md:gap-4 text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-2xl">
-                            <ShoppingCart size={18} className="text-indigo-500 shrink-0" />
-                            <div className="flex-1">
-                              <span className="block text-slate-900 text-sm md:text-base">{t.deliveryTitle}</span>
-                              <span className="text-slate-400 font-medium text-xs">{item.delivery}</span>
-                            </div>
-                          </div>
+                          <a 
+                            href={getStoreLink(item.storeKey)} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="w-full bg-slate-900 text-white py-4 md:py-5 rounded-[1.5rem] font-black text-lg hover:bg-blue-600 transition-all flex justify-center items-center gap-2 shadow-xl hover:shadow-blue-200 active:scale-95 text-center group/btn"
+                          >
+                            {t.visitStore}
+                            <ExternalLink size={20} className="group-hover/btn:translate-x-1 transition-transform rtl:group-hover/btn:-translate-x-1" />
+                          </a>
                         </div>
-                        
-                        <div className="bg-blue-50 p-4 md:p-5 rounded-2xl text-xs text-blue-800 mb-6 md:mb-8 font-bold leading-relaxed flex gap-3 items-start">
-                          <Info size={16} className="shrink-0 mt-0.5" />
-                          "{item.aiAnalysis}"
-                        </div>
-                        
-                        <a 
-                          href={getStoreLink(item.storeKey)} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
-                          className="w-full bg-slate-900 text-white py-4 md:py-5 rounded-[1.5rem] font-black text-lg hover:bg-blue-600 transition-all flex justify-center items-center gap-2 shadow-xl hover:shadow-blue-200 active:scale-95 text-center group/btn"
-                        >
-                          {t.visitStore}
-                          <ExternalLink size={20} className="group-hover/btn:translate-x-1 transition-transform rtl:group-hover/btn:-translate-x-1" />
-                        </a>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
@@ -1510,73 +1394,17 @@ const App = () => {
             {!results && !isSearching && (
               <>
                 <section id="about" className="mb-32 scroll-mt-32">
-                  <div className="text-center mb-16">
-                    <h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-6">{t.howItWorksTitle}</h2>
-                    <p className="text-slate-500 font-bold text-xl">ثلاث خطوات بسيطة.. وتوفر فلوسك</p>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-                    {[
-                      { icon: MousePointer2, title: t.step1Title, desc: t.step1Desc, color: 'blue' }, 
-                      { icon: Cpu, title: t.step2Title, desc: t.step2Desc, color: 'indigo' }, 
-                      { icon: Rocket, title: t.step3Title, desc: t.step3Desc, color: 'green' }
-                    ].map((item, i) => (
-                      <div key={i} className="bg-white p-8 md:p-12 rounded-[3rem] shadow-xl border border-slate-100 hover:-translate-y-2 transition-all text-center group">
-                        <div className={`bg-${item.color}-50 text-${item.color}-600 w-20 h-20 md:w-24 md:h-24 rounded-[2rem] flex items-center justify-center mx-auto mb-6 md:mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
-                          <item.icon size={40} className="md:size-48" />
-                        </div>
-                        <h3 className="text-xl md:text-2xl font-black mb-3 md:mb-4 text-slate-900">{item.title}</h3>
-                        <p className="text-slate-500 font-bold leading-relaxed text-sm md:text-base">{item.desc}</p>
-                      </div>
-                    ))}
-                  </div>
+                  <div className="text-center mb-16"><h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-6">{t.howItWorksTitle}</h2><p className="text-slate-500 font-bold text-xl">ثلاث خطوات بسيطة.. وتوفر فلوسك</p></div>
+                  <div className="grid md:grid-cols-3 gap-8">{[{ icon: MousePointer2, title: t.step1Title, desc: t.step1Desc, color: 'blue' }, { icon: Cpu, title: t.step2Title, desc: t.step2Desc, color: 'indigo' }, { icon: Rocket, title: t.step3Title, desc: t.step3Desc, color: 'green' }].map((item, i) => (<div key={i} className="bg-white p-12 rounded-[3rem] shadow-xl border border-slate-100 hover:-translate-y-2 transition-all text-center group"><div className={`bg-${item.color}-50 text-${item.color}-600 w-24 h-24 rounded-[2rem] flex items-center justify-center mx-auto mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}><item.icon size={48} /></div><h3 className="text-2xl font-black mb-4 text-slate-900">{item.title}</h3><p className="text-slate-500 font-bold leading-relaxed">{item.desc}</p></div>))}</div>
                 </section>
-                
-                <section id="how-we-earn" className="bg-slate-900 rounded-[3rem] p-8 md:p-24 text-white text-center shadow-2xl mb-32 scroll-mt-32 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-600/20 rounded-full blur-[120px]"></div>
-                    <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-indigo-600/20 rounded-full blur-[100px]"></div>
-                    <h2 className="text-3xl md:text-5xl font-black mb-6 md:mb-8 relative z-10">{t.earnTitle}</h2>
-                    <p className="text-blue-100 text-lg md:text-2xl max-w-4xl mx-auto leading-relaxed mb-12 md:mb-16 relative z-10 font-medium">{t.earnDesc}</p>
-                    <div className="flex flex-wrap justify-center gap-4 md:gap-6 relative z-10 font-black">
-                      <div className="bg-white/10 px-6 md:px-10 py-4 md:py-6 rounded-[2rem] backdrop-blur-md border border-white/10 flex items-center gap-3 hover:bg-white/20 transition-colors">
-                        <CheckCircle size={20} className="text-green-400" /> {t.neutrality}
-                      </div>
-                      <div className="bg-white/10 px-6 md:px-10 py-4 md:py-6 rounded-[2rem] backdrop-blur-md border border-white/10 flex items-center gap-3 hover:bg-white/20 transition-colors">
-                        <CheckCircle size={20} className="text-green-400" /> {t.noExtraCost}
-                      </div>
-                    </div>
+                <section id="how-we-earn" className="bg-slate-900 rounded-[3rem] p-10 md:p-24 text-white text-center shadow-2xl mb-32 scroll-mt-32 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-600/20 rounded-full blur-[120px]"></div><div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-indigo-600/20 rounded-full blur-[100px]"></div>
+                    <h2 className="text-3xl md:text-5xl font-black mb-8 relative z-10">{t.earnTitle}</h2><p className="text-blue-100 text-lg md:text-2xl max-w-4xl mx-auto leading-relaxed mb-16 relative z-10 font-medium">{t.earnDesc}</p>
+                    <div className="flex flex-wrap justify-center gap-6 relative z-10 font-black"><div className="bg-white/10 px-10 py-6 rounded-[2rem] backdrop-blur-md border border-white/10 flex items-center gap-3 hover:bg-white/20 transition-colors"><CheckCircle size={24} className="text-green-400" /> {t.neutrality}</div><div className="bg-white/10 px-10 py-6 rounded-[2rem] backdrop-blur-md border border-white/10 flex items-center gap-3 hover:bg-white/20 transition-colors"><CheckCircle size={24} className="text-green-400" /> {t.noExtraCost}</div></div>
                 </section>
-                
                 <section id="why-trust" className="mb-32 scroll-mt-32">
-                    <div className="text-center mb-16">
-                      <h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-6">{t.trustTitle}</h2>
-                      <div className="inline-flex items-center gap-3 bg-blue-50 text-blue-900 px-6 py-3 rounded-full font-black text-lg animate-bounce">
-                        <Activity size={24} className="text-blue-600" />
-                        <span>{realSearchCount.toLocaleString()} {t.realSearch}</span>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-                      <div className="bg-white p-8 md:p-12 rounded-[3rem] shadow-xl border border-slate-100 hover:shadow-2xl transition-all">
-                        <div className="bg-blue-50 text-blue-600 w-16 h-16 md:w-20 md:h-20 rounded-[2rem] flex items-center justify-center mb-6 md:mb-8">
-                          <BarChart3 size={32} className="md:size-40" />
-                        </div>
-                        <h3 className="text-xl md:text-2xl font-black mb-3 md:mb-4 text-slate-900">{t.trust1Title}</h3>
-                        <p className="text-slate-500 font-bold leading-relaxed text-sm md:text-base">{t.trust1Desc}</p>
-                      </div>
-                      <div className="bg-white p-8 md:p-12 rounded-[3rem] shadow-xl border border-slate-100 hover:shadow-2xl transition-all">
-                        <div className="bg-green-50 text-green-600 w-16 h-16 md:w-20 md:h-20 rounded-[2rem] flex items-center justify-center mb-6 md:mb-8">
-                          <Shield size={32} className="md:size-40" />
-                        </div>
-                        <h3 className="text-xl md:text-2xl font-black mb-3 md:mb-4 text-slate-900">{t.trust2Title}</h3>
-                        <p className="text-slate-500 font-bold leading-relaxed text-sm md:text-base">{t.trust2Desc}</p>
-                      </div>
-                      <div className="bg-white p-8 md:p-12 rounded-[3rem] shadow-xl border border-slate-100 hover:shadow-2xl transition-all">
-                        <div className="bg-purple-50 text-purple-600 w-16 h-16 md:w-20 md:h-20 rounded-[2rem] flex items-center justify-center mb-6 md:mb-8">
-                          <Heart size={32} className="md:size-40" />
-                        </div>
-                        <h3 className="text-xl md:text-2xl font-black mb-3 md:mb-4 text-slate-900">{t.trust3Title}</h3>
-                        <p className="text-slate-500 font-bold leading-relaxed text-sm md:text-base">{t.trust3Desc}</p>
-                      </div>
-                    </div>
+                    <div className="text-center mb-16"><h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-6">{t.trustTitle}</h2><div className="inline-flex items-center gap-3 bg-blue-50 text-blue-900 px-6 py-3 rounded-full font-black text-lg animate-bounce"><Activity size={24} className="text-blue-600" /><span>{realSearchCount.toLocaleString()} {t.realSearch}</span></div></div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8"><div className="bg-white p-12 rounded-[3rem] shadow-xl border border-slate-100 hover:shadow-2xl transition-all"><div className="bg-blue-50 text-blue-600 w-20 h-20 rounded-[2rem] flex items-center justify-center mb-8"><BarChart3 size={40} /></div><h3 className="text-2xl font-black mb-4 text-slate-900">{t.trust1Title}</h3><p className="text-slate-500 font-bold leading-relaxed">{t.trust1Desc}</p></div><div className="bg-white p-12 rounded-[3rem] shadow-xl border border-slate-100 hover:shadow-2xl transition-all"><div className="bg-green-50 text-green-600 w-20 h-20 rounded-[2rem] flex items-center justify-center mb-8"><Shield size={40} /></div><h3 className="text-2xl font-black mb-4 text-slate-900">{t.trust2Title}</h3><p className="text-slate-500 font-bold leading-relaxed">{t.trust2Desc}</p></div><div className="bg-white p-12 rounded-[3rem] shadow-xl border border-slate-100 hover:shadow-2xl transition-all"><div className="bg-purple-50 text-purple-600 w-20 h-20 rounded-[2rem] flex items-center justify-center mb-8"><Heart size={40} /></div><h3 className="text-2xl font-black mb-4 text-slate-900">{t.trust3Title}</h3><p className="text-slate-500 font-bold leading-relaxed">{t.trust3Desc}</p></div></div>
                 </section>
               </>
             )}
@@ -1584,11 +1412,11 @@ const App = () => {
         </>
       )}
 
-      {/* Admin View */}
+      {/* Admin View - كاملة كما كانت */}
       {view === 'admin' && (
         <div className="max-w-5xl mx-auto px-4 py-32 animate-in fade-in">
           {!isAdminAuthenticated ? (
-            <div className="bg-white rounded-[3rem] shadow-2xl p-8 md:p-12 max-w-sm mx-auto text-center border border-slate-100">
+            <div className="bg-white rounded-[3rem] shadow-2xl p-12 max-w-sm mx-auto text-center border border-slate-100">
                <Lock size={40} className="mx-auto mb-6 text-slate-900" />
                <h1 className="text-2xl font-black mb-6">{t.adminLogin}</h1>
                <p className="text-slate-400 mb-6 font-bold text-sm">استخدم بيانات حساب الفايربيس (Firebase) الخاصة بك</p>
@@ -1601,36 +1429,25 @@ const App = () => {
                <button onClick={resetToHome} className="mt-6 text-slate-400 font-bold text-sm">{t.back}</button>
             </div>
           ) : (
-            <div className="bg-white rounded-[3rem] shadow-2xl p-6 md:p-16 border border-slate-100">
-              <div className="flex flex-col md:flex-row justify-between items-center mb-10 border-b pb-6 gap-4">
+            <div className="bg-white rounded-[3rem] shadow-2xl p-10 md:p-16 border border-slate-100">
+              <div className="flex justify-between items-center mb-10 border-b pb-6">
                 <div className="flex items-center gap-4">
-                    <h1 className="text-xl md:text-2xl font-black">الإعدادات ⚙️</h1>
-                    <div className="relative bg-slate-100 p-2 rounded-xl">
-                      <Bell className={`w-6 h-6 ${inboxMessages.length > 0 ? 'text-red-500 animate-pulse' : 'text-slate-400'}`} />
-                      {inboxMessages.length > 0 && (
-                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-black">
-                          {inboxMessages.length}
-                        </span>
-                      )}
-                    </div>
+                    <h1 className="text-2xl font-black">الإعدادات ⚙️</h1>
+                    <div className="relative bg-slate-100 p-2 rounded-xl"><Bell className={`w-6 h-6 ${inboxMessages.length > 0 ? 'text-red-500 animate-pulse' : 'text-slate-400'}`} />{inboxMessages.length > 0 && <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-black">{inboxMessages.length}</span>}</div>
                 </div>
                 <div className="flex gap-3">
-                    <button onClick={handleSaveAllChanges} className="px-4 md:px-6 py-2 bg-green-600 text-white rounded-xl font-black text-xs hover:bg-green-700 shadow-lg flex items-center gap-2">
-                      <Save size={14} /> حفظ التغييرات
-                    </button>
-                    <button onClick={handleLogout} className="text-red-500 font-bold text-sm flex items-center gap-1">
-                      <LogOut size={14} /> خروج
-                    </button>
+                    <button onClick={handleSaveAllChanges} className="px-6 py-2 bg-green-600 text-white rounded-xl font-black text-xs hover:bg-green-700 shadow-lg flex items-center gap-2"><Save size={14} /> حفظ التغييرات</button>
+                    <button onClick={handleLogout} className="text-red-500 font-bold text-sm flex items-center gap-1"><LogOut size={14} /> خروج</button>
                 </div>
               </div>
               
               {/* Marketing & Promotion */}
-              <div className="mb-12 bg-purple-50 border border-purple-100 rounded-[2rem] p-6 md:p-8">
+              <div className="mb-12 bg-purple-50 border border-purple-100 rounded-[2rem] p-8">
                   <h3 className="font-black text-purple-900 border-b border-purple-200 pb-4 mb-6 flex items-center gap-2">
                       <Mail className="text-purple-600" />
                       التسويق والترويج (Email Marketing)
                   </h3>
-                  <div className="grid md:grid-cols-2 gap-6 md:gap-8">
+                  <div className="grid md:grid-cols-2 gap-8">
                       <div>
                           <div className="mb-4">
                               <label className="text-xs font-bold text-slate-500 mb-2 block">فرز حسب الاهتمام (مثل: آيفون، سوني)</label>
@@ -1651,20 +1468,14 @@ const App = () => {
                           <div className="bg-white rounded-xl border border-purple-100 h-64 overflow-y-auto custom-scrollbar p-2">
                               <div className="flex justify-between items-center px-2 pb-2 border-b border-slate-50 mb-2">
                                   <span className="text-xs font-bold text-slate-400">القائمة المستهدفة</span>
-                                  <span className="text-[10px] font-black bg-purple-100 text-purple-600 px-2 py-1 rounded-full">
-                                    {filteredSubscribers.length} مشترك
-                                  </span>
+                                  <span className="text-[10px] font-black bg-purple-100 text-purple-600 px-2 py-1 rounded-full">{filteredSubscribers.length} مشترك</span>
                               </div>
                               {filteredSubscribers.length > 0 ? (
                                   filteredSubscribers.map((sub, idx) => (
                                       <div key={idx} className="flex items-center justify-between p-2 hover:bg-purple-50 rounded-lg transition-colors">
                                           <div className="flex items-center gap-2 overflow-hidden">
-                                              <div className="bg-slate-100 p-1.5 rounded-full">
-                                                <UserCheck size={12} className="text-slate-400" />
-                                              </div>
-                                              <span className="text-xs font-bold text-slate-700 truncate" dir="ltr">
-                                                {sub.email}
-                                              </span>
+                                              <div className="bg-slate-100 p-1.5 rounded-full"><UserCheck size={12} className="text-slate-400" /></div>
+                                              <span className="text-xs font-bold text-slate-700 truncate" dir="ltr">{sub.email}</span>
                                           </div>
                                           {sub.interests && sub.interests.length > 0 && (
                                               <span className="text-[9px] font-bold bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded ml-2 truncate max-w-[80px]">
@@ -1682,7 +1493,7 @@ const App = () => {
                           </div>
                       </div>
 
-                      <div className="bg-white p-4 md:p-6 rounded-2xl border border-purple-100 shadow-sm flex flex-col">
+                      <div className="bg-white p-6 rounded-2xl border border-purple-100 shadow-sm flex flex-col">
                           <h4 className="font-bold text-purple-800 text-sm mb-4">إنشاء حملة ترويجية</h4>
                           <input 
                               type="text" 
@@ -1697,11 +1508,11 @@ const App = () => {
                               value={marketingBody}
                               onChange={(e) => setMarketingBody(e.target.value)}
                           ></textarea>
-                          <div className="mt-auto flex flex-col md:flex-row justify-between items-center gap-2">
+                          <div className="mt-auto flex justify-between items-center">
                               <span className="text-[10px] font-bold text-slate-400">سيتم الإرسال لـ {filteredSubscribers.length} شخص</span>
                               <button 
                                   onClick={handleSendCampaign}
-                                  className="bg-purple-600 text-white px-4 md:px-6 py-2 rounded-xl font-bold text-sm hover:bg-purple-700 flex items-center gap-2 shadow-lg shadow-purple-200"
+                                  className="bg-purple-600 text-white px-6 py-2 rounded-xl font-bold text-sm hover:bg-purple-700 flex items-center gap-2 shadow-lg shadow-purple-200"
                                   disabled={filteredSubscribers.length === 0}
                               >
                                   <Send size={16} /> إرسال الحملة
@@ -1711,88 +1522,230 @@ const App = () => {
                   </div>
               </div>
 
-              {/* باقي محتوى لوحة التحكم */}
-              {/* ... (ابقاء نفس المحتوى السابق مع تحسينات الجوال) ... */}
+              {/* API Settings */}
+              <div className="mb-12 bg-cyan-50 border border-cyan-100 rounded-[2rem] p-8">
+                  <h3 className="font-black text-cyan-900 border-b border-cyan-200 pb-4 mb-6 flex items-center gap-2">
+                      <Link className="text-cyan-600" />
+                      إعدادات الربط البرمجي (APIs)
+                  </h3>
+                  <div className="space-y-4">
+                      {adminConfig.customApis?.map((api, idx) => (
+                          <div key={idx} className="flex items-center gap-3 bg-white p-3 rounded-xl shadow-sm">
+                              <span className="font-bold text-cyan-800">{api.name}</span>
+                              <span className="flex-1 text-xs text-slate-500 truncate" dir="ltr">{api.url}</span>
+                              <button onClick={() => handleDeleteApi(idx)} className="text-cyan-300 hover:text-red-500"><Trash2 size={16} /></button>
+                          </div>
+                      ))}
+                      <div className="flex gap-2">
+                          <input type="text" placeholder="اسم المتجر" className="w-1/4 p-3 rounded-xl text-sm font-bold border-none" value={newApiName} onChange={(e) => setNewApiName(e.target.value)} />
+                          <input type="text" placeholder="رابط البحث (API URL)" className="flex-1 p-3 rounded-xl text-sm font-bold border-none text-left" dir="ltr" value={newApiUrl} onChange={(e) => setNewApiUrl(e.target.value)} />
+                          <button onClick={handleAddApi} className="bg-cyan-600 text-white px-6 rounded-xl font-bold text-sm hover:bg-cyan-700"><Plus size={20} /></button>
+                      </div>
+                      <p className="text-[10px] text-cyan-600 font-bold mt-2">* يجب أن يدعم الرابط بروتوكول CORS ويعيد بيانات بصيغة JSON.</p>
+                  </div>
+              </div>
               
+              {/* Analytics - Advanced */}
+              <div className="mb-12 bg-indigo-50 border border-indigo-100 rounded-[2rem] p-8">
+                  <h3 className="font-black text-indigo-900 border-b border-indigo-200 pb-4 mb-6 flex items-center gap-2"><BarChart2 className="text-indigo-600" />إحصائيات البحث المتقدمة</h3>
+                  
+                  <div className="mb-8">
+                      <p className="text-sm font-bold text-indigo-400 mb-4 flex items-center gap-2"><TrendingUp size={16} /> النمو الشهري (Monthly Growth)</p>
+                      <div className="bg-white p-6 rounded-2xl shadow-sm border border-indigo-50 h-64 flex items-end gap-4 overflow-x-auto custom-scrollbar">
+                          {monthlyStats.length > 0 ? (
+                              (() => {
+                                  const maxMonthly = Math.max(...monthlyStats.map(s => s.total_searches));
+                                  return monthlyStats.map((stat, idx) => {
+                                      const heightPercent = (stat.total_searches / maxMonthly) * 100;
+                                      return (
+                                          <div key={idx} className="flex flex-col items-center gap-2 group min-w-[50px]">
+                                              <div className="w-12 bg-gradient-to-t from-indigo-500 to-blue-400 rounded-t-xl transition-all duration-500 relative shadow-md group-hover:scale-105" style={{ height: `${heightPercent}%` }}>
+                                                  <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity font-bold whitespace-nowrap">{stat.total_searches}</span>
+                                              </div>
+                                              <span className="text-[10px] font-black text-slate-400" dir="ltr">{stat.month}</span>
+                                          </div>
+                                      );
+                                  });
+                              })()
+                          ) : (
+                              <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs font-bold">جاري جمع بيانات شهرية...</div>
+                          )}
+                      </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div>
+                          <p className="text-sm font-bold text-indigo-400 mb-4">الكلمات الأكثر بحثاً</p>
+                          <div className="flex items-end gap-2 h-64 mt-6 bg-white p-4 rounded-xl border border-indigo-50 shadow-inner">
+                            {topSearchTerms.length > 0 ? (
+                                (() => {
+                                    const maxCount = Math.max(...topSearchTerms.map(t => t.count));
+                                    return topSearchTerms.map((item, idx) => {
+                                        const heightPercent = (item.count / maxCount) * 100;
+                                        return (
+                                            <div key={idx} className="flex-1 flex flex-col items-center group relative h-full justify-end">
+                                                <div className="w-full bg-indigo-500 rounded-t-lg transition-all duration-500 hover:bg-indigo-600 relative shadow-sm" style={{ height: `${heightPercent}%` }}>
+                                                    <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 font-bold">{item.count} بحث</span>
+                                                </div>
+                                            </div>
+                                        );
+                                    });
+                                })()
+                            ) : (<div className="w-full h-full flex items-center justify-center text-slate-400 text-xs font-bold">لا توجد بيانات كافية</div>)}
+                          </div>
+                          <div className="flex gap-2 mt-2">{topSearchTerms.map((item, idx) => (<span key={idx} className="flex-1 text-[8px] text-center text-slate-500 font-bold truncate block">{item.term}</span>))}</div>
+                      </div>
+                      
+                      <div className="flex flex-col h-[350px]">
+                          <p className="text-sm font-bold text-indigo-400 mb-4 flex items-center gap-2"><Clock size={16} /> سجل البحث المباشر (Live Feed)</p>
+                          <div className="bg-white rounded-2xl shadow-sm border border-indigo-50 flex-1 overflow-hidden flex flex-col">
+                              <div className="flex bg-indigo-50 p-3 text-[10px] font-black text-indigo-800 uppercase tracking-wider">
+                                  <div className="w-1/3">الوقت</div>
+                                  <div className="flex-1">كلمة البحث</div>
+                                  <div className="w-1/4">الجهاز</div>
+                              </div>
+                              <div className="overflow-y-auto custom-scrollbar flex-1 p-2 space-y-1">
+                                  {searchLogs.length > 0 ? (
+                                      searchLogs.map((log, idx) => (
+                                          <div key={idx} className="flex items-center p-3 text-xs border-b border-slate-50 last:border-0 hover:bg-indigo-50/50 transition-colors rounded-lg">
+                                              <div className="w-1/3 text-slate-400 font-bold" dir="ltr">
+                                                  {new Date(log.timestamp).toLocaleDateString('en-GB')} <br/>
+                                                  <span className="text-indigo-300">{new Date(log.timestamp).toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'})}</span>
+                                              </div>
+                                              <div className="flex-1 font-black text-slate-700">{log.term}</div>
+                                              <div className="w-1/4 text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-full text-center">{log.device || 'Desktop'}</div>
+                                          </div>
+                                      ))
+                                  ) : (
+                                      <div className="text-center py-10 text-slate-300 text-xs font-bold">لا توجد عمليات بحث حديثة</div>
+                                  )}
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+
+              <div className="mb-12"><h3 className="font-black text-slate-900 border-b pb-4 mb-6 flex items-center gap-2"><MessageCircle className="text-blue-600" />الرسائل والطلبات الواردة</h3><div className="bg-slate-50 rounded-[2rem] p-6 max-h-[400px] overflow-y-auto custom-scrollbar">{inboxMessages.length === 0 ? (<div className="text-center py-12 text-slate-400 font-bold">لا توجد رسائل جديدة</div>) : (<div className="space-y-4">{inboxMessages.map((msg) => (<div key={msg.id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative group"><button onClick={() => handleDeleteMessage(msg.id)} className="absolute top-4 left-4 text-slate-300 hover:text-red-500 transition-colors"><Trash2 size={18} /></button><div className="flex items-center gap-3 mb-2"><span className={`text-[10px] font-black px-3 py-1 rounded-full ${msg.type === 'partner_request' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'}`}>{msg.type === 'partner_request' ? 'طلب شراكة' : 'رسالة تواصل'}</span><span className="text-xs text-slate-400 font-bold" dir="ltr">{new Date(msg.timestamp).toLocaleDateString('en-GB')}</span></div><h4 className="font-black text-lg text-slate-900 mb-1">{msg.type === 'partner_request' ? msg.store : msg.name}</h4><p className="text-blue-600 font-bold text-sm mb-2" dir="ltr">{msg.email}</p>{msg.message && (<p className="text-slate-600 text-sm leading-relaxed bg-slate-50 p-3 rounded-xl mt-2">"{msg.message}"</p>)}</div>))}</div>)}</div></div>
+
+               <div className="mb-12 bg-orange-50 border border-orange-100 rounded-[2rem] p-8"><h3 className="font-black text-orange-900 border-b border-orange-200 pb-4 mb-6 flex items-center gap-2"><Flame className="text-orange-600" />إدارة الكلمات الرائجة (تظهر في الرئيسية)</h3><div className="space-y-4"><div className="flex flex-wrap gap-2 mb-4">{adminConfig.trendingKeywords?.map((kw, idx) => (<div key={idx} className="bg-white text-orange-800 px-3 py-2 rounded-xl text-sm font-bold flex items-center gap-2 shadow-sm border border-orange-100">{kw}<button onClick={() => handleDeleteTrendingKeyword(idx)} className="text-orange-300 hover:text-red-500 transition-colors"><X size={14} /></button></div>))}</div><div className="flex gap-2"><input type="text" placeholder="أضف كلمة جديدة" className="flex-1 p-4 rounded-xl text-sm font-bold border-none shadow-sm" value={newTrendingKeyword} onChange={(e) => setNewTrendingKeyword(e.target.value)} /><button onClick={handleAddTrendingKeyword} className="bg-orange-600 text-white px-6 rounded-xl font-bold text-sm hover:bg-orange-700 shadow-lg shadow-orange-200"><Plus size={20} /></button></div></div></div>
+
+               <div className="grid md:grid-cols-2 gap-10 mb-12">
+                 <div className="space-y-6"><h3 className="font-black text-blue-900 border-b pb-2">بيانات التواصل</h3><div className="space-y-2"><label className="text-xs font-bold text-slate-400">الواتساب</label><input type="text" value={adminConfig.whatsappNumber} onChange={(e) => setAdminConfig({...adminConfig, whatsappNumber: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div><div className="space-y-2"><label className="text-xs font-bold text-slate-400">الإيميل</label><input type="email" value={adminConfig.supportEmail} onChange={(e) => setAdminConfig({...adminConfig, supportEmail: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div><div className="space-y-2"><label className="text-xs font-bold text-slate-400">تويتر</label><input type="text" value={adminConfig.twitterLink} onChange={(e) => setAdminConfig({...adminConfig, twitterLink: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div><div className="space-y-2"><label className="text-xs font-bold text-slate-400">إنستقرام</label><input type="text" value={adminConfig.instagramLink} onChange={(e) => setAdminConfig({...adminConfig, instagramLink: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div></div>
+                 <div className="space-y-6"><h3 className="font-black text-green-600 border-b pb-2">روابط المتاجر</h3><div className="max-h-64 overflow-y-auto pr-2 space-y-3 custom-scrollbar">{adminConfig.affiliateLinks?.map((store, index) => (<div key={index} className="flex gap-2"><input type="text" value={store.link} onChange={(e) => { const newLinks = [...adminConfig.affiliateLinks]; newLinks[index].link = e.target.value; setAdminConfig({...adminConfig, affiliateLinks: newLinks}); }} className="w-full p-3 rounded-xl bg-slate-50 font-bold border text-xs" dir="ltr" /><div className="w-24 p-3 rounded-xl bg-slate-100 font-black text-center text-xs flex items-center justify-center">{store.name.toUpperCase()}</div><button onClick={() => handleDeleteStore(index)} className="p-3 rounded-xl bg-red-50 text-red-500 hover:bg-red-100"><Trash2 size={16} /></button></div>))}</div><div className="bg-green-50 p-4 rounded-2xl border border-green-100"><h4 className="font-bold text-green-700 text-sm mb-3">إضافة متجر جديد</h4><div className="flex gap-2 mb-2"><input type="text" placeholder="الاسم" className="w-1/2 p-3 rounded-xl border text-sm font-bold" value={newStoreName} onChange={(e) => setNewStoreName(e.target.value)} /><input type="text" placeholder="الرابط" className="w-1/2 p-3 rounded-xl border text-sm font-bold text-left" dir="ltr" value={newStoreLink} onChange={(e) => setNewStoreLink(e.target.value)} /></div><button onClick={handleAddStore} className="w-full bg-green-600 text-white py-2 rounded-xl font-bold text-sm hover:bg-green-700 flex items-center justify-center gap-2"><Plus size={16} /> إضافة</button></div></div>
+                 <div className="space-y-6"><h3 className="font-black text-blue-900 border-b pb-2">شركاء نثق بهم</h3><div className="space-y-2">{adminConfig.trustedPartners?.map((partner, index) => (<div key={index} className="flex gap-2 items-center"><div className="flex-1 p-3 rounded-xl bg-slate-100 font-black text-center text-xs">{partner.name}</div><button onClick={() => handleDeletePartner(index)} className="p-3 rounded-xl bg-red-50 text-red-500 hover:bg-red-100"><Trash2 size={16} /></button></div>))}</div><div className="flex gap-2"><input type="text" placeholder="اسم الشريك" className="flex-1 p-3 rounded-xl border text-sm font-bold" value={newPartnerName} onChange={(e) => setNewPartnerName(e.target.value)} /><button onClick={handleAddPartner} className="bg-blue-600 text-white px-4 rounded-xl font-bold text-sm hover:bg-blue-700"><Plus size={16} /></button></div></div>
+                 <div className="space-y-6"><h3 className="font-black text-purple-600 border-b pb-2">العروض الخاصة</h3><div className="max-h-64 overflow-y-auto pr-2 space-y-3 custom-scrollbar">{adminConfig.exclusiveOffers?.map((offer, index) => (<div key={index} className="bg-purple-50 p-3 rounded-xl text-xs relative group"><button onClick={() => handleDeleteOffer(index)} className="absolute top-2 left-2 text-red-400 hover:text-red-600"><X size={14} /></button><p className="font-black text-purple-900">كلمة البحث: {offer.keyword}</p><p className="text-slate-600 truncate">{offer.message}</p></div>))}</div><div className="bg-purple-50 p-4 rounded-2xl border border-purple-100"><h4 className="font-bold text-purple-700 text-sm mb-3">إضافة عرض ذكي</h4><input type="text" placeholder="كلمة البحث" className="w-full p-2 mb-2 rounded-lg border text-xs font-bold" value={newOfferKeyword} onChange={(e) => setNewOfferKeyword(e.target.value)} /><input type="text" placeholder="رسالة العرض" className="w-full p-2 mb-2 rounded-lg border text-xs font-bold" value={newOfferMessage} onChange={(e) => setNewOfferMessage(e.target.value)} /><input type="text" placeholder="رابط العرض" className="w-full p-2 mb-2 rounded-lg border text-xs font-bold text-left" dir="ltr" value={newOfferLink} onChange={(e) => setNewOfferLink(e.target.value)} /><button onClick={handleAddOffer} className="w-full bg-purple-600 text-white py-2 rounded-xl font-bold text-sm hover:bg-purple-700 flex items-center justify-center gap-2"><Plus size={16} /> إضافة عرض</button></div></div>
+              </div>
             </div>
           )}
         </div>
       )}
 
-      {/* باقي الصفحات (التجار، الخصوصية، تواصل معنا) */}
-      {/* ... (ابقاء نفس المحتوى السابق مع تحسينات الجوال) ... */}
+      {/* باقي الصفحات كما هي */}
+      {view === 'merchant' && (
+        <div className="max-w-4xl mx-auto px-4 py-32 animate-in fade-in">
+           <div className="bg-white rounded-[3rem] shadow-2xl p-10 md:p-20 border border-slate-100 text-center">
+             <Award size={48} className="text-blue-600 mx-auto mb-6" />
+             <h1 className="text-3xl font-black text-slate-900 mb-4">شريك أعمال مقارن</h1>
+             <p className="text-slate-500 font-bold text-lg mb-10">وصل منتجاتك لآلاف العملاء.</p>
+             <form className="space-y-6 text-right max-w-xl mx-auto" onSubmit={handleMerchantSubmit}>
+               <input type="text" className="w-full p-5 rounded-2xl bg-slate-50 font-bold border" placeholder="اسم المتجر" required value={merchantForm.store} onChange={e => setMerchantForm({...merchantForm, store: e.target.value})} />
+               <input type="email" className="w-full p-5 rounded-2xl bg-slate-50 font-bold border" placeholder="إيميل التواصل" required value={merchantForm.email} onChange={e => setMerchantForm({...merchantForm, email: e.target.value})} />
+               <button type="submit" className="w-full bg-blue-600 text-white py-5 rounded-2xl font-black text-xl shadow-xl hover:bg-blue-700 transition-colors">إرسال الطلب</button>
+             </form>
+             <button onClick={resetToHome} className="mt-8 text-slate-400 font-bold underline">الرجوع</button>
+           </div>
+        </div>
+      )}
 
-      {/* Footer */}
-      <footer className="bg-slate-900 text-slate-400 py-12 md:py-16 mt-32 rounded-t-[3rem] relative overflow-hidden">
+      {view === 'privacy' && (
+        <div className="max-w-4xl mx-auto px-4 py-32 animate-in fade-in">
+           <div className="bg-white rounded-[3rem] shadow-2xl p-10 md:p-20 border border-slate-100 relative overflow-hidden">
+             <div className="relative z-10">
+                <h1 className="text-3xl font-black text-slate-900 mb-8 flex items-center gap-3"><Lock className="text-blue-600" /> {t.privacy}</h1>
+                <div className="space-y-8 text-slate-600 font-bold leading-loose text-base md:text-lg">
+                  <div className="bg-slate-50 p-6 rounded-2xl">
+                    <h3 className="text-xl font-black text-slate-900 mb-2">1. مقدمة</h3>
+                    <p>في "مقارن"، نأخذ خصوصيتك على محمل الجد. تشرح هذه الوثيقة كيف نجمع بياناتك ونستخدمها ونحميها عند استخدامك لموقعنا.</p>
+                  </div>
+                  <div className="bg-slate-50 p-6 rounded-2xl">
+                    <h3 className="text-xl font-black text-slate-900 mb-2">2. البيانات التي نجمعها</h3>
+                    <ul className="list-disc list-inside space-y-2">
+                        <li><strong>بيانات البحث:</strong> نقوم بتخزين كلمات البحث (بدون هوية) لتحسين خوارزمياتنا واقتراح منتجات أفضل.</li>
+                        <li><strong>بيانات الجهاز:</strong> مثل نوع المتصفح والجهاز لضمان أفضل تجربة تصفح.</li>
+                    </ul>
+                  </div>
+                  <div className="bg-slate-50 p-6 rounded-2xl">
+                    <h3 className="text-xl font-black text-slate-900 mb-2">3. ملفات تعريف الارتباط (Cookies)</h3>
+                    <p>نستخدم الكوكيز لتحسين تجربتك وتذكر تفضيلاتك. يمكنك تعطيل الكوكيز من إعدادات متصفحك، لكن قد يؤثر ذلك على بعض وظائف الموقع.</p>
+                  </div>
+                  <div className="bg-slate-50 p-6 rounded-2xl">
+                    <h3 className="text-xl font-black text-slate-900 mb-2">4. الروابط الخارجية والعمولات</h3>
+                    <p>يحتوي موقعنا على روابط لمتاجر خارجية (مثل أمازون ونون). عند النقر عليها، قد نتحصل على عمولة بسيطة دون أي تكلفة إضافية عليك. نحن غير مسؤولين عن سياسات الخصوصية الخاصة بتلك المتاجر.</p>
+                  </div>
+                  <div className="bg-slate-50 p-6 rounded-2xl">
+                    <h3 className="text-xl font-black text-slate-900 mb-2">5. أمان البيانات</h3>
+                    <p>نستخدم بروتوكولات تشفير متقدمة (SSL) لحماية اتصالك بالموقع. لا نقوم ببيع بياناتك لأي طرف ثالث.</p>
+                  </div>
+                </div>
+                <button onClick={resetToHome} className="mt-12 bg-slate-900 text-white px-10 py-4 rounded-2xl font-black hover:bg-blue-600 transition-colors">الرجوع للرئيسية</button>
+             </div>
+           </div>
+        </div>
+      )}
+
+      {view === 'contact' && (
+        <div className="max-w-6xl mx-auto px-4 py-32 animate-in fade-in">
+           <div className="text-center mb-16">
+              <h1 className="text-4xl font-black text-slate-900 mb-4">{t.contactTitle} 📞</h1>
+              <p className="text-slate-500 font-bold text-xl">حنا هنا عشان نسمعك، سواء عندك اقتراح أو مشكلة.</p>
+           </div>
+           <div className="grid md:grid-cols-2 gap-10">
+              <div className="space-y-6">
+                 <div className="bg-white p-8 rounded-[2.5rem] shadow-lg border border-slate-50 flex items-center gap-6 hover:-translate-y-1 transition-transform">
+                    <div className="bg-blue-100 text-blue-600 p-4 rounded-2xl"><Mail size={28} /></div>
+                    <div><h3 className="font-black text-lg text-slate-800">الإيميل</h3><p className="text-blue-600 font-bold">{adminConfig.supportEmail}</p></div>
+                 </div>
+                 <div className="bg-white p-8 rounded-[2.5rem] shadow-lg border border-slate-50 flex items-center gap-6 hover:-translate-y-1 transition-transform">
+                    <div className="bg-green-100 text-green-600 p-4 rounded-2xl"><MessageSquare size={28} /></div>
+                    <div><h3 className="font-black text-lg text-slate-800">واتساب</h3><p className="text-green-600 font-bold" dir="ltr">{adminConfig.whatsappNumber}</p></div>
+                 </div>
+                 <div className="bg-white p-8 rounded-[2.5rem] shadow-lg border border-slate-50 flex items-center gap-6 hover:-translate-y-1 transition-transform">
+                    <div className="bg-purple-100 text-purple-600 p-4 rounded-2xl"><Send size={28} /></div>
+                    <div><h3 className="font-black text-lg text-slate-800">سوشيال ميديا</h3><div className="flex gap-3 mt-1"><a href={adminConfig.twitterLink} className="text-slate-400 hover:text-blue-500 transition-colors"><Twitter size={20} /></a><a href={adminConfig.instagramLink} className="text-slate-400 hover:text-pink-500 transition-colors"><Instagram size={20} /></a></div></div>
+                 </div>
+              </div>
+              <div className="bg-white p-10 rounded-[2.5rem] shadow-xl border border-slate-50 h-full">
+                 <h3 className="text-2xl font-black mb-6 text-slate-900">أرسل رسالة مباشرة ✉️</h3>
+                 <form className="space-y-4" onSubmit={handleContactSubmit}>
+                    <input type="text" className="w-full p-4 rounded-2xl bg-slate-50 border-none font-bold focus:ring-4 focus:ring-blue-100" placeholder="الاسم" required value={contactForm.name} onChange={e => setContactForm({...contactForm, name: e.target.value})} />
+                    <input type="email" className="w-full p-4 rounded-2xl bg-slate-50 border-none font-bold focus:ring-4 focus:ring-blue-100" placeholder="الإيميل" required value={contactForm.email} onChange={e => setContactForm({...contactForm, email: e.target.value})} />
+                    <textarea className="w-full p-4 rounded-2xl bg-slate-50 border-none font-bold focus:ring-4 focus:ring-blue-100 h-32 resize-none" placeholder="اكتب رسالتك هنا..." required value={contactForm.message} onChange={e => setContactForm({...contactForm, message: e.target.value})}></textarea>
+                    <button type="submit" className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-lg shadow-lg hover:bg-slate-800 transition-all">إرسال</button>
+                 </form>
+              </div>
+           </div>
+           <div className="text-center mt-16"><button onClick={resetToHome} className="text-slate-400 font-bold hover:text-blue-600 flex items-center justify-center gap-2 mx-auto"><ArrowLeft size={16} /> الرجوع للرئيسية</button></div>
+        </div>
+      )}
+
+      <footer className="bg-slate-900 text-slate-400 py-16 mt-32 rounded-t-[3rem] relative overflow-hidden">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none"></div>
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-indigo-600/10 rounded-full blur-[100px] pointer-events-none"></div>
-        <div className="max-w-7xl mx-auto px-4 md:px-8 relative z-10">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12 mb-12 md:mb-16">
+        <div className="max-w-7xl mx-auto px-8 relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
             <div className="col-span-1 md:col-span-1">
-              <div className="flex items-center gap-2 text-white mb-6">
-                <div className="bg-blue-600 p-2 rounded-xl"><Brain size={24} /></div>
-                <span className="text-3xl font-black tracking-tighter">مقارن</span>
-              </div>
+              <div className="flex items-center gap-2 text-white mb-6"><div className="bg-blue-600 p-2 rounded-xl"><Brain size={24} /></div><span className="text-3xl font-black tracking-tighter">مقارن</span></div>
               <p className="text-slate-400 text-sm leading-relaxed font-medium mb-6">{t.footerDesc}</p>
-              <div className="flex gap-4">
-                <a href={adminConfig.twitterLink} className="bg-white/5 hover:bg-blue-500 hover:text-white p-3 rounded-full transition-all">
-                  <Twitter size={18} />
-                </a>
-                <a href={adminConfig.instagramLink} className="bg-white/5 hover:bg-pink-500 hover:text-white p-3 rounded-full transition-all">
-                  <Instagram size={18} />
-                </a>
-              </div>
+              <div className="flex gap-4"><a href={adminConfig.twitterLink} className="bg-white/5 hover:bg-blue-500 hover:text-white p-3 rounded-full transition-all"><Twitter size={18} /></a><a href={adminConfig.instagramLink} className="bg-white/5 hover:bg-pink-500 hover:text-white p-3 rounded-full transition-all"><Instagram size={18} /></a></div>
             </div>
-            
-            <div>
-              <h4 className="text-white font-black text-lg mb-6">{t.quickLinks}</h4>
-              <ul className="space-y-4 text-sm font-bold">
-                <li><button onClick={resetToHome} className="hover:text-blue-400 transition-colors">{t.home}</button></li>
-                <li><button onClick={() => scrollToSection('about')} className="hover:text-blue-400 transition-colors">{t.about}</button></li>
-                <li><button onClick={() => scrollToSection('why-trust')} className="hover:text-blue-400 transition-colors">{t.features}</button></li>
-                <li><button onClick={() => scrollToSection('how-we-earn')} className="hover:text-blue-400 transition-colors">{t.earn}</button></li>
-                <li><button onClick={() => setView('merchant')} className="hover:text-blue-400 transition-colors">{t.merchant}</button></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="text-white font-black text-lg mb-6">{t.legal}</h4>
-              <ul className="space-y-4 text-sm font-bold">
-                <li><button onClick={() => setView('privacy')} className="hover:text-blue-400 transition-colors">{t.privacy}</button></li>
-                <li><button onClick={() => setView('contact')} className="hover:text-blue-400 transition-colors">{t.contactTitle}</button></li>
-                <li><button className="hover:text-blue-400 transition-colors cursor-not-allowed opacity-50">{t.terms}</button></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="text-white font-black text-lg mb-6">{t.contact}</h4>
-              <ul className="space-y-4 text-sm font-medium">
-                <li className="flex items-center gap-3">
-                  <Mail size={18} className="text-blue-500" />
-                  <span dir="ltr">{adminConfig.supportEmail}</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Phone size={18} className="text-green-500" />
-                  <span dir="ltr">{adminConfig.whatsappNumber}</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <MapPinIcon />
-                  <span>الرياض، المملكة العربية السعودية</span>
-                </li>
-              </ul>
-            </div>
+            <div><h4 className="text-white font-black text-lg mb-6">{t.quickLinks}</h4><ul className="space-y-4 text-sm font-bold"><li><button onClick={resetToHome} className="hover:text-blue-400 transition-colors">{t.home}</button></li><li><button onClick={() => scrollToSection('about')} className="hover:text-blue-400 transition-colors">{t.about}</button></li><li><button onClick={() => scrollToSection('why-trust')} className="hover:text-blue-400 transition-colors">{t.features}</button></li><li><button onClick={() => scrollToSection('how-we-earn')} className="hover:text-blue-400 transition-colors">{t.earn}</button></li><li><button onClick={() => setView('merchant')} className="hover:text-blue-400 transition-colors">{t.merchant}</button></li></ul></div>
+             <div><h4 className="text-white font-black text-lg mb-6">{t.legal}</h4><ul className="space-y-4 text-sm font-bold"><li><button onClick={() => setView('privacy')} className="hover:text-blue-400 transition-colors">{t.privacy}</button></li><li><button onClick={() => setView('contact')} className="hover:text-blue-400 transition-colors">{t.contactTitle}</button></li><li><button className="hover:text-blue-400 transition-colors cursor-not-allowed opacity-50">{t.terms}</button></li></ul></div>
+            <div><h4 className="text-white font-black text-lg mb-6">{t.contact}</h4><ul className="space-y-4 text-sm font-medium"><li className="flex items-center gap-3"><Mail size={18} className="text-blue-500" /><span dir="ltr">{adminConfig.supportEmail}</span></li><li className="flex items-center gap-3"><Phone size={18} className="text-green-500" /><span dir="ltr">{adminConfig.whatsappNumber}</span></li><li className="flex items-start gap-3"><MapPinIcon /><span>الرياض، المملكة العربية السعودية</span></li></ul></div>
           </div>
-          
-          <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-bold text-slate-500">
-            <p>{t.rights}</p>
-            <div className="flex gap-6">
-              <span>{t.madeIn}</span>
-            </div>
-          </div>
+          <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-bold text-slate-500"><p>{t.rights}</p><div className="flex gap-6"><span>{t.madeIn}</span></div></div>
         </div>
       </footer>
 
-      {/* إضافة CSS للتحكم في التمرير على الجوال */}
       <style jsx>{`
         .scrollbar-hide {
           -ms-overflow-style: none;

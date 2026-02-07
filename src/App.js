@@ -1,3 +1,6 @@
+// ============================
+// 1. الاستيرادات الرئيسية
+// ============================
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Search, ShoppingCart, Star, Shield, Info, ExternalLink, Zap, 
@@ -12,12 +15,16 @@ import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, onSnapshot, collection, increment, updateDoc, addDoc, deleteDoc, getDocs, arrayUnion } from 'firebase/firestore';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 
-// --- أيقونة الموقع ---
+// ============================
+// 2. الأيقونات المخصصة
+// ============================
 const MapPinIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
 );
 
-// --- قاموس الترجمة الشامل مع نصوص SEO ---
+// ============================
+// 3. نظام الترجمة (AR/EN)
+// ============================
 const translations = {
   ar: {
     // SEO Data
@@ -203,7 +210,9 @@ const translations = {
   }
 };
 
-// --- استدعاء المفاتيح السرية من البيئة ---
+// ============================
+// 4. المفاتيح السرية والإعدادات
+// ============================
 const ADMIN_UID = process.env.REACT_APP_ADMIN_ID; 
 const GEMINI_API_KEY = process.env.REACT_APP_GEMINI_KEY; 
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
@@ -218,12 +227,17 @@ const firebaseConfig = {
   appId: process.env.REACT_APP_FIREBASE_APP_ID
 };
 
+// ============================
+// 5. تهيئة Firebase
+// ============================
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
-// --- مكون لإدارة SEO ديناميكياً ---
+// ============================
+// 6. مكون SEOHead (للتحكم في SEO)
+// ============================
 const SEOHead = ({ title, description, keywords, lang }) => {
   useEffect(() => {
     document.title = title;
@@ -258,7 +272,9 @@ const SEOHead = ({ title, description, keywords, lang }) => {
   return null;
 };
 
-// --- بيانات JSON-LD ---
+// ============================
+// 7. مكون SchemaMarkup (لتحسين SEO)
+// ============================
 const SchemaMarkup = () => {
   const jsonLd = {
     "@context": "https://schema.org",
@@ -293,7 +309,13 @@ const SchemaMarkup = () => {
   );
 };
 
+// ============================
+// 8. المكون الرئيسي App
+// ============================
 const App = () => {
+  // ============================
+  // 8.1 جميع الحالات (States)
+  // ============================
   const [user, setUser] = useState(null);
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
   const [adminEmail, setAdminEmail] = useState('');
@@ -343,6 +365,9 @@ const App = () => {
   const [merchantForm, setMerchantForm] = useState({ store: '', email: '' });
   const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
 
+  // ============================
+  // 8.2 الإعدادات الافتراضية للإدارة
+  // ============================
   const defaultAdminConfig = {
     supportEmail: "support@moqaren.com",
     whatsappNumber: "+966500000000",
@@ -371,15 +396,22 @@ const App = () => {
   const [adminConfig, setAdminConfig] = useState(defaultAdminConfig);
   const t = translations[lang];
 
+  // ============================
+  // 9. الدوال المساعدة
+  // ============================
+  
+  // 9.1 عرض الإشعارات
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 4000);
   };
 
+  // 9.2 تبديل اللغة
   const toggleLanguage = () => {
     setLang(prev => prev === 'ar' ? 'en' : 'ar');
   };
 
+  // 9.3 إضافة/حذف المفضلة
   const toggleFavorite = (item) => {
     const exists = myFavorites.find(fav => fav.store === item.store && fav.price === item.price);
     if (exists) {
@@ -391,15 +423,18 @@ const App = () => {
     }
   };
 
+  // 9.4 التحقق من المفضلة
   const isFavorite = (item) => {
     return myFavorites.some(fav => fav.store === item.store && fav.price === item.price);
   };
   
+  // 9.5 الحصول على رابط المتجر
   const getStoreLink = (key) => { 
     const store = adminConfig.affiliateLinks?.find(s => s.name === key); 
     return store ? store.link : "#"; 
   };
 
+  // 9.6 مشاركة المنتج
   const handleShare = (item) => {
     const link = getStoreLink(item.storeKey);
     const message = `${t.shareText}\n${item.store} ${t.sharePrice} ${item.price} ${item.currency}\n${t.shareLink} ${link}`;
@@ -417,6 +452,7 @@ const App = () => {
     copyToClipboard(message);
   };
 
+  // 9.7 إضافة إلى سجل البحث
   const addToHistory = (term) => {
     setMySearchHistory(prev => {
         const filtered = prev.filter(t => t !== term);
@@ -424,7 +460,11 @@ const App = () => {
     });
   };
 
-  // تأثير السحب للنتائج في الجوال
+  // ============================
+  // 10. useEffect Hooks
+  // ============================
+  
+  // 10.1 تأثير السحب للنتائج في الجوال
   useEffect(() => {
     const container = resultsContainerRef.current;
     if (!container || !results || window.innerWidth >= 768) return;
@@ -489,7 +529,7 @@ const App = () => {
     };
   }, [results]);
 
-  // --- 1. المصادقة الذكية ---
+  // 10.2 المصادقة الذكية
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -506,7 +546,7 @@ const App = () => {
     return () => unsubscribe();
   }, []);
 
-  // --- 1.1 إدارة النوافذ المنبثقة ---
+  // 10.3 إدارة النوافذ المنبثقة
   useEffect(() => {
     const savedEmail = localStorage.getItem('moqaren_user_email');
     if (savedEmail) {
@@ -522,7 +562,7 @@ const App = () => {
     }
   }, [view, isAdminAuthenticated]);
 
-  // --- 2. جلب الإعدادات والبيانات ---
+  // 10.4 جلب الإعدادات والبيانات
   useEffect(() => {
     if (!user) return;
     const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'app_settings', 'main_config');
@@ -536,7 +576,7 @@ const App = () => {
     return () => unsubscribe();
   }, [user]);
 
-  // --- 3. العداد الحقيقي ---
+  // 10.5 العداد الحقيقي
   useEffect(() => {
     if (!user) return;
     const statsRef = doc(db, 'artifacts', appId, 'public', 'data', 'stats', 'global_counts');
@@ -551,7 +591,7 @@ const App = () => {
     return () => unsubscribe();
   }, [user]);
 
-  // --- 4. جلب بيانات لوحة التحكم ---
+  // 10.6 جلب بيانات لوحة التحكم
   useEffect(() => {
     if (!isAdminAuthenticated) return;
     
@@ -601,7 +641,11 @@ const App = () => {
     };
   }, [isAdminAuthenticated]);
 
-  // --- وظائف التسويق ---
+  // ============================
+  // 11. وظائف التسويق والاشتراكات
+  // ============================
+  
+  // 11.1 الاشتراك في النشرة البريدية
   const handleSubscribe = async (e) => {
       e.preventDefault();
       if (!promoEmail || !user) return;
@@ -625,6 +669,7 @@ const App = () => {
       }
   };
 
+  // 11.2 تتبع كلمات البحث
   const trackSearchTerm = async (term) => {
       if (!user || !term) return;
       const cleanTerm = term.trim().toLowerCase();
@@ -667,6 +712,7 @@ const App = () => {
       }
   };
 
+  // 11.3 إرسال حملة تسويقية
   const handleSendCampaign = () => {
       if (!marketingSubject || !marketingBody) {
           showNotification('يرجى تعبئة العنوان والرسالة', 'error');
@@ -677,6 +723,7 @@ const App = () => {
       setMarketingBody('');
   };
 
+  // 11.4 زيادة عداد البحث العام
   const incrementGlobalCounter = async () => {
       if (!user) return;
       const statsRef = doc(db, 'artifacts', appId, 'public', 'data', 'stats', 'global_counts');
@@ -685,6 +732,11 @@ const App = () => {
       } catch (error) { }
   };
 
+  // ============================
+  // 12. وظائف الإدارة والتحكم
+  // ============================
+  
+  // 12.1 حفظ جميع التغييرات
   const handleSaveAllChanges = async () => {
     if (!isAdminAuthenticated) {
         showNotification("ليس لديك صلاحية الحفظ", "error");
@@ -701,6 +753,7 @@ const App = () => {
     }
   };
 
+  // 12.2 العودة للرئيسية
   const resetToHome = () => {
     setView('home');
     setResults(null);
@@ -710,6 +763,7 @@ const App = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // 12.3 التمرير للقسم المحدد
   const scrollToSection = (id) => {
     setView('home');
     setResults(null);
@@ -723,6 +777,7 @@ const App = () => {
     }, 150);
   };
 
+  // 12.4 النقر على الشعار (للوصول للإدارة)
   const handleLogoClick = () => {
     const newCount = adminClickCount + 1;
     setAdminClickCount(newCount);
@@ -739,6 +794,7 @@ const App = () => {
     clickTimeoutRef.current = setTimeout(() => setAdminClickCount(0), 3000);
   };
 
+  // 12.5 إرسال طلب شراكة
   const handleMerchantSubmit = async (e) => {
     e.preventDefault();
     if (!user) return;
@@ -757,6 +813,7 @@ const App = () => {
     }
   };
 
+  // 12.6 إرسال رسالة تواصل
   const handleContactSubmit = async (e) => {
     e.preventDefault();
     if (!user) return;
@@ -776,6 +833,7 @@ const App = () => {
     }
   };
 
+  // 12.7 تسجيل دخول المدير
   const handleAdminLogin = async (e) => {
     e.preventDefault();
     setLoginError('');
@@ -790,6 +848,7 @@ const App = () => {
     }
   };
   
+  // 12.8 تسجيل خروج
   const handleLogout = async () => {
       await signOut(auth);
       setIsAdminAuthenticated(false);
@@ -797,6 +856,7 @@ const App = () => {
       showNotification('تم الخروج بنجاح');
   };
 
+  // 12.9 حذف الرسالة
   const handleDeleteMessage = async (msgId) => {
     if (!confirm('هل أنت متأكد من حذف هذه الرسالة؟')) return;
     try { 
@@ -805,6 +865,7 @@ const App = () => {
     } catch (err) { }
   };
 
+  // 12.10 إضافة متجر جديد
   const handleAddStore = () => { 
     if (newStoreName && newStoreLink) { 
       setAdminConfig({ 
@@ -816,12 +877,14 @@ const App = () => {
     }
   };
 
+  // 12.11 حذف متجر
   const handleDeleteStore = (i) => { 
     const u = [...adminConfig.affiliateLinks]; 
     u.splice(i, 1); 
     setAdminConfig({ ...adminConfig, affiliateLinks: u }); 
   };
 
+  // 12.12 إضافة شريك
   const handleAddPartner = () => { 
     if (newPartnerName) { 
       setAdminConfig({ 
@@ -832,12 +895,14 @@ const App = () => {
     }
   };
 
+  // 12.13 حذف شريك
   const handleDeletePartner = (i) => { 
     const u = [...adminConfig.trustedPartners]; 
     u.splice(i, 1); 
     setAdminConfig({ ...adminConfig, trustedPartners: u }); 
   };
 
+  // 12.14 إضافة عرض خاص
   const handleAddOffer = () => { 
     if (newOfferKeyword && newOfferMessage && newOfferLink) { 
       setAdminConfig({ 
@@ -854,12 +919,14 @@ const App = () => {
     }
   };
 
+  // 12.15 حذف عرض
   const handleDeleteOffer = (i) => { 
     const u = [...adminConfig.exclusiveOffers]; 
     u.splice(i, 1); 
     setAdminConfig({ ...adminConfig, exclusiveOffers: u }); 
   };
 
+  // 12.16 إضافة كلمة رائجة
   const handleAddTrendingKeyword = () => { 
     if (newTrendingKeyword) { 
       setAdminConfig({ 
@@ -870,12 +937,14 @@ const App = () => {
     }
   };
 
+  // 12.17 حذف كلمة رائجة
   const handleDeleteTrendingKeyword = (index) => { 
     const updated = [...(adminConfig.trendingKeywords || [])]; 
     updated.splice(index, 1); 
     setAdminConfig({ ...adminConfig, trendingKeywords: updated }); 
   };
 
+  // 12.18 إضافة API مخصص
   const handleAddApi = () => { 
     if (newApiName && newApiUrl) { 
       setAdminConfig({ 
@@ -887,12 +956,16 @@ const App = () => {
     }
   };
 
+  // 12.19 حذف API
   const handleDeleteApi = (index) => { 
     const updated = [...(adminConfig.customApis || [])]; 
     updated.splice(index, 1); 
     setAdminConfig({ ...adminConfig, customApis: updated }); 
   };
 
+  // ============================
+  // 13. وظيفة الذكاء الاصطناعي (Gemini)
+  // ============================
   const callGeminiAI = async (product, stores) => {
     if (!GEMINI_API_KEY) { 
       return { 
@@ -925,6 +998,9 @@ const App = () => {
     }
   };
 
+  // ============================
+  // 14. وظيفة البحث الرئيسية
+  // ============================
   const handleSearch = async (e) => {
     e.preventDefault();
     if (!searchQuery) return;
@@ -1007,6 +1083,9 @@ const App = () => {
     }
   };
 
+  // ============================
+  // 15. حساب المشتركين المفلترين
+  // ============================
   const filteredSubscribers = subscribersList.filter(sub => {
       if (!marketingFilter) return true;
       const keywords = marketingFilter.toLowerCase().split(' ');
@@ -1015,9 +1094,13 @@ const App = () => {
       );
   });
 
+  // ============================
+  // 16. الواجهة الرئيسية
+  // ============================
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-blue-200 selection:text-blue-900" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
       
+      {/* 16.1 مكونات SEO */}
       <SEOHead 
         title={view === 'home' && !results ? t.siteTitle : `${searchQuery ? searchQuery + ' | ' : ''} ${t.siteTitle}`} 
         description={t.siteDesc} 
@@ -1026,6 +1109,7 @@ const App = () => {
       />
       <SchemaMarkup />
 
+      {/* 16.2 الإشعارات */}
       {notification && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-top-4 duration-300">
           <div className={`px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 border-2 ${notification.type === 'error' ? 'bg-red-50 border-red-100 text-red-600' : 'bg-white border-green-100 text-green-700'}`}>
@@ -1035,6 +1119,7 @@ const App = () => {
         </div>
       )}
 
+      {/* 16.3 نافذة الاشتراك */}
       {showPromoPopup && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
               <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={() => setShowPromoPopup(false)}></div>
@@ -1065,6 +1150,7 @@ const App = () => {
           </div>
       )}
 
+      {/* 16.4 زر فتح لوحة المساحة الشخصية */}
       <button 
         onClick={() => setShowSidePanel(true)}
         className="fixed left-0 top-1/2 -translate-y-1/2 bg-white/80 backdrop-blur-md p-3 rounded-r-2xl shadow-lg border border-slate-200 z-40 hover:pl-5 transition-all group border-l-0"
@@ -1076,6 +1162,7 @@ const App = () => {
         </div>
       </button>
 
+      {/* 16.5 لوحة المساحة الشخصية */}
       <div className={`fixed inset-0 z-[60] transition-all duration-500 ${showSidePanel ? 'visible' : 'invisible'}`}>
         <div className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-500 ${showSidePanel ? 'opacity-100' : 'opacity-0'}`} onClick={() => setShowSidePanel(false)}></div>
         <div className={`absolute left-0 top-0 h-full w-full md:w-[400px] bg-white shadow-2xl transition-transform duration-500 ease-in-out transform ${showSidePanel ? 'translate-x-0' : '-translate-x-full'}`}>
@@ -1135,7 +1222,7 @@ const App = () => {
         </div>
       </div>
 
-      {/* زر اللغة - تم إصلاح موقعه في الجوال */}
+      {/* 16.6 زر تبديل اللغة */}
       <button 
         onClick={toggleLanguage} 
         className={`fixed ${lang === 'ar' ? 'left-4' : 'right-4'} top-24 md:top-6 z-[100] bg-white/90 backdrop-blur-xl shadow-xl border border-white/50 p-3 rounded-full hover:scale-110 transition-all active:scale-95 group`}
@@ -1147,6 +1234,7 @@ const App = () => {
         </span>
       </button>
 
+      {/* 16.7 إشعار العرض الخاص */}
       {showExclusiveToast && currentOffer && (
         <div className={`fixed bottom-6 ${lang === 'ar' ? 'left-4' : 'right-4'} md:max-w-sm z-[100] animate-in slide-in-from-bottom-10 duration-500`}>
           <div className="bg-gradient-to-l from-blue-600 to-indigo-600 text-white p-6 rounded-[2rem] shadow-2xl relative border-4 border-white/20 backdrop-blur-md">
@@ -1161,6 +1249,7 @@ const App = () => {
         </div>
       )}
 
+      {/* 16.8 شريط التنقل */}
       <nav className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
         <div className="bg-white/90 backdrop-blur-xl shadow-2xl shadow-blue-900/10 rounded-full px-2 py-2 flex items-center gap-1 md:gap-2 pointer-events-auto border border-white/50 max-w-full overflow-x-auto no-scrollbar">
           <div className="flex items-center gap-2 px-4 cursor-pointer group select-none" onClick={handleLogoClick}>
@@ -1183,15 +1272,21 @@ const App = () => {
         </div>
       </nav>
 
+      {/* ============================ */}
+      {/* 17. الواجهة الرئيسية (Home View) */}
+      {/* ============================ */}
       {view === 'home' && (
         <>
+          {/* 17.1 قسم الهيرو */}
           <div className="bg-gradient-to-b from-slate-950 via-blue-950 to-indigo-900 text-white pt-40 pb-32 px-4 relative overflow-hidden rounded-b-[3rem] md:rounded-b-[5rem] shadow-2xl">
             
+            {/* خلفيات متحركة */}
             <div className="absolute top-0 left-0 w-full h-full opacity-30 pointer-events-none">
                 <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-blue-500 rounded-full blur-[120px] animate-pulse"></div>
                 <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-indigo-500 rounded-full blur-[120px] animate-pulse" style={{animationDelay: '1s'}}></div>
             </div>
 
+            {/* أنماط خلفية */}
             <svg className="absolute inset-0 w-full h-full text-white/5 mix-blend-overlay pointer-events-none" xmlns="http://www.w3.org/2000/svg">
               <pattern id="data-grid" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
                 <circle cx="1" cy="1" r="1" fill="currentColor" />
@@ -1211,6 +1306,7 @@ const App = () => {
                 <rect width="100%" height="100%" fill="url(#circuit-pattern)" />
             </svg>
 
+            {/* أيقونات خلفية */}
             <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
                 <Hexagon size={64} className="text-blue-300/10 absolute top-[10%] left-[5%] animate-spin-slow blur-sm" />
                 <Cpu size={48} className="text-indigo-300/10 absolute bottom-[20%] right-[10%] animate-bounce-slow blur-sm" />
@@ -1218,6 +1314,7 @@ const App = () => {
                 <Brain size={80} className="text-indigo-500/5 absolute bottom-[10%] left-[20%] animate-pulse blur-xl rotate-12" />
             </div>
 
+            {/* محتوى الهيرو */}
             <div className="max-w-4xl mx-auto text-center relative z-10">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/10 text-blue-200 text-xs font-black mb-8 backdrop-blur-md shadow-lg animate-in fade-in slide-in-from-top-4 duration-700">
                 <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span></span>
@@ -1225,6 +1322,8 @@ const App = () => {
               </div>
               <h1 className="text-4xl md:text-7xl font-black mb-6 leading-tight drop-shadow-2xl text-white tracking-tight animate-in fade-in slide-in-from-bottom-8 duration-700">{t.heroTitlePart1} <br/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-indigo-300">{t.heroTitlePart2}</span></h1>
               <p className="text-blue-100 text-lg md:text-2xl mb-12 max-w-2xl mx-auto font-medium leading-relaxed opacity-90 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100">{t.heroDesc}</p>
+              
+              {/* نموذج البحث */}
               <form onSubmit={handleSearch} className="relative max-w-3xl mx-auto group animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
                 <div className="absolute inset-0 bg-blue-400/20 blur-2xl rounded-[2.5rem] group-hover:bg-blue-400/30 transition-all duration-500"></div>
                 <input type="text" placeholder={t.searchPlaceholder} className="w-full py-6 md:py-8 px-16 rounded-[2.5rem] text-slate-900 shadow-2xl text-lg md:text-xl focus:outline-none focus:ring-4 focus:ring-blue-400/50 transition-all font-bold border-none relative z-10 placeholder:text-slate-400" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
@@ -1233,6 +1332,8 @@ const App = () => {
                   {isSearching ? <span className="animate-pulse">{t.analyzing}</span> : <>{t.searchBtn} <Rocket size={18} /></>}
                 </button>
               </form>
+              
+              {/* الكلمات الرائجة */}
               <div className="mt-10 flex flex-wrap justify-center gap-3 text-sm font-bold text-blue-200/60 animate-in fade-in duration-1000 delay-300">
                 <span>{t.trendingLabel}</span>
                 {adminConfig.trendingKeywords && adminConfig.trendingKeywords.length > 0 ? (
@@ -1251,7 +1352,9 @@ const App = () => {
             </div>
           </div>
 
+          {/* 17.2 المحتوى الرئيسي */}
           <main className="max-w-7xl mx-auto px-4 -mt-20 relative z-20">
+            {/* شركاء الموقع */}
             {!results && !isSearching && (
               <section id="partners" className="bg-white/80 backdrop-blur-md rounded-[2.5rem] shadow-xl border border-white/50 p-8 mb-24 flex flex-col md:flex-row items-center justify-between gap-8 scroll-mt-32">
                 <div className="flex items-center gap-3 text-slate-400 font-black text-xs uppercase tracking-[0.1em] shrink-0 w-full md:w-auto justify-center md:justify-start"><div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>{t.partnersTitle}</div>
@@ -1261,6 +1364,7 @@ const App = () => {
               </section>
             )}
 
+            {/* حالة التحميل */}
             {isSearching && (
               <div className="bg-white rounded-[3rem] p-12 md:p-20 shadow-xl border border-slate-100 text-center mb-32">
                 <div className="relative w-24 h-24 mx-auto mb-8">
@@ -1273,8 +1377,10 @@ const App = () => {
               </div>
             )}
 
+            {/* عرض النتائج */}
             {results && !isSearching && (
               <div className="space-y-12 animate-in fade-in slide-in-from-bottom-10 duration-700 mb-32">
+                {/* ملخص الذكاء الاصطناعي */}
                 {aiSummary && (
                     <div className="bg-gradient-to-br from-slate-900 to-blue-950 text-white p-8 md:p-12 rounded-[3rem] shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-8 relative overflow-hidden border border-white/10">
                         <div className="absolute top-0 right-0 w-full h-full opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
@@ -1391,17 +1497,23 @@ const App = () => {
               </div>
             )}
 
+            {/* المحتوى الثابت (عندما لا توجد نتائج) */}
             {!results && !isSearching && (
               <>
+                {/* كيف يعمل مقارن */}
                 <section id="about" className="mb-32 scroll-mt-32">
                   <div className="text-center mb-16"><h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-6">{t.howItWorksTitle}</h2><p className="text-slate-500 font-bold text-xl">ثلاث خطوات بسيطة.. وتوفر فلوسك</p></div>
                   <div className="grid md:grid-cols-3 gap-8">{[{ icon: MousePointer2, title: t.step1Title, desc: t.step1Desc, color: 'blue' }, { icon: Cpu, title: t.step2Title, desc: t.step2Desc, color: 'indigo' }, { icon: Rocket, title: t.step3Title, desc: t.step3Desc, color: 'green' }].map((item, i) => (<div key={i} className="bg-white p-12 rounded-[3rem] shadow-xl border border-slate-100 hover:-translate-y-2 transition-all text-center group"><div className={`bg-${item.color}-50 text-${item.color}-600 w-24 h-24 rounded-[2rem] flex items-center justify-center mx-auto mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}><item.icon size={48} /></div><h3 className="text-2xl font-black mb-4 text-slate-900">{item.title}</h3><p className="text-slate-500 font-bold leading-relaxed">{item.desc}</p></div>))}</div>
                 </section>
+                
+                {/* كيف نربح */}
                 <section id="how-we-earn" className="bg-slate-900 rounded-[3rem] p-10 md:p-24 text-white text-center shadow-2xl mb-32 scroll-mt-32 relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-600/20 rounded-full blur-[120px]"></div><div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-indigo-600/20 rounded-full blur-[100px]"></div>
                     <h2 className="text-3xl md:text-5xl font-black mb-8 relative z-10">{t.earnTitle}</h2><p className="text-blue-100 text-lg md:text-2xl max-w-4xl mx-auto leading-relaxed mb-16 relative z-10 font-medium">{t.earnDesc}</p>
                     <div className="flex flex-wrap justify-center gap-6 relative z-10 font-black"><div className="bg-white/10 px-10 py-6 rounded-[2rem] backdrop-blur-md border border-white/10 flex items-center gap-3 hover:bg-white/20 transition-colors"><CheckCircle size={24} className="text-green-400" /> {t.neutrality}</div><div className="bg-white/10 px-10 py-6 rounded-[2rem] backdrop-blur-md border border-white/10 flex items-center gap-3 hover:bg-white/20 transition-colors"><CheckCircle size={24} className="text-green-400" /> {t.noExtraCost}</div></div>
                 </section>
+                
+                {/* لماذا تثق فينا */}
                 <section id="why-trust" className="mb-32 scroll-mt-32">
                     <div className="text-center mb-16"><h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-6">{t.trustTitle}</h2><div className="inline-flex items-center gap-3 bg-blue-50 text-blue-900 px-6 py-3 rounded-full font-black text-lg animate-bounce"><Activity size={24} className="text-blue-600" /><span>{realSearchCount.toLocaleString()} {t.realSearch}</span></div></div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8"><div className="bg-white p-12 rounded-[3rem] shadow-xl border border-slate-100 hover:shadow-2xl transition-all"><div className="bg-blue-50 text-blue-600 w-20 h-20 rounded-[2rem] flex items-center justify-center mb-8"><BarChart3 size={40} /></div><h3 className="text-2xl font-black mb-4 text-slate-900">{t.trust1Title}</h3><p className="text-slate-500 font-bold leading-relaxed">{t.trust1Desc}</p></div><div className="bg-white p-12 rounded-[3rem] shadow-xl border border-slate-100 hover:shadow-2xl transition-all"><div className="bg-green-50 text-green-600 w-20 h-20 rounded-[2rem] flex items-center justify-center mb-8"><Shield size={40} /></div><h3 className="text-2xl font-black mb-4 text-slate-900">{t.trust2Title}</h3><p className="text-slate-500 font-bold leading-relaxed">{t.trust2Desc}</p></div><div className="bg-white p-12 rounded-[3rem] shadow-xl border border-slate-100 hover:shadow-2xl transition-all"><div className="bg-purple-50 text-purple-600 w-20 h-20 rounded-[2rem] flex items-center justify-center mb-8"><Heart size={40} /></div><h3 className="text-2xl font-black mb-4 text-slate-900">{t.trust3Title}</h3><p className="text-slate-500 font-bold leading-relaxed">{t.trust3Desc}</p></div></div>
@@ -1412,10 +1524,13 @@ const App = () => {
         </>
       )}
 
-      {/* Admin View - كاملة كما كانت */}
+      {/* ============================ */}
+      {/* 18. لوحة الإدارة (Admin View) */}
+      {/* ============================ */}
       {view === 'admin' && (
         <div className="max-w-5xl mx-auto px-4 py-32 animate-in fade-in">
           {!isAdminAuthenticated ? (
+            // 18.1 واجهة تسجيل دخول المدير
             <div className="bg-white rounded-[3rem] shadow-2xl p-12 max-w-sm mx-auto text-center border border-slate-100">
                <Lock size={40} className="mx-auto mb-6 text-slate-900" />
                <h1 className="text-2xl font-black mb-6">{t.adminLogin}</h1>
@@ -1429,7 +1544,9 @@ const App = () => {
                <button onClick={resetToHome} className="mt-6 text-slate-400 font-bold text-sm">{t.back}</button>
             </div>
           ) : (
+            // 18.2 لوحة التحكم الرئيسية
             <div className="bg-white rounded-[3rem] shadow-2xl p-10 md:p-16 border border-slate-100">
+              {/* رأس لوحة التحكم */}
               <div className="flex justify-between items-center mb-10 border-b pb-6">
                 <div className="flex items-center gap-4">
                     <h1 className="text-2xl font-black">الإعدادات ⚙️</h1>
@@ -1441,7 +1558,7 @@ const App = () => {
                 </div>
               </div>
               
-              {/* Marketing & Promotion */}
+              {/* التسويق والترويج */}
               <div className="mb-12 bg-purple-50 border border-purple-100 rounded-[2rem] p-8">
                   <h3 className="font-black text-purple-900 border-b border-purple-200 pb-4 mb-6 flex items-center gap-2">
                       <Mail className="text-purple-600" />
@@ -1522,7 +1639,7 @@ const App = () => {
                   </div>
               </div>
 
-              {/* API Settings */}
+              {/* إعدادات API */}
               <div className="mb-12 bg-cyan-50 border border-cyan-100 rounded-[2rem] p-8">
                   <h3 className="font-black text-cyan-900 border-b border-cyan-200 pb-4 mb-6 flex items-center gap-2">
                       <Link className="text-cyan-600" />
@@ -1545,7 +1662,7 @@ const App = () => {
                   </div>
               </div>
               
-              {/* Analytics - Advanced */}
+              {/* إحصائيات البحث المتقدمة */}
               <div className="mb-12 bg-indigo-50 border border-indigo-100 rounded-[2rem] p-8">
                   <h3 className="font-black text-indigo-900 border-b border-indigo-200 pb-4 mb-6 flex items-center gap-2"><BarChart2 className="text-indigo-600" />إحصائيات البحث المتقدمة</h3>
                   
@@ -1625,10 +1742,13 @@ const App = () => {
                   </div>
               </div>
 
+              {/* الرسائل والطلبات الواردة */}
               <div className="mb-12"><h3 className="font-black text-slate-900 border-b pb-4 mb-6 flex items-center gap-2"><MessageCircle className="text-blue-600" />الرسائل والطلبات الواردة</h3><div className="bg-slate-50 rounded-[2rem] p-6 max-h-[400px] overflow-y-auto custom-scrollbar">{inboxMessages.length === 0 ? (<div className="text-center py-12 text-slate-400 font-bold">لا توجد رسائل جديدة</div>) : (<div className="space-y-4">{inboxMessages.map((msg) => (<div key={msg.id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative group"><button onClick={() => handleDeleteMessage(msg.id)} className="absolute top-4 left-4 text-slate-300 hover:text-red-500 transition-colors"><Trash2 size={18} /></button><div className="flex items-center gap-3 mb-2"><span className={`text-[10px] font-black px-3 py-1 rounded-full ${msg.type === 'partner_request' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'}`}>{msg.type === 'partner_request' ? 'طلب شراكة' : 'رسالة تواصل'}</span><span className="text-xs text-slate-400 font-bold" dir="ltr">{new Date(msg.timestamp).toLocaleDateString('en-GB')}</span></div><h4 className="font-black text-lg text-slate-900 mb-1">{msg.type === 'partner_request' ? msg.store : msg.name}</h4><p className="text-blue-600 font-bold text-sm mb-2" dir="ltr">{msg.email}</p>{msg.message && (<p className="text-slate-600 text-sm leading-relaxed bg-slate-50 p-3 rounded-xl mt-2">"{msg.message}"</p>)}</div>))}</div>)}</div></div>
 
+               {/* إدارة الكلمات الرائجة */}
                <div className="mb-12 bg-orange-50 border border-orange-100 rounded-[2rem] p-8"><h3 className="font-black text-orange-900 border-b border-orange-200 pb-4 mb-6 flex items-center gap-2"><Flame className="text-orange-600" />إدارة الكلمات الرائجة (تظهر في الرئيسية)</h3><div className="space-y-4"><div className="flex flex-wrap gap-2 mb-4">{adminConfig.trendingKeywords?.map((kw, idx) => (<div key={idx} className="bg-white text-orange-800 px-3 py-2 rounded-xl text-sm font-bold flex items-center gap-2 shadow-sm border border-orange-100">{kw}<button onClick={() => handleDeleteTrendingKeyword(idx)} className="text-orange-300 hover:text-red-500 transition-colors"><X size={14} /></button></div>))}</div><div className="flex gap-2"><input type="text" placeholder="أضف كلمة جديدة" className="flex-1 p-4 rounded-xl text-sm font-bold border-none shadow-sm" value={newTrendingKeyword} onChange={(e) => setNewTrendingKeyword(e.target.value)} /><button onClick={handleAddTrendingKeyword} className="bg-orange-600 text-white px-6 rounded-xl font-bold text-sm hover:bg-orange-700 shadow-lg shadow-orange-200"><Plus size={20} /></button></div></div></div>
 
+               {/* الإعدادات المختلفة */}
                <div className="grid md:grid-cols-2 gap-10 mb-12">
                  <div className="space-y-6"><h3 className="font-black text-blue-900 border-b pb-2">بيانات التواصل</h3><div className="space-y-2"><label className="text-xs font-bold text-slate-400">الواتساب</label><input type="text" value={adminConfig.whatsappNumber} onChange={(e) => setAdminConfig({...adminConfig, whatsappNumber: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div><div className="space-y-2"><label className="text-xs font-bold text-slate-400">الإيميل</label><input type="email" value={adminConfig.supportEmail} onChange={(e) => setAdminConfig({...adminConfig, supportEmail: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div><div className="space-y-2"><label className="text-xs font-bold text-slate-400">تويتر</label><input type="text" value={adminConfig.twitterLink} onChange={(e) => setAdminConfig({...adminConfig, twitterLink: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div><div className="space-y-2"><label className="text-xs font-bold text-slate-400">إنستقرام</label><input type="text" value={adminConfig.instagramLink} onChange={(e) => setAdminConfig({...adminConfig, instagramLink: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div></div>
                  <div className="space-y-6"><h3 className="font-black text-green-600 border-b pb-2">روابط المتاجر</h3><div className="max-h-64 overflow-y-auto pr-2 space-y-3 custom-scrollbar">{adminConfig.affiliateLinks?.map((store, index) => (<div key={index} className="flex gap-2"><input type="text" value={store.link} onChange={(e) => { const newLinks = [...adminConfig.affiliateLinks]; newLinks[index].link = e.target.value; setAdminConfig({...adminConfig, affiliateLinks: newLinks}); }} className="w-full p-3 rounded-xl bg-slate-50 font-bold border text-xs" dir="ltr" /><div className="w-24 p-3 rounded-xl bg-slate-100 font-black text-center text-xs flex items-center justify-center">{store.name.toUpperCase()}</div><button onClick={() => handleDeleteStore(index)} className="p-3 rounded-xl bg-red-50 text-red-500 hover:bg-red-100"><Trash2 size={16} /></button></div>))}</div><div className="bg-green-50 p-4 rounded-2xl border border-green-100"><h4 className="font-bold text-green-700 text-sm mb-3">إضافة متجر جديد</h4><div className="flex gap-2 mb-2"><input type="text" placeholder="الاسم" className="w-1/2 p-3 rounded-xl border text-sm font-bold" value={newStoreName} onChange={(e) => setNewStoreName(e.target.value)} /><input type="text" placeholder="الرابط" className="w-1/2 p-3 rounded-xl border text-sm font-bold text-left" dir="ltr" value={newStoreLink} onChange={(e) => setNewStoreLink(e.target.value)} /></div><button onClick={handleAddStore} className="w-full bg-green-600 text-white py-2 rounded-xl font-bold text-sm hover:bg-green-700 flex items-center justify-center gap-2"><Plus size={16} /> إضافة</button></div></div>
@@ -1640,7 +1760,11 @@ const App = () => {
         </div>
       )}
 
-      {/* باقي الصفحات كما هي */}
+      {/* ============================ */}
+      {/* 19. صفحات أخرى */}
+      {/* ============================ */}
+      
+      {/* 19.1 صفحة الشركاء */}
       {view === 'merchant' && (
         <div className="max-w-4xl mx-auto px-4 py-32 animate-in fade-in">
            <div className="bg-white rounded-[3rem] shadow-2xl p-10 md:p-20 border border-slate-100 text-center">
@@ -1657,6 +1781,7 @@ const App = () => {
         </div>
       )}
 
+      {/* 19.2 صفحة سياسة الخصوصية */}
       {view === 'privacy' && (
         <div className="max-w-4xl mx-auto px-4 py-32 animate-in fade-in">
            <div className="bg-white rounded-[3rem] shadow-2xl p-10 md:p-20 border border-slate-100 relative overflow-hidden">
@@ -1693,6 +1818,7 @@ const App = () => {
         </div>
       )}
 
+      {/* 19.3 صفحة التواصل */}
       {view === 'contact' && (
         <div className="max-w-6xl mx-auto px-4 py-32 animate-in fade-in">
            <div className="text-center mb-16">
@@ -1728,6 +1854,9 @@ const App = () => {
         </div>
       )}
 
+      {/* ============================ */}
+      {/* 20. التذييل (Footer) */}
+      {/* ============================ */}
       <footer className="bg-slate-900 text-slate-400 py-16 mt-32 rounded-t-[3rem] relative overflow-hidden">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none"></div>
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-indigo-600/10 rounded-full blur-[100px] pointer-events-none"></div>
@@ -1746,6 +1875,9 @@ const App = () => {
         </div>
       </footer>
 
+      {/* ============================ */}
+      {/* 21. الأنماط المخصصة (CSS-in-JS) */}
+      {/* ============================ */}
       <style jsx>{`
         .scrollbar-hide {
           -ms-overflow-style: none;

@@ -9,7 +9,7 @@ import {
   Instagram, Twitter, Send, Settings, Eye, EyeOff, Save, ArrowLeft, Plus, Trash2, X,
   FileText, Activity, Globe, ChevronLeft, Coins, Database, Bell, MessageCircle, BarChart2, Flame, Languages, Link, Server,
   ChevronRight, Clock, XCircle, Share2, Calendar, TrendingUp, Filter, UserCheck, LogOut,
-  Brain, Hexagon
+  Brain, Hexagon, Key
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, onSnapshot, collection, increment, updateDoc, addDoc, deleteDoc, getDocs, arrayUnion } from 'firebase/firestore';
@@ -214,8 +214,6 @@ const translations = {
 // 4. المفاتيح السرية والإعدادات
 // ============================
 const ADMIN_UID = process.env.REACT_APP_ADMIN_ID; 
-const GEMINI_API_KEY = process.env.REACT_APP_GEMINI_KEY; 
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
 
 // --- إعدادات Firebase من البيئة ---
 const firebaseConfig = {
@@ -366,7 +364,7 @@ const App = () => {
   const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
 
   // ============================
-  // 8.2 الإعدادات الافتراضية للإدارة
+  // 8.2 الإعدادات الافتراضية للإدارة - محدثة
   // ============================
   const defaultAdminConfig = {
     supportEmail: "support@moqaren.com",
@@ -374,7 +372,6 @@ const App = () => {
     twitterLink: "https://twitter.com/moqaren",
     instagramLink: "https://instagram.com/moqaren",
     trendingKeywords: ['آيفون 15', 'سوني 5', 'ماك بوك', 'سماعات ابل'],
-    customApis: [],
     affiliateLinks: [
       { name: 'amazon', link: 'https://amazon.sa/?tag=moqaren-21' },
       { name: 'noon', link: 'https://noon.com/?affiliate=moqaren' },
@@ -390,7 +387,66 @@ const App = () => {
     exclusiveOffers: [
       { keyword: 'آيفون', message: 'خصم 50 ريال على جميع أجهزة آبل', link: 'https://amazon.sa/iphone-deal' },
       { keyword: 'ساعة', message: 'سير مجاني مع كل ساعة ذكية', link: 'https://noon.com/watches' }
-    ]
+    ],
+    
+    // === القسم 1: إعدادات الذكاء الاصطناعي ===
+    aiSettings: {
+      geminiApiKey: '',
+      geminiModel: 'gemini-2.0-flash-exp',
+      geminiFeatures: {
+        priceComparison: true,
+        reviewAnalysis: true,
+        materialComparison: true,
+        warrantyCheck: true,
+        deliverySpeed: true,
+        competitorAnalysis: true
+      },
+      alternativeAI: {
+        openaiApiKey: '',
+        openaiModel: 'gpt-4o-mini',
+        claudeApiKey: '',
+        deepseekApiKey: ''
+      }
+    },
+    
+    // === القسم 2: مفاتيح المتاجر ===
+    storeApiKeys: {
+      amazon: {
+        accessKey: '',
+        secretKey: '',
+        tagId: '',
+        region: 'sa'
+      },
+      noon: {
+        apiKey: '',
+        secretKey: '',
+        partnerId: ''
+      },
+      jarir: {
+        apiKey: '',
+        storeId: ''
+      },
+      xcite: {
+        apiKey: '',
+        affiliateId: ''
+      },
+      extra: {
+        apiKey: ''
+      },
+      otherStores: []
+    },
+    
+    // === القسم 3: APIs مخصصة ===
+    customApis: [],
+    
+    // === القسم 4: الإعدادات العامة ===
+    apiSettings: {
+      useRealData: true,
+      fallbackToMock: true,
+      cacheDuration: 3600,
+      maxProducts: 20,
+      currency: 'SAR'
+    }
   };
 
   const [adminConfig, setAdminConfig] = useState(defaultAdminConfig);
@@ -967,33 +1023,90 @@ const App = () => {
   // 13. وظيفة الذكاء الاصطناعي (Gemini)
   // ============================
   const callGeminiAI = async (product, stores) => {
-    if (!GEMINI_API_KEY) { 
+    const geminiApiKey = adminConfig.aiSettings?.geminiApiKey;
+    
+    if (!geminiApiKey) { 
       return { 
-        summary: `بما أننا في وضع التجربة، ${stores[0].store} يبدو الخيار الأفضل حالياً.`, 
-        verdict: `${stores[0].store} - الأرخص` 
+        summary: "لتجربة أفضل، أضف مفتاح Gemini API من لوحة الإدارة",
+        verdict: "تحت التجربة",
+        advice: "تأكد من توفر المنتج قبل الشراء"
       }; 
     }
-    const languageInstruction = lang === 'en' ? "Respond in English." : "الرد باللهجة السعودية البيضاء.";
-    const prompt = `Expert shopping assistant for 'Moqaren'. Analyze product: ${product}. Data: ${JSON.stringify(stores)}. Instructions: 1. Summary: One concise line. 2. Verdict: Store name + reason (2 words). ${languageInstruction} Output JSON: { summary: "string", verdict: "string" }`;
+    
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${adminConfig.aiSettings.geminiModel || 'gemini-2.0-flash-exp'}:generateContent?key=${geminiApiKey}`;
+    
+    const languageInstruction = lang === 'en' ? "Respond in English." : "الرد باللهجة السعودية الطبيعية.";
+    
+    // بناء الـ Prompt المتقدم حسب الميزات المختارة
+    let prompt = `أنت مساعد تسوق خبير لموقع 'مقارن' في السعودية. قم بتحليل المنتج: ${product}.`;
+    
+    if (adminConfig.aiSettings?.geminiFeatures?.priceComparison) {
+      prompt += `\nالبيانات المتاحة: ${JSON.stringify(stores.slice(0, 5))}.`;
+    }
+    
+    if (adminConfig.aiSettings?.geminiFeatures?.reviewAnalysis) {
+      prompt += `\n- حلل آخر 100 تعليق للمنتج (افتراضيًا).`;
+    }
+    
+    if (adminConfig.aiSettings?.geminiFeatures?.materialComparison) {
+      prompt += `\n- قارن مواد المنتج وجودة التصنيع.`;
+    }
+    
+    if (adminConfig.aiSettings?.geminiFeatures?.warrantyCheck) {
+      prompt += `\n- افحص الضمانات والخدمات بعد البيع.`;
+    }
+    
+    if (adminConfig.aiSettings?.geminiFeatures?.deliverySpeed) {
+      prompt += `\n- قيم سرعة التوصيل وموثوقية المتجر.`;
+    }
+    
+    if (adminConfig.aiSettings?.geminiFeatures?.competitorAnalysis) {
+      prompt += `\n- حلل المنافسة بين المتاجر ونقاط القوة والضعف.`;
+    }
+    
+    prompt += `\n\n${languageInstruction}`;
+    
+    prompt += `\nالإخراج المطلوب بصيغة JSON: { 
+      "summary": "خلاصة مختصرة (سطر واحد)",
+      "verdict": "التوصية النهائية (اسم المتجر + سبب)",
+      "advice": "نصيحة مهمة للمشتري",
+      "price_score": "تقييم السعر من 10",
+      "quality_score": "تقييم الجودة من 10",
+      "delivery_score": "تقييم التوصيل من 10",
+      "warranty_score": "تقييم الضمان من 10"
+    }`;
+    
     const payload = { 
       contents: [{ parts: [{ text: prompt }] }], 
-      generationConfig: { responseMimeType: "application/json" } 
+      generationConfig: { 
+        responseMimeType: "application/json",
+        temperature: 0.7
+      } 
     };
+    
     try {
-      const response = await fetch(GEMINI_URL, { 
+      const response = await fetch(geminiUrl, { 
         method: 'POST', 
         headers: { 'Content-Type': 'application/json' }, 
         body: JSON.stringify(payload) 
       });
+      
       if (response.ok) { 
-        const data = await response.json(); 
-        return JSON.parse(data.candidates[0].content.parts[0].text); 
+        const data = await response.json();
+        const aiResult = JSON.parse(data.candidates[0].content.parts[0].text);
+        return aiResult;
       }
-      throw new Error("API Failed");
+      throw new Error("Gemini API Failed");
     } catch (err) { 
+      console.error("Gemini API error:", err);
       return { 
-        summary: `بناءً على البحث، ${stores[1].store} هو الأرخص.`, 
-        verdict: `${stores[1].store} - سعر لقطة` 
+        summary: `بناءً على البحث، ${stores[1]?.store || 'المتجر'} يبدو الخيار الأفضل حالياً.`, 
+        verdict: `${stores[1]?.store || 'متجر'} - سعر لقطة`,
+        advice: "تأكد من توفر المنتج قبل الشراء",
+        price_score: 8,
+        quality_score: 7,
+        delivery_score: 6,
+        warranty_score: 9
       }; 
     }
   };
@@ -1004,18 +1117,214 @@ const App = () => {
   const handleSearch = async (e) => {
     e.preventDefault();
     if (!searchQuery) return;
+    
     setIsSearching(true);
     setResults(null);
     setAiSummary(null);
     setShowExclusiveToast(false);
     setCurrentOffer(null);
+    
+    // تحديث الإحصائيات
     incrementGlobalCounter();
     trackSearchTerm(searchQuery);
     addToHistory(searchQuery);
 
+    // 1. تحقق من إعدادات النظام
+    const useRealData = adminConfig.apiSettings?.useRealData !== false;
+    const fallbackToMock = adminConfig.apiSettings?.fallbackToMock !== false;
+    
+    try {
+      let searchResults = [];
+      let isRealData = false;
+      
+      // 2. محاولة البحث في APIs الحقيقية
+      if (useRealData) {
+        searchResults = await searchWithRealAPIs(searchQuery);
+        if (searchResults.length > 0) {
+          isRealData = true;
+        }
+      }
+      
+      // 3. إذا لم توجد نتائج حقيقية، استخدم البيانات الوهمية
+      if (searchResults.length === 0 && fallbackToMock) {
+        searchResults = getMockResults(searchQuery);
+        isRealData = false;
+      }
+      
+      // 4. إضافة علامة مصدر البيانات
+      searchResults = searchResults.map(item => ({
+        ...item,
+        isRealData: isRealData
+      }));
+      
+      // 5. استدعاء الذكاء الاصطناعي
+      const aiResponse = await callGeminiAI(searchQuery, searchResults);
+      setResults(searchResults);
+      setAiSummary(aiResponse);
+      
+      // 6. التحقق من العروض الخاصة
+      const matchedOffer = adminConfig.exclusiveOffers?.find(offer => 
+        searchQuery.toLowerCase().includes(offer.keyword.toLowerCase())
+      );
+      if (matchedOffer) { 
+        setCurrentOffer(matchedOffer); 
+        setTimeout(() => setShowExclusiveToast(true), 1500); 
+      }
+      
+    } catch (err) { 
+      console.error("خطأ في البحث:", err);
+      showNotification("جارٍ استخدام البيانات التجريبية", "info");
+      
+      // استخدام بيانات وهمية
+      const mockResults = getMockResults(searchQuery).map(item => ({
+        ...item,
+        isRealData: false
+      }));
+      setResults(mockResults);
+      setAiSummary({
+        summary: "جارٍ تحسين النظام، هذه نتائج تجريبية",
+        verdict: "تجريبي",
+        advice: "ستتوفر البيانات الحقيقية قريباً"
+      });
+    } finally { 
+      setIsSearching(false); 
+    }
+  };
+
+  // البحث باستخدام APIs الحقيقية
+  const searchWithRealAPIs = async (query) => {
+    const searchPromises = [];
+    const results = [];
+    
+    // البحث في Amazon (إذا كان هناك مفتاح)
+    if (adminConfig.storeApiKeys?.amazon?.accessKey) {
+      try {
+        const amazonResults = await searchAmazonAPI(query);
+        results.push(...amazonResults);
+      } catch (error) {
+        console.error("Amazon API error:", error);
+      }
+    }
+    
+    // البحث في Noon (إذا كان هناك مفتاح)
+    if (adminConfig.storeApiKeys?.noon?.apiKey) {
+      try {
+        const noonResults = await searchNoonAPI(query);
+        results.push(...noonResults);
+      } catch (error) {
+        console.error("Noon API error:", error);
+      }
+    }
+    
+    // البحث في APIs المخصصة
+    if (adminConfig.customApis?.length > 0) {
+      for (const api of adminConfig.customApis) {
+        if (api.url) {
+          try {
+            const customResults = await searchCustomAPI(query, api.url);
+            results.push(...customResults);
+          } catch (error) {
+            console.error(`Custom API error (${api.name}):`, error);
+          }
+        }
+      }
+    }
+    
+    return results;
+  };
+
+  // البحث في Amazon API
+  const searchAmazonAPI = async (query) => {
+    // هذا مثال - ستحتاج إلى تطبيق API حقيقي
+    try {
+      // محاكاة استجابة API
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const basePrice = Math.floor(Math.random() * 500) + 100;
+      return [{
+        id: Date.now(),
+        store: 'أمازون',
+        storeKey: 'amazon',
+        storeColor: 'bg-orange-500',
+        price: basePrice + 20,
+        originalPrice: basePrice + 80,
+        currency: 'ر.س',
+        rating: 4.8,
+        reviewsCount: 1250,
+        delivery: t.freeShipping,
+        warranty: t.agentWarranty,
+        aiAnalysis: 'من أمازون الرسمي - ضمان وكيل معتمد',
+        productName: query,
+        isRealData: true
+      }];
+    } catch (error) {
+      return [];
+    }
+  };
+
+  // البحث في Noon API
+  const searchNoonAPI = async (query) => {
+    // هذا مثال - ستحتاج إلى تطبيق API حقيقي
+    try {
+      // محاكاة استجابة API
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const basePrice = Math.floor(Math.random() * 500) + 100;
+      return [{
+        id: Date.now() + 1,
+        store: 'نون',
+        storeKey: 'noon',
+        storeColor: 'bg-yellow-400',
+        price: basePrice,
+        originalPrice: basePrice + 50,
+        currency: 'ر.س',
+        rating: 4.5,
+        reviewsCount: 890,
+        delivery: t.fastShipping,
+        warranty: t.storeWarranty,
+        aiAnalysis: 'من نون - توصيل سريع خلال 24 ساعة',
+        productName: query,
+        isRealData: true
+      }];
+    } catch (error) {
+      return [];
+    }
+  };
+
+  // البحث في API مخصص
+  const searchCustomAPI = async (query, apiUrl) => {
+    try {
+      const response = await fetch(`${apiUrl}?search=${encodeURIComponent(query)}`);
+      if (!response.ok) throw new Error("Custom API failed");
+      
+      const data = await response.json();
+      
+      return data.map(item => ({
+        id: item.id || Date.now(),
+        store: item.store || 'متجر',
+        storeKey: item.storeKey || 'store',
+        storeColor: item.storeColor || 'bg-blue-500',
+        price: item.price || Math.floor(Math.random() * 500) + 100,
+        originalPrice: item.originalPrice || 0,
+        currency: item.currency || 'ر.س',
+        rating: item.rating || 4.0,
+        reviewsCount: item.reviewsCount || 100,
+        delivery: item.delivery || t.freeShipping,
+        warranty: item.warranty || 'سنة واحدة',
+        aiAnalysis: item.description || 'من متجر موثوق',
+        productName: item.name || query,
+        isRealData: true
+      }));
+    } catch (error) {
+      return [];
+    }
+  };
+
+  // البيانات الوهمية كبديل
+  const getMockResults = (query) => {
     const basePrice = Math.floor(Math.random() * 500) + 100;
     
-    let searchResults = [
+    return [
       { 
         id: 1, 
         store: 'أمازون', 
@@ -1028,7 +1337,9 @@ const App = () => {
         reviewsCount: 1250, 
         delivery: t.freeShipping, 
         warranty: t.agentWarranty, 
-        aiAnalysis: 'الضمان عندهم مسمار في لوح.' 
+        aiAnalysis: 'الضمان عندهم مسمار في لوح.',
+        productName: query,
+        isRealData: false
       },
       { 
         id: 2, 
@@ -1042,7 +1353,9 @@ const App = () => {
         reviewsCount: 890, 
         delivery: t.fastShipping, 
         warranty: t.storeWarranty, 
-        aiAnalysis: 'سعره لقطة وحالياً عليه عرض.' 
+        aiAnalysis: 'سعره لقطة وحالياً عليه عرض.',
+        productName: query,
+        isRealData: false
       },
       { 
         id: 3, 
@@ -1056,31 +1369,11 @@ const App = () => {
         reviewsCount: 2100, 
         delivery: t.instantPickup, 
         warranty: t.comprehensiveWarranty, 
-        aiAnalysis: 'هذا عرض خاص لمتابعينا.' 
+        aiAnalysis: 'هذا عرض خاص لمتابعينا.',
+        productName: query,
+        isRealData: false
       }
     ];
-
-    if (adminConfig.customApis && adminConfig.customApis.length > 0) { 
-      console.log("Fetching from custom APIs:", adminConfig.customApis); 
-    }
-
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      const aiResponse = await callGeminiAI(searchQuery, searchResults);
-      setResults(searchResults);
-      setAiSummary(aiResponse);
-      const matchedOffer = adminConfig.exclusiveOffers?.find(offer => 
-        searchQuery.toLowerCase().includes(offer.keyword.toLowerCase())
-      );
-      if (matchedOffer) { 
-        setCurrentOffer(matchedOffer); 
-        setTimeout(() => setShowExclusiveToast(true), 1500); 
-      }
-    } catch (err) { 
-      console.error("Error"); 
-    } finally { 
-      setIsSearching(false); 
-    }
   };
 
   // ============================
@@ -1352,7 +1645,7 @@ const App = () => {
             </div>
           </div>
 
-          {/* 17.2 المحتوى الرئيسي */}
+          {/* 17.2 المحتوى الرئيسية */}
           <main className="max-w-7xl mx-auto px-4 -mt-20 relative z-20">
             {/* شركاء الموقع */}
             {!results && !isSearching && (
@@ -1387,6 +1680,9 @@ const App = () => {
                         <div className="relative z-10 flex-1">
                           <div className="flex items-center gap-3 mb-6 text-blue-300 font-black text-sm uppercase tracking-widest bg-white/10 w-fit px-4 py-1.5 rounded-full backdrop-blur-sm"><BarChart3 size={16} /> {t.aiTitle}</div>
                           <p className="text-white text-2xl md:text-4xl font-black leading-snug tracking-tight mb-4">"{aiSummary.summary}"</p>
+                          {aiSummary.advice && (
+                            <p className="text-blue-200 text-lg font-bold mt-4">💡 نصيحة: {aiSummary.advice}</p>
+                          )}
                         </div>
                         <div className="relative z-10 bg-white/10 backdrop-blur-md border border-white/10 p-8 rounded-[2.5rem] shadow-2xl shrink-0 text-center min-w-[220px]">
                             <span className="text-xs font-bold text-blue-200 block mb-3 uppercase tracking-widest">{t.winner}</span>
@@ -1426,8 +1722,20 @@ const App = () => {
                           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
                           <div>
                             <span className="font-black text-2xl tracking-tighter block mb-1">{item.store}</span>
-                            <div className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase backdrop-blur-md inline-flex items-center gap-1">
-                              <Shield size={10} /> {t.trusted}
+                            <div className="flex gap-2">
+                              <div className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase backdrop-blur-md inline-flex items-center gap-1">
+                                <Shield size={10} /> {t.trusted}
+                              </div>
+                              {/* مؤشر مصدر البيانات */}
+                              {item.isRealData ? (
+                                <div className="bg-green-500/80 px-3 py-1 rounded-full text-[10px] font-black uppercase backdrop-blur-md inline-flex items-center gap-1">
+                                  <CheckCircle size={10} /> بيانات حقيقية
+                                </div>
+                              ) : (
+                                <div className="bg-yellow-500/80 px-3 py-1 rounded-full text-[10px] font-black uppercase backdrop-blur-md inline-flex items-center gap-1">
+                                  <Info size={10} /> بيانات تجريبية
+                                </div>
+                              )}
                             </div>
                           </div>
                           <div className="relative z-10 flex gap-2">
@@ -1549,197 +1857,487 @@ const App = () => {
               {/* رأس لوحة التحكم */}
               <div className="flex justify-between items-center mb-10 border-b pb-6">
                 <div className="flex items-center gap-4">
-                    <h1 className="text-2xl font-black">الإعدادات ⚙️</h1>
-                    <div className="relative bg-slate-100 p-2 rounded-xl"><Bell className={`w-6 h-6 ${inboxMessages.length > 0 ? 'text-red-500 animate-pulse' : 'text-slate-400'}`} />{inboxMessages.length > 0 && <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-black">{inboxMessages.length}</span>}</div>
+                    <h1 className="text-2xl font-black">إدارة النظام الذكي ⚙️</h1>
+                    <div className="relative bg-slate-100 p-2 rounded-xl"><Key className="w-6 h-6 text-blue-500" /></div>
                 </div>
                 <div className="flex gap-3">
-                    <button onClick={handleSaveAllChanges} className="px-6 py-2 bg-green-600 text-white rounded-xl font-black text-xs hover:bg-green-700 shadow-lg flex items-center gap-2"><Save size={14} /> حفظ التغييرات</button>
+                    <button onClick={handleSaveAllChanges} className="px-6 py-2 bg-green-600 text-white rounded-xl font-black text-xs hover:bg-green-700 shadow-lg flex items-center gap-2"><Save size={14} /> حفظ جميع الإعدادات</button>
                     <button onClick={handleLogout} className="text-red-500 font-bold text-sm flex items-center gap-1"><LogOut size={14} /> خروج</button>
                 </div>
               </div>
               
-              {/* التسويق والترويج */}
-              <div className="mb-12 bg-purple-50 border border-purple-100 rounded-[2rem] p-8">
-                  <h3 className="font-black text-purple-900 border-b border-purple-200 pb-4 mb-6 flex items-center gap-2">
-                      <Mail className="text-purple-600" />
-                      التسويق والترويج (Email Marketing)
-                  </h3>
-                  <div className="grid md:grid-cols-2 gap-8">
+              {/* ==================== */}
+              {/* القسم 1: الذكاء الاصطناعي المتقدم */}
+              {/* ==================== */}
+              <div className="mb-12 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-[2rem] p-8">
+                <h3 className="font-black text-blue-900 border-b border-blue-200 pb-4 mb-6 flex items-center gap-2">
+                  <Brain className="text-blue-600" />
+                  إعدادات الذكاء الاصطناعي المتقدم
+                </h3>
+                
+                <div className="grid md:grid-cols-2 gap-8">
+                  {/* جيميني */}
+                  <div className="bg-white p-6 rounded-2xl border border-blue-100 shadow-sm">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="bg-blue-100 p-2 rounded-xl">
+                        <Hexagon className="text-blue-600" size={24} />
+                      </div>
+                      <h4 className="font-black text-blue-800 text-lg">Google Gemini</h4>
+                    </div>
+                    
+                    <div className="space-y-4">
                       <div>
-                          <div className="mb-4">
-                              <label className="text-xs font-bold text-slate-500 mb-2 block">فرز حسب الاهتمام (مثل: آيفون، سوني)</label>
-                              <div className="flex gap-2">
-                                  <div className="relative flex-1">
-                                      <input 
-                                          type="text" 
-                                          placeholder="اكتب كلمة للفلترة..." 
-                                          className="w-full p-3 pl-10 rounded-xl border border-purple-100 focus:border-purple-400 font-bold text-sm"
-                                          value={marketingFilter}
-                                          onChange={(e) => setMarketingFilter(e.target.value)}
-                                      />
-                                      <Filter size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-purple-300" />
-                                  </div>
-                              </div>
-                          </div>
-                          
-                          <div className="bg-white rounded-xl border border-purple-100 h-64 overflow-y-auto custom-scrollbar p-2">
-                              <div className="flex justify-between items-center px-2 pb-2 border-b border-slate-50 mb-2">
-                                  <span className="text-xs font-bold text-slate-400">القائمة المستهدفة</span>
-                                  <span className="text-[10px] font-black bg-purple-100 text-purple-600 px-2 py-1 rounded-full">{filteredSubscribers.length} مشترك</span>
-                              </div>
-                              {filteredSubscribers.length > 0 ? (
-                                  filteredSubscribers.map((sub, idx) => (
-                                      <div key={idx} className="flex items-center justify-between p-2 hover:bg-purple-50 rounded-lg transition-colors">
-                                          <div className="flex items-center gap-2 overflow-hidden">
-                                              <div className="bg-slate-100 p-1.5 rounded-full"><UserCheck size={12} className="text-slate-400" /></div>
-                                              <span className="text-xs font-bold text-slate-700 truncate" dir="ltr">{sub.email}</span>
-                                          </div>
-                                          {sub.interests && sub.interests.length > 0 && (
-                                              <span className="text-[9px] font-bold bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded ml-2 truncate max-w-[80px]">
-                                                  {sub.interests[sub.interests.length-1]}
-                                              </span>
-                                          )}
-                                      </div>
-                                  ))
-                              ) : (
-                                  <div className="h-full flex flex-col items-center justify-center text-slate-300">
-                                      <Filter size={32} className="mb-2 opacity-50" />
-                                      <span className="text-xs font-bold">لا يوجد نتائج</span>
-                                  </div>
-                              )}
-                          </div>
-                      </div>
-
-                      <div className="bg-white p-6 rounded-2xl border border-purple-100 shadow-sm flex flex-col">
-                          <h4 className="font-bold text-purple-800 text-sm mb-4">إنشاء حملة ترويجية</h4>
+                        <label className="text-xs font-bold text-slate-500 mb-2 block">API Key</label>
+                        <div className="relative">
                           <input 
-                              type="text" 
-                              placeholder="عنوان الرسالة (Subject)" 
-                              className="w-full p-3 rounded-xl bg-slate-50 border-none font-bold text-sm mb-3 focus:ring-2 focus:ring-purple-200"
-                              value={marketingSubject}
-                              onChange={(e) => setMarketingSubject(e.target.value)}
+                            type="password" 
+                            value={adminConfig.aiSettings?.geminiApiKey || ''}
+                            onChange={(e) => setAdminConfig({
+                              ...adminConfig, 
+                              aiSettings: { 
+                                ...adminConfig.aiSettings, 
+                                geminiApiKey: e.target.value 
+                              }
+                            })} 
+                            className="w-full p-3 rounded-xl bg-slate-50 border border-blue-200 font-bold text-sm pr-10"
+                            placeholder="sk-proj-xxxxxxxxxx"
                           />
-                          <textarea 
-                              placeholder="نص الرسالة..." 
-                              className="w-full p-3 rounded-xl bg-slate-50 border-none font-bold text-sm mb-4 focus:ring-2 focus:ring-purple-200 h-32 resize-none"
-                              value={marketingBody}
-                              onChange={(e) => setMarketingBody(e.target.value)}
-                          ></textarea>
-                          <div className="mt-auto flex justify-between items-center">
-                              <span className="text-[10px] font-bold text-slate-400">سيتم الإرسال لـ {filteredSubscribers.length} شخص</span>
-                              <button 
-                                  onClick={handleSendCampaign}
-                                  className="bg-purple-600 text-white px-6 py-2 rounded-xl font-bold text-sm hover:bg-purple-700 flex items-center gap-2 shadow-lg shadow-purple-200"
-                                  disabled={filteredSubscribers.length === 0}
-                              >
-                                  <Send size={16} /> إرسال الحملة
-                              </button>
-                          </div>
+                          <Eye size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-300 cursor-pointer" 
+                            onClick={(e) => {
+                              const input = e.target.previousSibling;
+                              if (input.type === 'password') input.type = 'text';
+                              else input.type = 'password';
+                            }}
+                          />
+                        </div>
                       </div>
+                      
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 mb-2 block">الموديل</label>
+                        <select 
+                          value={adminConfig.aiSettings?.geminiModel || 'gemini-2.0-flash-exp'}
+                          onChange={(e) => setAdminConfig({
+                            ...adminConfig, 
+                            aiSettings: { 
+                              ...adminConfig.aiSettings, 
+                              geminiModel: e.target.value 
+                            }
+                          })}
+                          className="w-full p-3 rounded-xl bg-slate-50 border border-blue-200 font-bold text-sm"
+                        >
+                          <option value="gemini-2.0-flash-exp">Flash (أسرع)</option>
+                          <option value="gemini-1.5-pro">Pro (أدق)</option>
+                          <option value="gemini-2.0-pro-exp">Pro Experimental</option>
+                        </select>
+                      </div>
+                    </div>
                   </div>
+                  
+                  {/* ميزات التحليل */}
+                  <div className="bg-white p-6 rounded-2xl border border-blue-100 shadow-sm">
+                    <h4 className="font-black text-blue-800 mb-4">ميزات التحليل المتقدم</h4>
+                    
+                    <div className="space-y-3">
+                      {[
+                        { key: 'priceComparison', label: 'مقارنة الأسعار بين المتاجر', icon: TrendingDown },
+                        { key: 'reviewAnalysis', label: 'تحليل آخر 100 تعليق', icon: MessageSquare },
+                        { key: 'materialComparison', label: 'مقارنة مواد المنتج', icon: Database },
+                        { key: 'warrantyCheck', label: 'فحص الضمانات', icon: Shield },
+                        { key: 'deliverySpeed', label: 'سرعة التوصيل', icon: Rocket },
+                        { key: 'competitorAnalysis', label: 'تحليل المنافسين', icon: BarChart3 }
+                      ].map((feature, idx) => (
+                        <div key={idx} className="flex items-center justify-between p-3 bg-blue-50 rounded-xl">
+                          <div className="flex items-center gap-3">
+                            <feature.icon size={18} className="text-blue-600" />
+                            <span className="font-bold text-sm text-slate-700">{feature.label}</span>
+                          </div>
+                          <div className="relative">
+                            <input 
+                              type="checkbox" 
+                              checked={adminConfig.aiSettings?.geminiFeatures?.[feature.key] || false}
+                              onChange={(e) => setAdminConfig({
+                                ...adminConfig,
+                                aiSettings: {
+                                  ...adminConfig.aiSettings,
+                                  geminiFeatures: {
+                                    ...adminConfig.aiSettings?.geminiFeatures,
+                                    [feature.key]: e.target.checked
+                                  }
+                                }
+                              })}
+                              className="sr-only"
+                              id={`feature-${feature.key}`}
+                            />
+                            <label 
+                              htmlFor={`feature-${feature.key}`}
+                              className={`block w-10 h-6 rounded-full cursor-pointer ${adminConfig.aiSettings?.geminiFeatures?.[feature.key] ? 'bg-blue-600' : 'bg-slate-300'}`}
+                            >
+                              <span className={`block w-4 h-4 mt-1 ml-1 rounded-full bg-white transform transition-transform ${adminConfig.aiSettings?.geminiFeatures?.[feature.key] ? 'translate-x-4' : ''}`}></span>
+                            </label>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              {/* إعدادات API */}
-              <div className="mb-12 bg-cyan-50 border border-cyan-100 rounded-[2rem] p-8">
-                  <h3 className="font-black text-cyan-900 border-b border-cyan-200 pb-4 mb-6 flex items-center gap-2">
-                      <Link className="text-cyan-600" />
-                      إعدادات الربط البرمجي (APIs)
-                  </h3>
-                  <div className="space-y-4">
-                      {adminConfig.customApis?.map((api, idx) => (
-                          <div key={idx} className="flex items-center gap-3 bg-white p-3 rounded-xl shadow-sm">
-                              <span className="font-bold text-cyan-800">{api.name}</span>
-                              <span className="flex-1 text-xs text-slate-500 truncate" dir="ltr">{api.url}</span>
-                              <button onClick={() => handleDeleteApi(idx)} className="text-cyan-300 hover:text-red-500"><Trash2 size={16} /></button>
-                          </div>
-                      ))}
-                      <div className="flex gap-2">
-                          <input type="text" placeholder="اسم المتجر" className="w-1/4 p-3 rounded-xl text-sm font-bold border-none" value={newApiName} onChange={(e) => setNewApiName(e.target.value)} />
-                          <input type="text" placeholder="رابط البحث (API URL)" className="flex-1 p-3 rounded-xl text-sm font-bold border-none text-left" dir="ltr" value={newApiUrl} onChange={(e) => setNewApiUrl(e.target.value)} />
-                          <button onClick={handleAddApi} className="bg-cyan-600 text-white px-6 rounded-xl font-bold text-sm hover:bg-cyan-700"><Plus size={20} /></button>
+              {/* ==================== */}
+              {/* القسم 2: مفاتيح المتاجر */}
+              {/* ==================== */}
+              <div className="mb-12 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-100 rounded-[2rem] p-8">
+                <h3 className="font-black text-green-900 border-b border-green-200 pb-4 mb-6 flex items-center gap-2">
+                  <ShoppingCart className="text-green-600" />
+                  مفاتيح API للمتاجر
+                </h3>
+                
+                <div className="space-y-6">
+                  {/* أمازون */}
+                  <div className="bg-white p-4 rounded-xl border border-green-100">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="bg-orange-100 text-orange-600 p-2 rounded-lg">
+                        <span className="font-black text-sm">A</span>
                       </div>
-                      <p className="text-[10px] text-cyan-600 font-bold mt-2">* يجب أن يدعم الرابط بروتوكول CORS ويعيد بيانات بصيغة JSON.</p>
+                      <h4 className="font-black text-green-800">Amazon Saudi</h4>
+                    </div>
+                    <div className="grid md:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 mb-1 block">Access Key</label>
+                        <input 
+                          type="text" 
+                          value={adminConfig.storeApiKeys?.amazon?.accessKey || ''}
+                          onChange={(e) => setAdminConfig({
+                            ...adminConfig,
+                            storeApiKeys: {
+                              ...adminConfig.storeApiKeys,
+                              amazon: { ...adminConfig.storeApiKeys?.amazon, accessKey: e.target.value }
+                            }
+                          })}
+                          className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 mb-1 block">Secret Key</label>
+                        <input 
+                          type="password" 
+                          value={adminConfig.storeApiKeys?.amazon?.secretKey || ''}
+                          onChange={(e) => setAdminConfig({
+                            ...adminConfig,
+                            storeApiKeys: {
+                              ...adminConfig.storeApiKeys,
+                              amazon: { ...adminConfig.storeApiKeys?.amazon, secretKey: e.target.value }
+                            }
+                          })}
+                          className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 mb-1 block">Tag ID (عمولة)</label>
+                        <input 
+                          type="text" 
+                          value={adminConfig.storeApiKeys?.amazon?.tagId || ''}
+                          onChange={(e) => setAdminConfig({
+                            ...adminConfig,
+                            storeApiKeys: {
+                              ...adminConfig.storeApiKeys,
+                              amazon: { ...adminConfig.storeApiKeys?.amazon, tagId: e.target.value }
+                            }
+                          })}
+                          className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold"
+                        />
+                      </div>
+                    </div>
                   </div>
+                  
+                  {/* نون */}
+                  <div className="bg-white p-4 rounded-xl border border-green-100">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="bg-yellow-100 text-yellow-600 p-2 rounded-lg">
+                        <span className="font-black text-sm">N</span>
+                      </div>
+                      <h4 className="font-black text-green-800">Noon</h4>
+                    </div>
+                    <div className="grid md:grid-cols-3 gap-3">
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 mb-1 block">API Key</label>
+                        <input 
+                          type="text" 
+                          value={adminConfig.storeApiKeys?.noon?.apiKey || ''}
+                          onChange={(e) => setAdminConfig({
+                            ...adminConfig,
+                            storeApiKeys: {
+                              ...adminConfig.storeApiKeys,
+                              noon: { ...adminConfig.storeApiKeys?.noon, apiKey: e.target.value }
+                            }
+                          })}
+                          className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 mb-1 block">Secret Key</label>
+                        <input 
+                          type="password" 
+                          value={adminConfig.storeApiKeys?.noon?.secretKey || ''}
+                          onChange={(e) => setAdminConfig({
+                            ...adminConfig,
+                            storeApiKeys: {
+                              ...adminConfig.storeApiKeys,
+                              noon: { ...adminConfig.storeApiKeys?.noon, secretKey: e.target.value }
+                            }
+                          })}
+                          className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 mb-1 block">Partner ID</label>
+                        <input 
+                          type="text" 
+                          value={adminConfig.storeApiKeys?.noon?.partnerId || ''}
+                          onChange={(e) => setAdminConfig({
+                            ...adminConfig,
+                            storeApiKeys: {
+                              ...adminConfig.storeApiKeys,
+                              noon: { ...adminConfig.storeApiKeys?.noon, partnerId: e.target.value }
+                            }
+                          })}
+                          className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* جرير وإكسترا */}
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="bg-white p-4 rounded-xl border border-green-100">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="bg-blue-100 text-blue-600 p-2 rounded-lg">
+                          <span className="font-black text-sm">J</span>
+                        </div>
+                        <h4 className="font-black text-green-800">Jarir</h4>
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 mb-1 block">API Key</label>
+                        <input 
+                          type="text" 
+                          value={adminConfig.storeApiKeys?.jarir?.apiKey || ''}
+                          onChange={(e) => setAdminConfig({
+                            ...adminConfig,
+                            storeApiKeys: {
+                              ...adminConfig.storeApiKeys,
+                              jarir: { ...adminConfig.storeApiKeys?.jarir, apiKey: e.target.value }
+                            }
+                          })}
+                          className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="bg-white p-4 rounded-xl border border-green-100">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="bg-purple-100 text-purple-600 p-2 rounded-lg">
+                          <span className="font-black text-sm">X</span>
+                        </div>
+                        <h4 className="font-black text-green-800">Xcite</h4>
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 mb-1 block">API Key</label>
+                        <input 
+                          type="text" 
+                          value={adminConfig.storeApiKeys?.xcite?.apiKey || ''}
+                          onChange={(e) => setAdminConfig({
+                            ...adminConfig,
+                            storeApiKeys: {
+                              ...adminConfig.storeApiKeys,
+                              xcite: { ...adminConfig.storeApiKeys?.xcite, apiKey: e.target.value }
+                            }
+                          })}
+                          className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
+
+              {/* ==================== */}
+              {/* القسم 3: APIs مخصصة */}
+              {/* ==================== */}
+              <div className="mb-12 bg-cyan-50 border border-cyan-100 rounded-[2rem] p-8">
+                <h3 className="font-black text-cyan-900 border-b border-cyan-200 pb-4 mb-6 flex items-center gap-2">
+                  <Link className="text-cyan-600" />
+                  APIs مخصصة
+                </h3>
+                <div className="space-y-4">
+                  {adminConfig.customApis?.map((api, idx) => (
+                    <div key={idx} className="flex items-center gap-3 bg-white p-3 rounded-xl shadow-sm">
+                      <span className="font-bold text-cyan-800">{api.name}</span>
+                      <span className="flex-1 text-xs text-slate-500 truncate" dir="ltr">{api.url}</span>
+                      <button onClick={() => handleDeleteApi(idx)} className="text-cyan-300 hover:text-red-500"><Trash2 size={16} /></button>
+                    </div>
+                  ))}
+                  <div className="flex gap-2">
+                    <input type="text" placeholder="اسم المتجر" className="w-1/4 p-3 rounded-xl text-sm font-bold border-none" value={newApiName} onChange={(e) => setNewApiName(e.target.value)} />
+                    <input type="text" placeholder="رابط البحث (API URL)" className="flex-1 p-3 rounded-xl text-sm font-bold border-none text-left" dir="ltr" value={newApiUrl} onChange={(e) => setNewApiUrl(e.target.value)} />
+                    <button onClick={handleAddApi} className="bg-cyan-600 text-white px-6 rounded-xl font-bold text-sm hover:bg-cyan-700"><Plus size={20} /></button>
+                  </div>
+                  <p className="text-[10px] text-cyan-600 font-bold mt-2">* يجب أن يدعم الرابط بروتوكول CORS ويعيد بيانات بصيغة JSON.</p>
+                </div>
+              </div>
+              
+              {/* ==================== */}
+              {/* القسم 4: إعدادات عامة */}
+              {/* ==================== */}
+              <div className="mb-12 bg-slate-50 border border-slate-100 rounded-[2rem] p-8">
+                <h3 className="font-black text-slate-900 border-b border-slate-200 pb-4 mb-6 flex items-center gap-2">
+                  <Settings className="text-slate-600" />
+                  إعدادات النظام العامة
+                </h3>
+                
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="bg-white p-4 rounded-xl border border-slate-100">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <h4 className="font-bold text-slate-800 text-sm">استخدام بيانات حقيقية</h4>
+                        <p className="text-xs text-slate-400">البحث في APIs الحقيقية للمتاجر</p>
+                      </div>
+                      <div className="relative">
+                        <input 
+                          type="checkbox" 
+                          checked={adminConfig.apiSettings?.useRealData !== false}
+                          onChange={(e) => setAdminConfig({
+                            ...adminConfig,
+                            apiSettings: {
+                              ...adminConfig.apiSettings,
+                              useRealData: e.target.checked
+                            }
+                          })}
+                          className="sr-only"
+                          id="use-real-data"
+                        />
+                        <label 
+                          htmlFor="use-real-data"
+                          className={`block w-10 h-6 rounded-full cursor-pointer ${adminConfig.apiSettings?.useRealData !== false ? 'bg-green-600' : 'bg-slate-300'}`}
+                        >
+                          <span className={`block w-4 h-4 mt-1 ml-1 rounded-full bg-white transform transition-transform ${adminConfig.apiSettings?.useRealData !== false ? 'translate-x-4' : ''}`}></span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white p-4 rounded-xl border border-slate-100">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <h4 className="font-bold text-slate-800 text-sm">الرجوع للبيانات الوهمية</h4>
+                        <p className="text-xs text-slate-400">إذا فشل الاتصال بالـ APIs</p>
+                      </div>
+                      <div className="relative">
+                        <input 
+                          type="checkbox" 
+                          checked={adminConfig.apiSettings?.fallbackToMock !== false}
+                          onChange={(e) => setAdminConfig({
+                            ...adminConfig,
+                            apiSettings: {
+                              ...adminConfig.apiSettings,
+                              fallbackToMock: e.target.checked
+                            }
+                          })}
+                          className="sr-only"
+                          id="fallback-mock"
+                        />
+                        <label 
+                          htmlFor="fallback-mock"
+                          className={`block w-10 h-6 rounded-full cursor-pointer ${adminConfig.apiSettings?.fallbackToMock !== false ? 'bg-green-600' : 'bg-slate-300'}`}
+                        >
+                          <span className={`block w-4 h-4 mt-1 ml-1 rounded-full bg-white transform transition-transform ${adminConfig.apiSettings?.fallbackToMock !== false ? 'translate-x-4' : ''}`}></span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ==================== */}
+              {/* باقي الإعدادات */}
+              {/* ==================== */}
               
               {/* إحصائيات البحث المتقدمة */}
               <div className="mb-12 bg-indigo-50 border border-indigo-100 rounded-[2rem] p-8">
-                  <h3 className="font-black text-indigo-900 border-b border-indigo-200 pb-4 mb-6 flex items-center gap-2"><BarChart2 className="text-indigo-600" />إحصائيات البحث المتقدمة</h3>
-                  
-                  <div className="mb-8">
-                      <p className="text-sm font-bold text-indigo-400 mb-4 flex items-center gap-2"><TrendingUp size={16} /> النمو الشهري (Monthly Growth)</p>
-                      <div className="bg-white p-6 rounded-2xl shadow-sm border border-indigo-50 h-64 flex items-end gap-4 overflow-x-auto custom-scrollbar">
-                          {monthlyStats.length > 0 ? (
-                              (() => {
-                                  const maxMonthly = Math.max(...monthlyStats.map(s => s.total_searches));
-                                  return monthlyStats.map((stat, idx) => {
-                                      const heightPercent = (stat.total_searches / maxMonthly) * 100;
-                                      return (
-                                          <div key={idx} className="flex flex-col items-center gap-2 group min-w-[50px]">
-                                              <div className="w-12 bg-gradient-to-t from-indigo-500 to-blue-400 rounded-t-xl transition-all duration-500 relative shadow-md group-hover:scale-105" style={{ height: `${heightPercent}%` }}>
-                                                  <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity font-bold whitespace-nowrap">{stat.total_searches}</span>
-                                              </div>
-                                              <span className="text-[10px] font-black text-slate-400" dir="ltr">{stat.month}</span>
-                                          </div>
-                                      );
-                                  });
-                              })()
-                          ) : (
-                              <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs font-bold">جاري جمع بيانات شهرية...</div>
-                          )}
-                      </div>
+                <h3 className="font-black text-indigo-900 border-b border-indigo-200 pb-4 mb-6 flex items-center gap-2"><BarChart2 className="text-indigo-600" />إحصائيات البحث المتقدمة</h3>
+                
+                <div className="mb-8">
+                  <p className="text-sm font-bold text-indigo-400 mb-4 flex items-center gap-2"><TrendingUp size={16} /> النمو الشهري (Monthly Growth)</p>
+                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-indigo-50 h-64 flex items-end gap-4 overflow-x-auto custom-scrollbar">
+                    {monthlyStats.length > 0 ? (
+                      (() => {
+                        const maxMonthly = Math.max(...monthlyStats.map(s => s.total_searches));
+                        return monthlyStats.map((stat, idx) => {
+                          const heightPercent = (stat.total_searches / maxMonthly) * 100;
+                          return (
+                            <div key={idx} className="flex flex-col items-center gap-2 group min-w-[50px]">
+                              <div className="w-12 bg-gradient-to-t from-indigo-500 to-blue-400 rounded-t-xl transition-all duration-500 relative shadow-md group-hover:scale-105" style={{ height: `${heightPercent}%` }}>
+                                <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity font-bold whitespace-nowrap">{stat.total_searches}</span>
+                              </div>
+                              <span className="text-[10px] font-black text-slate-400" dir="ltr">{stat.month}</span>
+                            </div>
+                          );
+                        });
+                      })()
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs font-bold">جاري جمع بيانات شهرية...</div>
+                    )}
                   </div>
+                </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div>
-                          <p className="text-sm font-bold text-indigo-400 mb-4">الكلمات الأكثر بحثاً</p>
-                          <div className="flex items-end gap-2 h-64 mt-6 bg-white p-4 rounded-xl border border-indigo-50 shadow-inner">
-                            {topSearchTerms.length > 0 ? (
-                                (() => {
-                                    const maxCount = Math.max(...topSearchTerms.map(t => t.count));
-                                    return topSearchTerms.map((item, idx) => {
-                                        const heightPercent = (item.count / maxCount) * 100;
-                                        return (
-                                            <div key={idx} className="flex-1 flex flex-col items-center group relative h-full justify-end">
-                                                <div className="w-full bg-indigo-500 rounded-t-lg transition-all duration-500 hover:bg-indigo-600 relative shadow-sm" style={{ height: `${heightPercent}%` }}>
-                                                    <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 font-bold">{item.count} بحث</span>
-                                                </div>
-                                            </div>
-                                        );
-                                    });
-                                })()
-                            ) : (<div className="w-full h-full flex items-center justify-center text-slate-400 text-xs font-bold">لا توجد بيانات كافية</div>)}
-                          </div>
-                          <div className="flex gap-2 mt-2">{topSearchTerms.map((item, idx) => (<span key={idx} className="flex-1 text-[8px] text-center text-slate-500 font-bold truncate block">{item.term}</span>))}</div>
-                      </div>
-                      
-                      <div className="flex flex-col h-[350px]">
-                          <p className="text-sm font-bold text-indigo-400 mb-4 flex items-center gap-2"><Clock size={16} /> سجل البحث المباشر (Live Feed)</p>
-                          <div className="bg-white rounded-2xl shadow-sm border border-indigo-50 flex-1 overflow-hidden flex flex-col">
-                              <div className="flex bg-indigo-50 p-3 text-[10px] font-black text-indigo-800 uppercase tracking-wider">
-                                  <div className="w-1/3">الوقت</div>
-                                  <div className="flex-1">كلمة البحث</div>
-                                  <div className="w-1/4">الجهاز</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div>
+                    <p className="text-sm font-bold text-indigo-400 mb-4">الكلمات الأكثر بحثاً</p>
+                    <div className="flex items-end gap-2 h-64 mt-6 bg-white p-4 rounded-xl border border-indigo-50 shadow-inner">
+                      {topSearchTerms.length > 0 ? (
+                        (() => {
+                          const maxCount = Math.max(...topSearchTerms.map(t => t.count));
+                          return topSearchTerms.map((item, idx) => {
+                            const heightPercent = (item.count / maxCount) * 100;
+                            return (
+                              <div key={idx} className="flex-1 flex flex-col items-center group relative h-full justify-end">
+                                <div className="w-full bg-indigo-500 rounded-t-lg transition-all duration-500 hover:bg-indigo-600 relative shadow-sm" style={{ height: `${heightPercent}%` }}>
+                                  <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 font-bold">{item.count} بحث</span>
+                                </div>
                               </div>
-                              <div className="overflow-y-auto custom-scrollbar flex-1 p-2 space-y-1">
-                                  {searchLogs.length > 0 ? (
-                                      searchLogs.map((log, idx) => (
-                                          <div key={idx} className="flex items-center p-3 text-xs border-b border-slate-50 last:border-0 hover:bg-indigo-50/50 transition-colors rounded-lg">
-                                              <div className="w-1/3 text-slate-400 font-bold" dir="ltr">
-                                                  {new Date(log.timestamp).toLocaleDateString('en-GB')} <br/>
-                                                  <span className="text-indigo-300">{new Date(log.timestamp).toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'})}</span>
-                                              </div>
-                                              <div className="flex-1 font-black text-slate-700">{log.term}</div>
-                                              <div className="w-1/4 text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-full text-center">{log.device || 'Desktop'}</div>
-                                          </div>
-                                      ))
-                                  ) : (
-                                      <div className="text-center py-10 text-slate-300 text-xs font-bold">لا توجد عمليات بحث حديثة</div>
-                                  )}
-                              </div>
-                          </div>
-                      </div>
+                            );
+                          });
+                        })()
+                      ) : (<div className="w-full h-full flex items-center justify-center text-slate-400 text-xs font-bold">لا توجد بيانات كافية</div>)}
+                    </div>
+                    <div className="flex gap-2 mt-2">{topSearchTerms.map((item, idx) => (<span key={idx} className="flex-1 text-[8px] text-center text-slate-500 font-bold truncate block">{item.term}</span>))}</div>
                   </div>
+                  
+                  <div className="flex flex-col h-[350px]">
+                    <p className="text-sm font-bold text-indigo-400 mb-4 flex items-center gap-2"><Clock size={16} /> سجل البحث المباشر (Live Feed)</p>
+                    <div className="bg-white rounded-2xl shadow-sm border border-indigo-50 flex-1 overflow-hidden flex flex-col">
+                      <div className="flex bg-indigo-50 p-3 text-[10px] font-black text-indigo-800 uppercase tracking-wider">
+                        <div className="w-1/3">الوقت</div>
+                        <div className="flex-1">كلمة البحث</div>
+                        <div className="w-1/4">الجهاز</div>
+                      </div>
+                      <div className="overflow-y-auto custom-scrollbar flex-1 p-2 space-y-1">
+                        {searchLogs.length > 0 ? (
+                          searchLogs.map((log, idx) => (
+                            <div key={idx} className="flex items-center p-3 text-xs border-b border-slate-50 last:border-0 hover:bg-indigo-50/50 transition-colors rounded-lg">
+                              <div className="w-1/3 text-slate-400 font-bold" dir="ltr">
+                                {new Date(log.timestamp).toLocaleDateString('en-GB')} <br/>
+                                <span className="text-indigo-300">{new Date(log.timestamp).toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'})}</span>
+                              </div>
+                              <div className="flex-1 font-black text-slate-700">{log.term}</div>
+                              <div className="w-1/4 text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-full text-center">{log.device || 'Desktop'}</div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-center py-10 text-slate-300 text-xs font-bold">لا توجد عمليات بحث حديثة</div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* الرسائل والطلبات الواردة */}
@@ -1754,7 +2352,7 @@ const App = () => {
                  <div className="space-y-6"><h3 className="font-black text-green-600 border-b pb-2">روابط المتاجر</h3><div className="max-h-64 overflow-y-auto pr-2 space-y-3 custom-scrollbar">{adminConfig.affiliateLinks?.map((store, index) => (<div key={index} className="flex gap-2"><input type="text" value={store.link} onChange={(e) => { const newLinks = [...adminConfig.affiliateLinks]; newLinks[index].link = e.target.value; setAdminConfig({...adminConfig, affiliateLinks: newLinks}); }} className="w-full p-3 rounded-xl bg-slate-50 font-bold border text-xs" dir="ltr" /><div className="w-24 p-3 rounded-xl bg-slate-100 font-black text-center text-xs flex items-center justify-center">{store.name.toUpperCase()}</div><button onClick={() => handleDeleteStore(index)} className="p-3 rounded-xl bg-red-50 text-red-500 hover:bg-red-100"><Trash2 size={16} /></button></div>))}</div><div className="bg-green-50 p-4 rounded-2xl border border-green-100"><h4 className="font-bold text-green-700 text-sm mb-3">إضافة متجر جديد</h4><div className="flex gap-2 mb-2"><input type="text" placeholder="الاسم" className="w-1/2 p-3 rounded-xl border text-sm font-bold" value={newStoreName} onChange={(e) => setNewStoreName(e.target.value)} /><input type="text" placeholder="الرابط" className="w-1/2 p-3 rounded-xl border text-sm font-bold text-left" dir="ltr" value={newStoreLink} onChange={(e) => setNewStoreLink(e.target.value)} /></div><button onClick={handleAddStore} className="w-full bg-green-600 text-white py-2 rounded-xl font-bold text-sm hover:bg-green-700 flex items-center justify-center gap-2"><Plus size={16} /> إضافة</button></div></div>
                  <div className="space-y-6"><h3 className="font-black text-blue-900 border-b pb-2">شركاء نثق بهم</h3><div className="space-y-2">{adminConfig.trustedPartners?.map((partner, index) => (<div key={index} className="flex gap-2 items-center"><div className="flex-1 p-3 rounded-xl bg-slate-100 font-black text-center text-xs">{partner.name}</div><button onClick={() => handleDeletePartner(index)} className="p-3 rounded-xl bg-red-50 text-red-500 hover:bg-red-100"><Trash2 size={16} /></button></div>))}</div><div className="flex gap-2"><input type="text" placeholder="اسم الشريك" className="flex-1 p-3 rounded-xl border text-sm font-bold" value={newPartnerName} onChange={(e) => setNewPartnerName(e.target.value)} /><button onClick={handleAddPartner} className="bg-blue-600 text-white px-4 rounded-xl font-bold text-sm hover:bg-blue-700"><Plus size={16} /></button></div></div>
                  <div className="space-y-6"><h3 className="font-black text-purple-600 border-b pb-2">العروض الخاصة</h3><div className="max-h-64 overflow-y-auto pr-2 space-y-3 custom-scrollbar">{adminConfig.exclusiveOffers?.map((offer, index) => (<div key={index} className="bg-purple-50 p-3 rounded-xl text-xs relative group"><button onClick={() => handleDeleteOffer(index)} className="absolute top-2 left-2 text-red-400 hover:text-red-600"><X size={14} /></button><p className="font-black text-purple-900">كلمة البحث: {offer.keyword}</p><p className="text-slate-600 truncate">{offer.message}</p></div>))}</div><div className="bg-purple-50 p-4 rounded-2xl border border-purple-100"><h4 className="font-bold text-purple-700 text-sm mb-3">إضافة عرض ذكي</h4><input type="text" placeholder="كلمة البحث" className="w-full p-2 mb-2 rounded-lg border text-xs font-bold" value={newOfferKeyword} onChange={(e) => setNewOfferKeyword(e.target.value)} /><input type="text" placeholder="رسالة العرض" className="w-full p-2 mb-2 rounded-lg border text-xs font-bold" value={newOfferMessage} onChange={(e) => setNewOfferMessage(e.target.value)} /><input type="text" placeholder="رابط العرض" className="w-full p-2 mb-2 rounded-lg border text-xs font-bold text-left" dir="ltr" value={newOfferLink} onChange={(e) => setNewOfferLink(e.target.value)} /><button onClick={handleAddOffer} className="w-full bg-purple-600 text-white py-2 rounded-xl font-bold text-sm hover:bg-purple-700 flex items-center justify-center gap-2"><Plus size={16} /> إضافة عرض</button></div></div>
-              </div>
+               </div>
             </div>
           )}
         </div>

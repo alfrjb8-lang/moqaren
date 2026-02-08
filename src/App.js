@@ -357,8 +357,6 @@ const App = () => {
   const [newOfferMessage, setNewOfferMessage] = useState('');
   const [newOfferLink, setNewOfferLink] = useState('');
   const [newTrendingKeyword, setNewTrendingKeyword] = useState('');
-  const [newApiName, setNewApiName] = useState('');
-  const [newApiUrl, setNewApiUrl] = useState('');
 
   const [merchantForm, setMerchantForm] = useState({ store: '', email: '' });
   const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
@@ -432,14 +430,10 @@ const App = () => {
       },
       extra: {
         apiKey: ''
-      },
-      otherStores: []
+      }
     },
     
-    // === القسم 3: APIs مخصصة ===
-    customApis: [],
-    
-    // === القسم 4: الإعدادات العامة ===
+    // === القسم 3: الإعدادات العامة ===
     apiSettings: {
       useRealData: true,
       fallbackToMock: true,
@@ -1000,25 +994,6 @@ const App = () => {
     setAdminConfig({ ...adminConfig, trendingKeywords: updated }); 
   };
 
-  // 12.18 إضافة API مخصص
-  const handleAddApi = () => { 
-    if (newApiName && newApiUrl) { 
-      setAdminConfig({ 
-        ...adminConfig, 
-        customApis: [...(adminConfig.customApis || []), { name: newApiName, url: newApiUrl }] 
-      }); 
-      setNewApiName(''); 
-      setNewApiUrl(''); 
-    }
-  };
-
-  // 12.19 حذف API
-  const handleDeleteApi = (index) => { 
-    const updated = [...(adminConfig.customApis || [])]; 
-    updated.splice(index, 1); 
-    setAdminConfig({ ...adminConfig, customApis: updated }); 
-  };
-
   // ============================
   // 13. وظيفة الذكاء الاصطناعي (Gemini)
   // ============================
@@ -1216,20 +1191,6 @@ const App = () => {
       }
     }
     
-    // البحث في APIs المخصصة
-    if (adminConfig.customApis?.length > 0) {
-      for (const api of adminConfig.customApis) {
-        if (api.url) {
-          try {
-            const customResults = await searchCustomAPI(query, api.url);
-            results.push(...customResults);
-          } catch (error) {
-            console.error(`Custom API error (${api.name}):`, error);
-          }
-        }
-      }
-    }
-    
     return results;
   };
 
@@ -1286,35 +1247,6 @@ const App = () => {
         productName: query,
         isRealData: true
       }];
-    } catch (error) {
-      return [];
-    }
-  };
-
-  // البحث في API مخصص
-  const searchCustomAPI = async (query, apiUrl) => {
-    try {
-      const response = await fetch(`${apiUrl}?search=${encodeURIComponent(query)}`);
-      if (!response.ok) throw new Error("Custom API failed");
-      
-      const data = await response.json();
-      
-      return data.map(item => ({
-        id: item.id || Date.now(),
-        store: item.store || 'متجر',
-        storeKey: item.storeKey || 'store',
-        storeColor: item.storeColor || 'bg-blue-500',
-        price: item.price || Math.floor(Math.random() * 500) + 100,
-        originalPrice: item.originalPrice || 0,
-        currency: item.currency || 'ر.س',
-        rating: item.rating || 4.0,
-        reviewsCount: item.reviewsCount || 100,
-        delivery: item.delivery || t.freeShipping,
-        warranty: item.warranty || 'سنة واحدة',
-        aiAnalysis: item.description || 'من متجر موثوق',
-        productName: item.name || query,
-        isRealData: true
-      }));
     } catch (error) {
       return [];
     }
@@ -1388,7 +1320,7 @@ const App = () => {
   });
 
   // ============================
-  // 16. الواجهة الرئيسية
+  // 16. الواجهة الرئيسية (Home View)
   // ============================
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-blue-200 selection:text-blue-900" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
@@ -2158,34 +2090,9 @@ const App = () => {
                   </div>
                 </div>
               </div>
-
-              {/* ==================== */}
-              {/* القسم 3: APIs مخصصة */}
-              {/* ==================== */}
-              <div className="mb-12 bg-cyan-50 border border-cyan-100 rounded-[2rem] p-8">
-                <h3 className="font-black text-cyan-900 border-b border-cyan-200 pb-4 mb-6 flex items-center gap-2">
-                  <Link className="text-cyan-600" />
-                  APIs مخصصة
-                </h3>
-                <div className="space-y-4">
-                  {adminConfig.customApis?.map((api, idx) => (
-                    <div key={idx} className="flex items-center gap-3 bg-white p-3 rounded-xl shadow-sm">
-                      <span className="font-bold text-cyan-800">{api.name}</span>
-                      <span className="flex-1 text-xs text-slate-500 truncate" dir="ltr">{api.url}</span>
-                      <button onClick={() => handleDeleteApi(idx)} className="text-cyan-300 hover:text-red-500"><Trash2 size={16} /></button>
-                    </div>
-                  ))}
-                  <div className="flex gap-2">
-                    <input type="text" placeholder="اسم المتجر" className="w-1/4 p-3 rounded-xl text-sm font-bold border-none" value={newApiName} onChange={(e) => setNewApiName(e.target.value)} />
-                    <input type="text" placeholder="رابط البحث (API URL)" className="flex-1 p-3 rounded-xl text-sm font-bold border-none text-left" dir="ltr" value={newApiUrl} onChange={(e) => setNewApiUrl(e.target.value)} />
-                    <button onClick={handleAddApi} className="bg-cyan-600 text-white px-6 rounded-xl font-bold text-sm hover:bg-cyan-700"><Plus size={20} /></button>
-                  </div>
-                  <p className="text-[10px] text-cyan-600 font-bold mt-2">* يجب أن يدعم الرابط بروتوكول CORS ويعيد بيانات بصيغة JSON.</p>
-                </div>
-              </div>
               
               {/* ==================== */}
-              {/* القسم 4: إعدادات عامة */}
+              {/* القسم 3: إعدادات عامة */}
               {/* ==================== */}
               <div className="mb-12 bg-slate-50 border border-slate-100 rounded-[2rem] p-8">
                 <h3 className="font-black text-slate-900 border-b border-slate-200 pb-4 mb-6 flex items-center gap-2">
@@ -2349,7 +2256,7 @@ const App = () => {
                {/* الإعدادات المختلفة */}
                <div className="grid md:grid-cols-2 gap-10 mb-12">
                  <div className="space-y-6"><h3 className="font-black text-blue-900 border-b pb-2">بيانات التواصل</h3><div className="space-y-2"><label className="text-xs font-bold text-slate-400">الواتساب</label><input type="text" value={adminConfig.whatsappNumber} onChange={(e) => setAdminConfig({...adminConfig, whatsappNumber: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div><div className="space-y-2"><label className="text-xs font-bold text-slate-400">الإيميل</label><input type="email" value={adminConfig.supportEmail} onChange={(e) => setAdminConfig({...adminConfig, supportEmail: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div><div className="space-y-2"><label className="text-xs font-bold text-slate-400">تويتر</label><input type="text" value={adminConfig.twitterLink} onChange={(e) => setAdminConfig({...adminConfig, twitterLink: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div><div className="space-y-2"><label className="text-xs font-bold text-slate-400">إنستقرام</label><input type="text" value={adminConfig.instagramLink} onChange={(e) => setAdminConfig({...adminConfig, instagramLink: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div></div>
-                 <div className="space-y-6"><h3 className="font-black text-green-600 border-b pb-2">روابط المتاجر</h3><div className="max-h-64 overflow-y-auto pr-2 space-y-3 custom-scrollbar">{adminConfig.affiliateLinks?.map((store, index) => (<div key={index} className="flex gap-2"><input type="text" value={store.link} onChange={(e) => { const newLinks = [...adminConfig.affiliateLinks]; newLinks[index].link = e.target.value; setAdminConfig({...adminConfig, affiliateLinks: newLinks}); }} className="w-full p-3 rounded-xl bg-slate-50 font-bold border text-xs" dir="ltr" /><div className="w-24 p-3 rounded-xl bg-slate-100 font-black text-center text-xs flex items-center justify-center">{store.name.toUpperCase()}</div><button onClick={() => handleDeleteStore(index)} className="p-3 rounded-xl bg-red-50 text-red-500 hover:bg-red-100"><Trash2 size={16} /></button></div>))}</div><div className="bg-green-50 p-4 rounded-2xl border border-green-100"><h4 className="font-bold text-green-700 text-sm mb-3">إضافة متجر جديد</h4><div className="flex gap-2 mb-2"><input type="text" placeholder="الاسم" className="w-1/2 p-3 rounded-xl border text-sm font-bold" value={newStoreName} onChange={(e) => setNewStoreName(e.target.value)} /><input type="text" placeholder="الرابط" className="w-1/2 p-3 rounded-xl border text-sm font-bold text-left" dir="ltr" value={newStoreLink} onChange={(e) => setNewStoreLink(e.target.value)} /></div><button onClick={handleAddStore} className="w-full bg-green-600 text-white py-2 rounded-xl font-bold text-sm hover:bg-green-700 flex items-center justify-center gap-2"><Plus size={16} /> إضافة</button></div></div>
+                 <div className="space-y-6"><h3 className="font-black text-green-600 border-b pb-2">روابط المتاجر الأساسية</h3><div className="max-h-64 overflow-y-auto pr-2 space-y-3 custom-scrollbar">{adminConfig.affiliateLinks?.map((store, index) => (<div key={index} className="flex gap-2"><input type="text" value={store.link} onChange={(e) => { const newLinks = [...adminConfig.affiliateLinks]; newLinks[index].link = e.target.value; setAdminConfig({...adminConfig, affiliateLinks: newLinks}); }} className="w-full p-3 rounded-xl bg-slate-50 font-bold border text-xs" dir="ltr" /><div className="w-24 p-3 rounded-xl bg-slate-100 font-black text-center text-xs flex items-center justify-center">{store.name.toUpperCase()}</div><button onClick={() => handleDeleteStore(index)} className="p-3 rounded-xl bg-red-50 text-red-500 hover:bg-red-100"><Trash2 size={16} /></button></div>))}</div></div>
                  <div className="space-y-6"><h3 className="font-black text-blue-900 border-b pb-2">شركاء نثق بهم</h3><div className="space-y-2">{adminConfig.trustedPartners?.map((partner, index) => (<div key={index} className="flex gap-2 items-center"><div className="flex-1 p-3 rounded-xl bg-slate-100 font-black text-center text-xs">{partner.name}</div><button onClick={() => handleDeletePartner(index)} className="p-3 rounded-xl bg-red-50 text-red-500 hover:bg-red-100"><Trash2 size={16} /></button></div>))}</div><div className="flex gap-2"><input type="text" placeholder="اسم الشريك" className="flex-1 p-3 rounded-xl border text-sm font-bold" value={newPartnerName} onChange={(e) => setNewPartnerName(e.target.value)} /><button onClick={handleAddPartner} className="bg-blue-600 text-white px-4 rounded-xl font-bold text-sm hover:bg-blue-700"><Plus size={16} /></button></div></div>
                  <div className="space-y-6"><h3 className="font-black text-purple-600 border-b pb-2">العروض الخاصة</h3><div className="max-h-64 overflow-y-auto pr-2 space-y-3 custom-scrollbar">{adminConfig.exclusiveOffers?.map((offer, index) => (<div key={index} className="bg-purple-50 p-3 rounded-xl text-xs relative group"><button onClick={() => handleDeleteOffer(index)} className="absolute top-2 left-2 text-red-400 hover:text-red-600"><X size={14} /></button><p className="font-black text-purple-900">كلمة البحث: {offer.keyword}</p><p className="text-slate-600 truncate">{offer.message}</p></div>))}</div><div className="bg-purple-50 p-4 rounded-2xl border border-purple-100"><h4 className="font-bold text-purple-700 text-sm mb-3">إضافة عرض ذكي</h4><input type="text" placeholder="كلمة البحث" className="w-full p-2 mb-2 rounded-lg border text-xs font-bold" value={newOfferKeyword} onChange={(e) => setNewOfferKeyword(e.target.value)} /><input type="text" placeholder="رسالة العرض" className="w-full p-2 mb-2 rounded-lg border text-xs font-bold" value={newOfferMessage} onChange={(e) => setNewOfferMessage(e.target.value)} /><input type="text" placeholder="رابط العرض" className="w-full p-2 mb-2 rounded-lg border text-xs font-bold text-left" dir="ltr" value={newOfferLink} onChange={(e) => setNewOfferLink(e.target.value)} /><button onClick={handleAddOffer} className="w-full bg-purple-600 text-white py-2 rounded-xl font-bold text-sm hover:bg-purple-700 flex items-center justify-center gap-2"><Plus size={16} /> إضافة عرض</button></div></div>
                </div>

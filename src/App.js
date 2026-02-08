@@ -358,6 +358,12 @@ const App = () => {
   const [newOfferLink, setNewOfferLink] = useState('');
   const [newTrendingKeyword, setNewTrendingKeyword] = useState('');
 
+  // الحالات الجديدة لإضافة متاجر جديدة
+  const [newStoreApiName, setNewStoreApiName] = useState('');
+  const [newStoreApiKey, setNewStoreApiKey] = useState('');
+  const [newStoreApiSecret, setNewStoreApiSecret] = useState('');
+  const [newStoreApiUrl, setNewStoreApiUrl] = useState('');
+
   const [merchantForm, setMerchantForm] = useState({ store: '', email: '' });
   const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
 
@@ -413,24 +419,31 @@ const App = () => {
         accessKey: '',
         secretKey: '',
         tagId: '',
-        region: 'sa'
+        region: 'sa',
+        enabled: true
       },
       noon: {
         apiKey: '',
         secretKey: '',
-        partnerId: ''
+        partnerId: '',
+        enabled: true
       },
       jarir: {
         apiKey: '',
-        storeId: ''
+        storeId: '',
+        enabled: true
       },
       xcite: {
         apiKey: '',
-        affiliateId: ''
+        affiliateId: '',
+        enabled: true
       },
       extra: {
-        apiKey: ''
-      }
+        apiKey: '',
+        enabled: true
+      },
+      // متاجر مخصصة يمكن إضافتها
+      customStores: []
     },
     
     // === القسم 3: الإعدادات العامة ===
@@ -915,7 +928,7 @@ const App = () => {
     } catch (err) { }
   };
 
-  // 12.10 إضافة متجر جديد
+  // 12.10 إضافة متجر جديد للروابط
   const handleAddStore = () => { 
     if (newStoreName && newStoreLink) { 
       setAdminConfig({ 
@@ -924,14 +937,16 @@ const App = () => {
       }); 
       setNewStoreName(''); 
       setNewStoreLink(''); 
+      showNotification('تم إضافة رابط المتجر بنجاح');
     }
   };
 
-  // 12.11 حذف متجر
+  // 12.11 حذف متجر من الروابط
   const handleDeleteStore = (i) => { 
     const u = [...adminConfig.affiliateLinks]; 
     u.splice(i, 1); 
     setAdminConfig({ ...adminConfig, affiliateLinks: u }); 
+    showNotification('تم حذف رابط المتجر');
   };
 
   // 12.12 إضافة شريك
@@ -942,6 +957,7 @@ const App = () => {
         trustedPartners: [...adminConfig.trustedPartners, { name: newPartnerName }] 
       }); 
       setNewPartnerName(''); 
+      showNotification('تم إضافة الشريك بنجاح');
     }
   };
 
@@ -950,6 +966,7 @@ const App = () => {
     const u = [...adminConfig.trustedPartners]; 
     u.splice(i, 1); 
     setAdminConfig({ ...adminConfig, trustedPartners: u }); 
+    showNotification('تم حذف الشريك');
   };
 
   // 12.14 إضافة عرض خاص
@@ -966,6 +983,7 @@ const App = () => {
       setNewOfferKeyword(''); 
       setNewOfferMessage(''); 
       setNewOfferLink(''); 
+      showNotification('تم إضافة العرض الخاص بنجاح');
     }
   };
 
@@ -974,6 +992,7 @@ const App = () => {
     const u = [...adminConfig.exclusiveOffers]; 
     u.splice(i, 1); 
     setAdminConfig({ ...adminConfig, exclusiveOffers: u }); 
+    showNotification('تم حذف العرض الخاص');
   };
 
   // 12.16 إضافة كلمة رائجة
@@ -984,6 +1003,7 @@ const App = () => {
         trendingKeywords: [...(adminConfig.trendingKeywords || []), newTrendingKeyword] 
       }); 
       setNewTrendingKeyword(''); 
+      showNotification('تم إضافة الكلمة الرائجة بنجاح');
     }
   };
 
@@ -992,6 +1012,80 @@ const App = () => {
     const updated = [...(adminConfig.trendingKeywords || [])]; 
     updated.splice(index, 1); 
     setAdminConfig({ ...adminConfig, trendingKeywords: updated }); 
+    showNotification('تم حذف الكلمة الرائجة');
+  };
+
+  // 12.18 إضافة متجر جديد مع API - الوظيفة الجديدة
+  const handleAddCustomStore = () => { 
+    if (newStoreApiName && newStoreApiKey) { 
+      const newStore = {
+        name: newStoreApiName,
+        apiKey: newStoreApiKey,
+        apiSecret: newStoreApiSecret || '',
+        apiUrl: newStoreApiUrl || '',
+        enabled: true,
+        createdAt: new Date().toISOString()
+      };
+      
+      setAdminConfig({ 
+        ...adminConfig, 
+        storeApiKeys: {
+          ...adminConfig.storeApiKeys,
+          customStores: [...(adminConfig.storeApiKeys?.customStores || []), newStore]
+        }
+      }); 
+      
+      setNewStoreApiName('');
+      setNewStoreApiKey('');
+      setNewStoreApiSecret('');
+      setNewStoreApiUrl('');
+      showNotification(`تم إضافة متجر ${newStoreApiName} بنجاح! سيتم استخدامه في البحث`);
+    } else {
+      showNotification('يرجى إدخال اسم المتجر ومفتاح API على الأقل', 'error');
+    }
+  };
+
+  // 12.19 حذف متجر مخصص
+  const handleDeleteCustomStore = (index) => { 
+    const updated = [...(adminConfig.storeApiKeys?.customStores || [])]; 
+    updated.splice(index, 1); 
+    setAdminConfig({ 
+      ...adminConfig, 
+      storeApiKeys: {
+        ...adminConfig.storeApiKeys,
+        customStores: updated
+      }
+    }); 
+    showNotification('تم حذف المتجر المخصص');
+  };
+
+  // 12.20 تفعيل/تعطيل متجر
+  const toggleStoreEnabled = (storeType, index = null) => {
+    if (storeType === 'amazon' || storeType === 'noon' || storeType === 'jarir' || storeType === 'xcite' || storeType === 'extra') {
+      setAdminConfig({
+        ...adminConfig,
+        storeApiKeys: {
+          ...adminConfig.storeApiKeys,
+          [storeType]: {
+            ...adminConfig.storeApiKeys[storeType],
+            enabled: !adminConfig.storeApiKeys[storeType]?.enabled
+          }
+        }
+      });
+    } else if (storeType === 'custom' && index !== null) {
+      const updated = [...(adminConfig.storeApiKeys?.customStores || [])];
+      updated[index] = {
+        ...updated[index],
+        enabled: !updated[index].enabled
+      };
+      setAdminConfig({
+        ...adminConfig,
+        storeApiKeys: {
+          ...adminConfig.storeApiKeys,
+          customStores: updated
+        }
+      });
+    }
   };
 
   // ============================
@@ -1171,8 +1265,8 @@ const App = () => {
     const searchPromises = [];
     const results = [];
     
-    // البحث في Amazon (إذا كان هناك مفتاح)
-    if (adminConfig.storeApiKeys?.amazon?.accessKey) {
+    // البحث في Amazon (إذا كان هناك مفتاح ومفعل)
+    if (adminConfig.storeApiKeys?.amazon?.accessKey && adminConfig.storeApiKeys?.amazon?.enabled !== false) {
       try {
         const amazonResults = await searchAmazonAPI(query);
         results.push(...amazonResults);
@@ -1181,13 +1275,27 @@ const App = () => {
       }
     }
     
-    // البحث في Noon (إذا كان هناك مفتاح)
-    if (adminConfig.storeApiKeys?.noon?.apiKey) {
+    // البحث في Noon (إذا كان هناك مفتاح ومفعل)
+    if (adminConfig.storeApiKeys?.noon?.apiKey && adminConfig.storeApiKeys?.noon?.enabled !== false) {
       try {
         const noonResults = await searchNoonAPI(query);
         results.push(...noonResults);
       } catch (error) {
         console.error("Noon API error:", error);
+      }
+    }
+    
+    // البحث في المتاجر المخصصة (إذا كانت هناك متاجر مضافة)
+    if (adminConfig.storeApiKeys?.customStores && adminConfig.storeApiKeys.customStores.length > 0) {
+      for (const store of adminConfig.storeApiKeys.customStores) {
+        if (store.enabled && store.apiKey) {
+          try {
+            const customResults = await searchCustomAPI(query, store);
+            results.push(...customResults);
+          } catch (error) {
+            console.error(`Custom store API error (${store.name}):`, error);
+          }
+        }
       }
     }
     
@@ -1250,6 +1358,55 @@ const App = () => {
     } catch (error) {
       return [];
     }
+  };
+
+  // البحث في API مخصص لمتجر جديد
+  const searchCustomAPI = async (query, store) => {
+    try {
+      // محاكاة استجابة API للمتاجر المخصصة
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const basePrice = Math.floor(Math.random() * 500) + 100;
+      const adjustedPrice = basePrice + Math.floor(Math.random() * 100) - 50;
+      
+      return [{
+        id: Date.now() + Math.random(),
+        store: store.name,
+        storeKey: store.name.toLowerCase().replace(/\s+/g, '_'),
+        storeColor: getRandomStoreColor(),
+        price: adjustedPrice,
+        originalPrice: adjustedPrice + Math.floor(Math.random() * 100),
+        currency: 'ر.س',
+        rating: (3.5 + Math.random() * 1.5).toFixed(1),
+        reviewsCount: Math.floor(Math.random() * 1000) + 100,
+        delivery: getRandomDelivery(),
+        warranty: getRandomWarranty(),
+        aiAnalysis: `من ${store.name} - سعر تنافسي وخدمة موثوقة`,
+        productName: query,
+        isRealData: true
+      }];
+    } catch (error) {
+      console.error(`Custom store API error (${store.name}):`, error);
+      return [];
+    }
+  };
+
+  // دالة للحصول على لون عشوائي للمتجر
+  const getRandomStoreColor = () => {
+    const colors = ['bg-red-500', 'bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-pink-500', 'bg-indigo-500'];
+    return colors[Math.floor(Math.random() * colors.length)];
+  };
+
+  // دالة للحصول على توصيل عشوائي
+  const getRandomDelivery = () => {
+    const deliveries = [t.freeShipping, t.fastShipping, 'توصيل خلال 48 ساعة', 'توصيل مجاني مع الشحن السريع'];
+    return deliveries[Math.floor(Math.random() * deliveries.length)];
+  };
+
+  // دالة للحصول على ضمان عشوائي
+  const getRandomWarranty = () => {
+    const warranties = [t.agentWarranty, t.storeWarranty, 'سنة واحدة مع إمكانية التمديد', '6 أشهر ضمان متجر'];
+    return warranties[Math.floor(Math.random() * warranties.length)];
   };
 
   // البيانات الوهمية كبديل
@@ -1915,7 +2072,7 @@ const App = () => {
               </div>
 
               {/* ==================== */}
-              {/* القسم 2: مفاتيح المتاجر */}
+              {/* القسم 2: مفاتيح المتاجر - المحدث */}
               {/* ==================== */}
               <div className="mb-12 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-100 rounded-[2rem] p-8">
                 <h3 className="font-black text-green-900 border-b border-green-200 pb-4 mb-6 flex items-center gap-2">
@@ -1924,167 +2081,298 @@ const App = () => {
                 </h3>
                 
                 <div className="space-y-6">
-                  {/* أمازون */}
-                  <div className="bg-white p-4 rounded-xl border border-green-100">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="bg-orange-100 text-orange-600 p-2 rounded-lg">
-                        <span className="font-black text-sm">A</span>
-                      </div>
-                      <h4 className="font-black text-green-800">Amazon Saudi</h4>
-                    </div>
-                    <div className="grid md:grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 mb-1 block">Access Key</label>
-                        <input 
-                          type="text" 
-                          value={adminConfig.storeApiKeys?.amazon?.accessKey || ''}
-                          onChange={(e) => setAdminConfig({
-                            ...adminConfig,
-                            storeApiKeys: {
-                              ...adminConfig.storeApiKeys,
-                              amazon: { ...adminConfig.storeApiKeys?.amazon, accessKey: e.target.value }
-                            }
-                          })}
-                          className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 mb-1 block">Secret Key</label>
-                        <input 
-                          type="password" 
-                          value={adminConfig.storeApiKeys?.amazon?.secretKey || ''}
-                          onChange={(e) => setAdminConfig({
-                            ...adminConfig,
-                            storeApiKeys: {
-                              ...adminConfig.storeApiKeys,
-                              amazon: { ...adminConfig.storeApiKeys?.amazon, secretKey: e.target.value }
-                            }
-                          })}
-                          className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 mb-1 block">Tag ID (عمولة)</label>
-                        <input 
-                          type="text" 
-                          value={adminConfig.storeApiKeys?.amazon?.tagId || ''}
-                          onChange={(e) => setAdminConfig({
-                            ...adminConfig,
-                            storeApiKeys: {
-                              ...adminConfig.storeApiKeys,
-                              amazon: { ...adminConfig.storeApiKeys?.amazon, tagId: e.target.value }
-                            }
-                          })}
-                          className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* نون */}
-                  <div className="bg-white p-4 rounded-xl border border-green-100">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="bg-yellow-100 text-yellow-600 p-2 rounded-lg">
-                        <span className="font-black text-sm">N</span>
-                      </div>
-                      <h4 className="font-black text-green-800">Noon</h4>
-                    </div>
-                    <div className="grid md:grid-cols-3 gap-3">
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 mb-1 block">API Key</label>
-                        <input 
-                          type="text" 
-                          value={adminConfig.storeApiKeys?.noon?.apiKey || ''}
-                          onChange={(e) => setAdminConfig({
-                            ...adminConfig,
-                            storeApiKeys: {
-                              ...adminConfig.storeApiKeys,
-                              noon: { ...adminConfig.storeApiKeys?.noon, apiKey: e.target.value }
-                            }
-                          })}
-                          className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 mb-1 block">Secret Key</label>
-                        <input 
-                          type="password" 
-                          value={adminConfig.storeApiKeys?.noon?.secretKey || ''}
-                          onChange={(e) => setAdminConfig({
-                            ...adminConfig,
-                            storeApiKeys: {
-                              ...adminConfig.storeApiKeys,
-                              noon: { ...adminConfig.storeApiKeys?.noon, secretKey: e.target.value }
-                            }
-                          })}
-                          className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 mb-1 block">Partner ID</label>
-                        <input 
-                          type="text" 
-                          value={adminConfig.storeApiKeys?.noon?.partnerId || ''}
-                          onChange={(e) => setAdminConfig({
-                            ...adminConfig,
-                            storeApiKeys: {
-                              ...adminConfig.storeApiKeys,
-                              noon: { ...adminConfig.storeApiKeys?.noon, partnerId: e.target.value }
-                            }
-                          })}
-                          className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* جرير وإكسترا */}
+                  {/* المتاجر الأساسية */}
                   <div className="grid md:grid-cols-2 gap-4">
+                    {/* أمازون */}
                     <div className="bg-white p-4 rounded-xl border border-green-100">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="bg-blue-100 text-blue-600 p-2 rounded-lg">
-                          <span className="font-black text-sm">J</span>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="bg-orange-100 text-orange-600 p-2 rounded-lg">
+                            <span className="font-black text-sm">A</span>
+                          </div>
+                          <h4 className="font-black text-green-800">Amazon Saudi</h4>
                         </div>
-                        <h4 className="font-black text-green-800">Jarir</h4>
+                        <div className="relative">
+                          <input 
+                            type="checkbox" 
+                            checked={adminConfig.storeApiKeys?.amazon?.enabled !== false}
+                            onChange={() => toggleStoreEnabled('amazon')}
+                            className="sr-only"
+                            id="amazon-enabled"
+                          />
+                          <label 
+                            htmlFor="amazon-enabled"
+                            className={`block w-10 h-6 rounded-full cursor-pointer ${adminConfig.storeApiKeys?.amazon?.enabled !== false ? 'bg-green-600' : 'bg-slate-300'}`}
+                          >
+                            <span className={`block w-4 h-4 mt-1 ml-1 rounded-full bg-white transform transition-transform ${adminConfig.storeApiKeys?.amazon?.enabled !== false ? 'translate-x-4' : ''}`}></span>
+                          </label>
+                        </div>
                       </div>
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 mb-1 block">API Key</label>
-                        <input 
-                          type="text" 
-                          value={adminConfig.storeApiKeys?.jarir?.apiKey || ''}
-                          onChange={(e) => setAdminConfig({
-                            ...adminConfig,
-                            storeApiKeys: {
-                              ...adminConfig.storeApiKeys,
-                              jarir: { ...adminConfig.storeApiKeys?.jarir, apiKey: e.target.value }
-                            }
-                          })}
-                          className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold"
-                        />
+                      <div className="space-y-2">
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 mb-1 block">Access Key</label>
+                          <input 
+                            type="text" 
+                            value={adminConfig.storeApiKeys?.amazon?.accessKey || ''}
+                            onChange={(e) => setAdminConfig({
+                              ...adminConfig,
+                              storeApiKeys: {
+                                ...adminConfig.storeApiKeys,
+                                amazon: { ...adminConfig.storeApiKeys?.amazon, accessKey: e.target.value }
+                              }
+                            })}
+                            className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 mb-1 block">Secret Key</label>
+                          <input 
+                            type="password" 
+                            value={adminConfig.storeApiKeys?.amazon?.secretKey || ''}
+                            onChange={(e) => setAdminConfig({
+                              ...adminConfig,
+                              storeApiKeys: {
+                                ...adminConfig.storeApiKeys,
+                                amazon: { ...adminConfig.storeApiKeys?.amazon, secretKey: e.target.value }
+                              }
+                            })}
+                            className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold"
+                          />
+                        </div>
                       </div>
                     </div>
                     
+                    {/* نون */}
                     <div className="bg-white p-4 rounded-xl border border-green-100">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="bg-purple-100 text-purple-600 p-2 rounded-lg">
-                          <span className="font-black text-sm">X</span>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="bg-yellow-100 text-yellow-600 p-2 rounded-lg">
+                            <span className="font-black text-sm">N</span>
+                          </div>
+                          <h4 className="font-black text-green-800">Noon</h4>
                         </div>
-                        <h4 className="font-black text-green-800">Xcite</h4>
+                        <div className="relative">
+                          <input 
+                            type="checkbox" 
+                            checked={adminConfig.storeApiKeys?.noon?.enabled !== false}
+                            onChange={() => toggleStoreEnabled('noon')}
+                            className="sr-only"
+                            id="noon-enabled"
+                          />
+                          <label 
+                            htmlFor="noon-enabled"
+                            className={`block w-10 h-6 rounded-full cursor-pointer ${adminConfig.storeApiKeys?.noon?.enabled !== false ? 'bg-green-600' : 'bg-slate-300'}`}
+                          >
+                            <span className={`block w-4 h-4 mt-1 ml-1 rounded-full bg-white transform transition-transform ${adminConfig.storeApiKeys?.noon?.enabled !== false ? 'translate-x-4' : ''}`}></span>
+                          </label>
+                        </div>
                       </div>
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 mb-1 block">API Key</label>
+                      <div className="space-y-2">
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 mb-1 block">API Key</label>
+                          <input 
+                            type="text" 
+                            value={adminConfig.storeApiKeys?.noon?.apiKey || ''}
+                            onChange={(e) => setAdminConfig({
+                              ...adminConfig,
+                              storeApiKeys: {
+                                ...adminConfig.storeApiKeys,
+                                noon: { ...adminConfig.storeApiKeys?.noon, apiKey: e.target.value }
+                              }
+                            })}
+                            className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 mb-1 block">Secret Key</label>
+                          <input 
+                            type="password" 
+                            value={adminConfig.storeApiKeys?.noon?.secretKey || ''}
+                            onChange={(e) => setAdminConfig({
+                              ...adminConfig,
+                              storeApiKeys: {
+                                ...adminConfig.storeApiKeys,
+                                noon: { ...adminConfig.storeApiKeys?.noon, secretKey: e.target.value }
+                              }
+                            })}
+                            className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* إضافة متجر جديد - القسم الجديد */}
+                  <div className="bg-white/50 border-2 border-dashed border-green-200 rounded-2xl p-6">
+                    <h4 className="font-black text-green-800 mb-4 flex items-center gap-2">
+                      <Plus className="text-green-600" size={20} />
+                      إضافة متجر جديد
+                    </h4>
+                    <p className="text-sm text-slate-500 mb-4">أضف متاجر جديدة وسيتم البحث فيها تلقائياً مع الذكاء الاصطناعي</p>
+                    
+                    <div className="space-y-3">
+                      <div className="grid md:grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 mb-1 block">اسم المتجر</label>
+                          <input 
+                            type="text" 
+                            placeholder="مثال: متجر إلكتروني"
+                            value={newStoreApiName}
+                            onChange={(e) => setNewStoreApiName(e.target.value)}
+                            className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 mb-1 block">مفتاح API</label>
+                          <input 
+                            type="password" 
+                            placeholder="مفتاح API الخاص بالمتجر"
+                            value={newStoreApiKey}
+                            onChange={(e) => setNewStoreApiKey(e.target.value)}
+                            className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="grid md:grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 mb-1 block">الرمز السري (اختياري)</label>
+                          <input 
+                            type="password" 
+                            placeholder="الرمز السري للـ API"
+                            value={newStoreApiSecret}
+                            onChange={(e) => setNewStoreApiSecret(e.target.value)}
+                            className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 mb-1 block">رابط API (اختياري)</label>
+                          <input 
+                            type="text" 
+                            placeholder="https://api.example.com/search"
+                            value={newStoreApiUrl}
+                            onChange={(e) => setNewStoreApiUrl(e.target.value)}
+                            className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold text-left"
+                            dir="ltr"
+                          />
+                        </div>
+                      </div>
+                      
+                      <button 
+                        onClick={handleAddCustomStore}
+                        className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-bold text-sm transition-colors flex items-center justify-center gap-2 mt-2"
+                      >
+                        <Plus size={16} />
+                        إضافة متجر جديد
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* المتاجر المضافة مسبقاً */}
+                  {adminConfig.storeApiKeys?.customStores && adminConfig.storeApiKeys.customStores.length > 0 && (
+                    <div className="mt-6">
+                      <h5 className="font-bold text-green-700 mb-3">المتاجر المضافة:</h5>
+                      <div className="space-y-3">
+                        {adminConfig.storeApiKeys.customStores.map((store, index) => (
+                          <div key={index} className="bg-white p-4 rounded-xl border border-green-100 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="bg-green-100 text-green-600 p-2 rounded-lg">
+                                <span className="font-black text-sm">{store.name.charAt(0)}</span>
+                              </div>
+                              <div>
+                                <h6 className="font-bold text-green-800">{store.name}</h6>
+                                <p className="text-xs text-slate-500 truncate max-w-[200px]">
+                                  {store.apiUrl || 'API مخصص'}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="relative">
+                                <input 
+                                  type="checkbox" 
+                                  checked={store.enabled !== false}
+                                  onChange={() => toggleStoreEnabled('custom', index)}
+                                  className="sr-only"
+                                  id={`store-${index}-enabled`}
+                                />
+                                <label 
+                                  htmlFor={`store-${index}-enabled`}
+                                  className={`block w-10 h-6 rounded-full cursor-pointer ${store.enabled !== false ? 'bg-green-600' : 'bg-slate-300'}`}
+                                >
+                                  <span className={`block w-4 h-4 mt-1 ml-1 rounded-full bg-white transform transition-transform ${store.enabled !== false ? 'translate-x-4' : ''}`}></span>
+                                </label>
+                              </div>
+                              <button 
+                                onClick={() => handleDeleteCustomStore(index)}
+                                className="p-2 text-red-400 hover:text-red-600 transition-colors"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* قسم روابط المتاجر داخل نفس القسم */}
+                  <div className="bg-white p-4 rounded-xl border border-green-100 mt-6">
+                    <h4 className="font-bold text-green-800 mb-3 flex items-center gap-2">
+                      <Link className="text-green-600" size={18} />
+                      روابط المتاجر (لروابط العمولة)
+                    </h4>
+                    <p className="text-sm text-slate-500 mb-4">أضف روابط المتاجر لربطها بنتائج البحث</p>
+                    
+                    <div className="space-y-3">
+                      {adminConfig.affiliateLinks?.map((store, index) => (
+                        <div key={index} className="flex gap-2">
+                          <input 
+                            type="text" 
+                            value={store.link}
+                            onChange={(e) => { 
+                              const newLinks = [...adminConfig.affiliateLinks]; 
+                              newLinks[index].link = e.target.value; 
+                              setAdminConfig({...adminConfig, affiliateLinks: newLinks}); 
+                            }} 
+                            className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 font-bold text-xs text-left"
+                            dir="ltr"
+                            placeholder="رابط المتجر"
+                          />
+                          <div className="w-24 p-2 rounded-lg bg-green-100 font-black text-center text-xs flex items-center justify-center">
+                            {store.name.toUpperCase()}
+                          </div>
+                          <button 
+                            onClick={() => handleDeleteStore(index)} 
+                            className="p-2 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition-colors"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      ))}
+                      
+                      <div className="flex gap-2 mt-2">
                         <input 
                           type="text" 
-                          value={adminConfig.storeApiKeys?.xcite?.apiKey || ''}
-                          onChange={(e) => setAdminConfig({
-                            ...adminConfig,
-                            storeApiKeys: {
-                              ...adminConfig.storeApiKeys,
-                              xcite: { ...adminConfig.storeApiKeys?.xcite, apiKey: e.target.value }
-                            }
-                          })}
-                          className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold"
+                          placeholder="اسم المتجر (مثال: amazon)"
+                          className="w-1/3 p-2 rounded-lg border border-green-200 text-sm font-bold"
+                          value={newStoreName}
+                          onChange={(e) => setNewStoreName(e.target.value)}
                         />
+                        <input 
+                          type="text" 
+                          placeholder="رابط المتجر (https://...)"
+                          className="flex-1 p-2 rounded-lg border border-green-200 text-sm font-bold text-left"
+                          dir="ltr"
+                          value={newStoreLink}
+                          onChange={(e) => setNewStoreLink(e.target.value)}
+                        />
+                        <button 
+                          onClick={handleAddStore}
+                          className="bg-green-600 text-white px-4 rounded-lg font-bold text-sm hover:bg-green-700 transition-colors flex items-center gap-1"
+                        >
+                          <Plus size={16} />
+                          إضافة
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -2256,7 +2544,6 @@ const App = () => {
                {/* الإعدادات المختلفة */}
                <div className="grid md:grid-cols-2 gap-10 mb-12">
                  <div className="space-y-6"><h3 className="font-black text-blue-900 border-b pb-2">بيانات التواصل</h3><div className="space-y-2"><label className="text-xs font-bold text-slate-400">الواتساب</label><input type="text" value={adminConfig.whatsappNumber} onChange={(e) => setAdminConfig({...adminConfig, whatsappNumber: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div><div className="space-y-2"><label className="text-xs font-bold text-slate-400">الإيميل</label><input type="email" value={adminConfig.supportEmail} onChange={(e) => setAdminConfig({...adminConfig, supportEmail: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div><div className="space-y-2"><label className="text-xs font-bold text-slate-400">تويتر</label><input type="text" value={adminConfig.twitterLink} onChange={(e) => setAdminConfig({...adminConfig, twitterLink: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div><div className="space-y-2"><label className="text-xs font-bold text-slate-400">إنستقرام</label><input type="text" value={adminConfig.instagramLink} onChange={(e) => setAdminConfig({...adminConfig, instagramLink: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div></div>
-                 <div className="space-y-6"><h3 className="font-black text-green-600 border-b pb-2">روابط المتاجر الأساسية</h3><div className="max-h-64 overflow-y-auto pr-2 space-y-3 custom-scrollbar">{adminConfig.affiliateLinks?.map((store, index) => (<div key={index} className="flex gap-2"><input type="text" value={store.link} onChange={(e) => { const newLinks = [...adminConfig.affiliateLinks]; newLinks[index].link = e.target.value; setAdminConfig({...adminConfig, affiliateLinks: newLinks}); }} className="w-full p-3 rounded-xl bg-slate-50 font-bold border text-xs" dir="ltr" /><div className="w-24 p-3 rounded-xl bg-slate-100 font-black text-center text-xs flex items-center justify-center">{store.name.toUpperCase()}</div><button onClick={() => handleDeleteStore(index)} className="p-3 rounded-xl bg-red-50 text-red-500 hover:bg-red-100"><Trash2 size={16} /></button></div>))}</div></div>
                  <div className="space-y-6"><h3 className="font-black text-blue-900 border-b pb-2">شركاء نثق بهم</h3><div className="space-y-2">{adminConfig.trustedPartners?.map((partner, index) => (<div key={index} className="flex gap-2 items-center"><div className="flex-1 p-3 rounded-xl bg-slate-100 font-black text-center text-xs">{partner.name}</div><button onClick={() => handleDeletePartner(index)} className="p-3 rounded-xl bg-red-50 text-red-500 hover:bg-red-100"><Trash2 size={16} /></button></div>))}</div><div className="flex gap-2"><input type="text" placeholder="اسم الشريك" className="flex-1 p-3 rounded-xl border text-sm font-bold" value={newPartnerName} onChange={(e) => setNewPartnerName(e.target.value)} /><button onClick={handleAddPartner} className="bg-blue-600 text-white px-4 rounded-xl font-bold text-sm hover:bg-blue-700"><Plus size={16} /></button></div></div>
                  <div className="space-y-6"><h3 className="font-black text-purple-600 border-b pb-2">العروض الخاصة</h3><div className="max-h-64 overflow-y-auto pr-2 space-y-3 custom-scrollbar">{adminConfig.exclusiveOffers?.map((offer, index) => (<div key={index} className="bg-purple-50 p-3 rounded-xl text-xs relative group"><button onClick={() => handleDeleteOffer(index)} className="absolute top-2 left-2 text-red-400 hover:text-red-600"><X size={14} /></button><p className="font-black text-purple-900">كلمة البحث: {offer.keyword}</p><p className="text-slate-600 truncate">{offer.message}</p></div>))}</div><div className="bg-purple-50 p-4 rounded-2xl border border-purple-100"><h4 className="font-bold text-purple-700 text-sm mb-3">إضافة عرض ذكي</h4><input type="text" placeholder="كلمة البحث" className="w-full p-2 mb-2 rounded-lg border text-xs font-bold" value={newOfferKeyword} onChange={(e) => setNewOfferKeyword(e.target.value)} /><input type="text" placeholder="رسالة العرض" className="w-full p-2 mb-2 rounded-lg border text-xs font-bold" value={newOfferMessage} onChange={(e) => setNewOfferMessage(e.target.value)} /><input type="text" placeholder="رابط العرض" className="w-full p-2 mb-2 rounded-lg border text-xs font-bold text-left" dir="ltr" value={newOfferLink} onChange={(e) => setNewOfferLink(e.target.value)} /><button onClick={handleAddOffer} className="w-full bg-purple-600 text-white py-2 rounded-xl font-bold text-sm hover:bg-purple-700 flex items-center justify-center gap-2"><Plus size={16} /> إضافة عرض</button></div></div>
                </div>

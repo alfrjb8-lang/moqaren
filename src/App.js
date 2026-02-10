@@ -49,7 +49,6 @@ const translations = {
     analyzing: 'جاري التحليل...',
     realSearch: 'عملية بحث حقيقية',
     trendingLabel: '🔥 طلبات رائجة:',
-    partnersTitle: 'نبحث في المتاجر الموثوقة فقط',
     loadingTitle: 'جالس أفرّ لك السوق..',
     loadingDesc: 'نحلل الأسعار، الضمانات، وتقييمات الناس..',
     aiTitle: 'الزبدة من الذكاء الاصطناعي',
@@ -140,7 +139,6 @@ const translations = {
     analyzing: 'Analyzing...',
     realSearch: 'Real Searches',
     trendingLabel: '🔥 Trending:',
-    partnersTitle: 'We search trusted stores only',
     loadingTitle: 'Scanning the market...',
     loadingDesc: 'Analyzing prices, warranties, and user reviews...',
     aiTitle: 'AI Summary',
@@ -381,12 +379,6 @@ const App = () => {
       { name: 'noon', link: 'https://noon.com/?affiliate=moqaren' },
       { name: 'temu', link: 'https://temu.com/s/moqaren' },
       { name: 'xcite', link: 'https://xcite.com/exclusive-deal' }
-    ],
-    trustedPartners: [
-      { name: 'AMAZON' },
-      { name: 'NOON' },
-      { name: 'X-CITE' },
-      { name: 'JARIR' }
     ],
     exclusiveOffers: [
       { keyword: 'آيفون', message: 'خصم 50 ريال على جميع أجهزة آبل', link: 'https://amazon.sa/iphone-deal' },
@@ -949,27 +941,7 @@ const App = () => {
     showNotification('تم حذف رابط المتجر');
   };
 
-  // 12.12 إضافة شريك
-  const handleAddPartner = () => { 
-    if (newPartnerName) { 
-      setAdminConfig({ 
-        ...adminConfig, 
-        trustedPartners: [...adminConfig.trustedPartners, { name: newPartnerName }] 
-      }); 
-      setNewPartnerName(''); 
-      showNotification('تم إضافة الشريك بنجاح');
-    }
-  };
-
-  // 12.13 حذف شريك
-  const handleDeletePartner = (i) => { 
-    const u = [...adminConfig.trustedPartners]; 
-    u.splice(i, 1); 
-    setAdminConfig({ ...adminConfig, trustedPartners: u }); 
-    showNotification('تم حذف الشريك');
-  };
-
-  // 12.14 إضافة عرض خاص
+  // 12.12 إضافة عرض خاص
   const handleAddOffer = () => { 
     if (newOfferKeyword && newOfferMessage && newOfferLink) { 
       setAdminConfig({ 
@@ -987,7 +959,7 @@ const App = () => {
     }
   };
 
-  // 12.15 حذف عرض
+  // 12.13 حذف عرض
   const handleDeleteOffer = (i) => { 
     const u = [...adminConfig.exclusiveOffers]; 
     u.splice(i, 1); 
@@ -995,7 +967,7 @@ const App = () => {
     showNotification('تم حذف العرض الخاص');
   };
 
-  // 12.16 إضافة كلمة رائجة
+  // 12.14 إضافة كلمة رائجة
   const handleAddTrendingKeyword = () => { 
     if (newTrendingKeyword) { 
       setAdminConfig({ 
@@ -1007,7 +979,7 @@ const App = () => {
     }
   };
 
-  // 12.17 حذف كلمة رائجة
+  // 12.15 حذف كلمة رائجة
   const handleDeleteTrendingKeyword = (index) => { 
     const updated = [...(adminConfig.trendingKeywords || [])]; 
     updated.splice(index, 1); 
@@ -1015,7 +987,7 @@ const App = () => {
     showNotification('تم حذف الكلمة الرائجة');
   };
 
-  // 12.18 إضافة متجر جديد مع API - الوظيفة الجديدة
+  // 12.16 إضافة متجر جديد مع API - الوظيفة الجديدة
   const handleAddCustomStore = () => { 
     if (newStoreApiName && newStoreApiKey) { 
       const newStore = {
@@ -1045,7 +1017,7 @@ const App = () => {
     }
   };
 
-  // 12.19 حذف متجر مخصص
+  // 12.17 حذف متجر مخصص
   const handleDeleteCustomStore = (index) => { 
     const updated = [...(adminConfig.storeApiKeys?.customStores || [])]; 
     updated.splice(index, 1); 
@@ -1059,7 +1031,7 @@ const App = () => {
     showNotification('تم حذف المتجر المخصص');
   };
 
-  // 12.20 تفعيل/تعطيل متجر
+  // 12.18 تفعيل/تعطيل متجر
   const toggleStoreEnabled = (storeType, index = null) => {
     if (storeType === 'amazon' || storeType === 'noon' || storeType === 'jarir' || storeType === 'xcite' || storeType === 'extra') {
       setAdminConfig({
@@ -1642,7 +1614,7 @@ const App = () => {
           </div>
           <div className="h-6 w-px bg-slate-200 mx-1"></div>
           <div className="flex items-center">
-            {[{ id: 'home', label: t.home, icon: Globe, action: resetToHome }, { id: 'about', label: t.about, icon: Info, action: () => scrollToSection('about') }, { id: 'features', label: t.features, icon: Star, action: () => scrollToSection('why-trust') }, { id: 'earn', label: t.earn, icon: Coins, action: () => scrollToSection('how-we-earn') }, { id: 'partners', label: t.partners, icon: Users, action: () => scrollToSection('partners') }].map((item) => (
+            {[{ id: 'home', label: t.home, icon: Globe, action: resetToHome }, { id: 'about', label: t.about, icon: Info, action: () => scrollToSection('about') }, { id: 'features', label: t.features, icon: Star, action: () => scrollToSection('why-trust') }, { id: 'earn', label: t.earn, icon: Coins, action: () => scrollToSection('how-we-earn') }].map((item) => (
                 <button key={item.id} onClick={item.action} className={`px-3 md:px-5 py-2 rounded-full font-bold text-xs md:text-sm flex items-center gap-2 transition-all duration-300 ${view === 'home' ? 'hover:bg-blue-50 hover:text-blue-600 text-slate-600' : ''}`}>
                     <item.icon size={14} className="opacity-70" />
                     <span className="whitespace-nowrap">{item.label}</span>
@@ -1736,16 +1708,8 @@ const App = () => {
 
           {/* 17.2 المحتوى الرئيسية */}
           <main className="max-w-7xl mx-auto px-4 -mt-20 relative z-20">
-            {/* شركاء الموقع */}
-            {!results && !isSearching && (
-              <section id="partners" className="bg-white/80 backdrop-blur-md rounded-[2.5rem] shadow-xl border border-white/50 p-8 mb-24 flex flex-col md:flex-row items-center justify-between gap-8 scroll-mt-32">
-                <div className="flex items-center gap-3 text-slate-400 font-black text-xs uppercase tracking-[0.1em] shrink-0 w-full md:w-auto justify-center md:justify-start"><div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>{t.partnersTitle}</div>
-                <div className="flex flex-wrap justify-center md:justify-end items-center gap-8 md:gap-16 opacity-50 grayscale hover:grayscale-0 transition-all duration-500 cursor-pointer font-black w-full">
-                    {adminConfig.trustedPartners?.map((partner, idx) => (<div key={idx} className="text-xl md:text-2xl font-black italic tracking-tighter hover:text-blue-900 transition-colors transform hover:scale-110">{partner.name}</div>))}
-                </div>
-              </section>
-            )}
-
+            {/* تم إزالة قسم شركاء الموقع بالكامل */}
+            
             {/* حالة التحميل */}
             {isSearching && (
               <div className="bg-white rounded-[3rem] p-12 md:p-20 shadow-xl border border-slate-100 text-center mb-32">
@@ -2120,7 +2084,7 @@ const App = () => {
                                 ...adminConfig.storeApiKeys,
                                 amazon: { ...adminConfig.storeApiKeys?.amazon, accessKey: e.target.value }
                               }
-                            })}
+                            })} 
                             className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold"
                           />
                         </div>
@@ -2135,7 +2099,7 @@ const App = () => {
                                 ...adminConfig.storeApiKeys,
                                 amazon: { ...adminConfig.storeApiKeys?.amazon, secretKey: e.target.value }
                               }
-                            })}
+                            })} 
                             className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold"
                           />
                         </div>
@@ -2179,7 +2143,7 @@ const App = () => {
                                 ...adminConfig.storeApiKeys,
                                 noon: { ...adminConfig.storeApiKeys?.noon, apiKey: e.target.value }
                               }
-                            })}
+                            })} 
                             className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold"
                           />
                         </div>
@@ -2194,7 +2158,7 @@ const App = () => {
                                 ...adminConfig.storeApiKeys,
                                 noon: { ...adminConfig.storeApiKeys?.noon, secretKey: e.target.value }
                               }
-                            })}
+                            })} 
                             className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold"
                           />
                         </div>
@@ -2544,7 +2508,6 @@ const App = () => {
                {/* الإعدادات المختلفة */}
                <div className="grid md:grid-cols-2 gap-10 mb-12">
                  <div className="space-y-6"><h3 className="font-black text-blue-900 border-b pb-2">بيانات التواصل</h3><div className="space-y-2"><label className="text-xs font-bold text-slate-400">الواتساب</label><input type="text" value={adminConfig.whatsappNumber} onChange={(e) => setAdminConfig({...adminConfig, whatsappNumber: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div><div className="space-y-2"><label className="text-xs font-bold text-slate-400">الإيميل</label><input type="email" value={adminConfig.supportEmail} onChange={(e) => setAdminConfig({...adminConfig, supportEmail: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div><div className="space-y-2"><label className="text-xs font-bold text-slate-400">تويتر</label><input type="text" value={adminConfig.twitterLink} onChange={(e) => setAdminConfig({...adminConfig, twitterLink: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div><div className="space-y-2"><label className="text-xs font-bold text-slate-400">إنستقرام</label><input type="text" value={adminConfig.instagramLink} onChange={(e) => setAdminConfig({...adminConfig, instagramLink: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div></div>
-                 <div className="space-y-6"><h3 className="font-black text-blue-900 border-b pb-2">شركاء نثق بهم</h3><div className="space-y-2">{adminConfig.trustedPartners?.map((partner, index) => (<div key={index} className="flex gap-2 items-center"><div className="flex-1 p-3 rounded-xl bg-slate-100 font-black text-center text-xs">{partner.name}</div><button onClick={() => handleDeletePartner(index)} className="p-3 rounded-xl bg-red-50 text-red-500 hover:bg-red-100"><Trash2 size={16} /></button></div>))}</div><div className="flex gap-2"><input type="text" placeholder="اسم الشريك" className="flex-1 p-3 rounded-xl border text-sm font-bold" value={newPartnerName} onChange={(e) => setNewPartnerName(e.target.value)} /><button onClick={handleAddPartner} className="bg-blue-600 text-white px-4 rounded-xl font-bold text-sm hover:bg-blue-700"><Plus size={16} /></button></div></div>
                  <div className="space-y-6"><h3 className="font-black text-purple-600 border-b pb-2">العروض الخاصة</h3><div className="max-h-64 overflow-y-auto pr-2 space-y-3 custom-scrollbar">{adminConfig.exclusiveOffers?.map((offer, index) => (<div key={index} className="bg-purple-50 p-3 rounded-xl text-xs relative group"><button onClick={() => handleDeleteOffer(index)} className="absolute top-2 left-2 text-red-400 hover:text-red-600"><X size={14} /></button><p className="font-black text-purple-900">كلمة البحث: {offer.keyword}</p><p className="text-slate-600 truncate">{offer.message}</p></div>))}</div><div className="bg-purple-50 p-4 rounded-2xl border border-purple-100"><h4 className="font-bold text-purple-700 text-sm mb-3">إضافة عرض ذكي</h4><input type="text" placeholder="كلمة البحث" className="w-full p-2 mb-2 rounded-lg border text-xs font-bold" value={newOfferKeyword} onChange={(e) => setNewOfferKeyword(e.target.value)} /><input type="text" placeholder="رسالة العرض" className="w-full p-2 mb-2 rounded-lg border text-xs font-bold" value={newOfferMessage} onChange={(e) => setNewOfferMessage(e.target.value)} /><input type="text" placeholder="رابط العرض" className="w-full p-2 mb-2 rounded-lg border text-xs font-bold text-left" dir="ltr" value={newOfferLink} onChange={(e) => setNewOfferLink(e.target.value)} /><button onClick={handleAddOffer} className="w-full bg-purple-600 text-white py-2 rounded-xl font-bold text-sm hover:bg-purple-700 flex items-center justify-center gap-2"><Plus size={16} /> إضافة عرض</button></div></div>
                </div>
             </div>

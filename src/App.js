@@ -9,10 +9,10 @@ import {
   Instagram, Twitter, Send, Settings, Eye, EyeOff, Save, ArrowLeft, Plus, Trash2, X,
   FileText, Activity, Globe, ChevronLeft, Coins, Database, Bell, MessageCircle, BarChart2, Flame, Languages, Link, Server,
   ChevronRight, Clock, XCircle, Share2, Calendar, TrendingUp, Filter, UserCheck, LogOut,
-  Brain, Hexagon, Key
+  Brain, Hexagon, Key, Target, MailCheck, Users2, BellRing, ChartBar
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
-import { getFirestore, doc, setDoc, onSnapshot, collection, increment, updateDoc, addDoc, deleteDoc, getDocs, arrayUnion } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, onSnapshot, collection, increment, updateDoc, addDoc, deleteDoc, getDocs, arrayUnion, query, where, getDoc } from 'firebase/firestore';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 
 // ============================
@@ -114,7 +114,53 @@ const translations = {
     subscribe: 'اشتراك',
     thanksSubscribe: 'شكراً لاشتراكك! بنرسل لك الزين.',
     emailPlaceholder: 'اكتب إيميلك هنا',
-    swipeHint: 'اسحب لليمين ←'
+    swipeHint: 'اسحب لليمين ←',
+    
+    // New Email Campaigns
+    emailCampaigns: 'الحملات الإيميلية',
+    createCampaign: 'إنشاء حملة جديدة',
+    campaignName: 'اسم الحملة',
+    campaignSubject: 'عنوان الرسالة',
+    campaignContent: 'محتوى الرسالة',
+    targetAudience: 'الفئة المستهدفة',
+    allSubscribers: 'جميع المشتركين',
+    filterByInterests: 'فلترة حسب الاهتمامات',
+    interestsPlaceholder: 'اكتب اهتمامات (مثال: آيفون, سامسونج, لابتوب)',
+    scheduleSend: 'جدولة الإرسال',
+    sendNow: 'إرسال الآن',
+    sendLater: 'إرسال لاحقاً',
+    scheduledFor: 'مجدول للإرسال في',
+    campaignStatus: 'حالة الحملة',
+    draft: 'مسودة',
+    scheduled: 'مجدول',
+    sent: 'تم الإرسال',
+    stats: 'إحصائيات',
+    totalSubscribers: 'إجمالي المشتركين',
+    activeSubscribers: 'مشتركين نشطين',
+    campaignStats: 'إحصائيات الحملة',
+    sentTo: 'مرسل إلى',
+    opened: 'مفتوح',
+    clicked: 'نقرات',
+    conversion: 'تحويل',
+    createNewCampaign: 'إنشاء حملة جديدة',
+    editCampaign: 'تعديل الحملة',
+    deleteCampaign: 'حذف الحملة',
+    sendTestEmail: 'إرسال بريد تجريبي',
+    testEmailSent: 'تم إرسال البريد التجريبي',
+    campaignSaved: 'تم حفظ الحملة',
+    campaignSent: 'تم إرسال الحملة',
+    subscribersList: 'قائمة المشتركين',
+    email: 'الإيميل',
+    subscribedDate: 'تاريخ الاشتراك',
+    lastActivity: 'آخر نشاط',
+    interests: 'الاهتمامات',
+    status: 'الحالة',
+    active: 'نشط',
+    inactive: 'غير نشط',
+    exportSubscribers: 'تصدير المشتركين',
+    importSubscribers: 'استيراد المشتركين',
+    template: 'قالب',
+    preview: 'معاينة'
   },
   en: {
     // SEO Data
@@ -204,7 +250,53 @@ const translations = {
     subscribe: 'Subscribe',
     thanksSubscribe: 'Thanks! We\'ll keep you posted.',
     emailPlaceholder: 'Enter your email',
-    swipeHint: 'Swipe right →'
+    swipeHint: 'Swipe right →',
+    
+    // New Email Campaigns
+    emailCampaigns: 'Email Campaigns',
+    createCampaign: 'Create New Campaign',
+    campaignName: 'Campaign Name',
+    campaignSubject: 'Email Subject',
+    campaignContent: 'Email Content',
+    targetAudience: 'Target Audience',
+    allSubscribers: 'All Subscribers',
+    filterByInterests: 'Filter by Interests',
+    interestsPlaceholder: 'Enter interests (e.g., iPhone, Samsung, Laptop)',
+    scheduleSend: 'Schedule Send',
+    sendNow: 'Send Now',
+    sendLater: 'Send Later',
+    scheduledFor: 'Scheduled for',
+    campaignStatus: 'Campaign Status',
+    draft: 'Draft',
+    scheduled: 'Scheduled',
+    sent: 'Sent',
+    stats: 'Statistics',
+    totalSubscribers: 'Total Subscribers',
+    activeSubscribers: 'Active Subscribers',
+    campaignStats: 'Campaign Stats',
+    sentTo: 'Sent to',
+    opened: 'Opened',
+    clicked: 'Clicks',
+    conversion: 'Conversion',
+    createNewCampaign: 'Create New Campaign',
+    editCampaign: 'Edit Campaign',
+    deleteCampaign: 'Delete Campaign',
+    sendTestEmail: 'Send Test Email',
+    testEmailSent: 'Test email sent',
+    campaignSaved: 'Campaign saved',
+    campaignSent: 'Campaign sent',
+    subscribersList: 'Subscribers List',
+    email: 'Email',
+    subscribedDate: 'Subscribed Date',
+    lastActivity: 'Last Activity',
+    interests: 'Interests',
+    status: 'Status',
+    active: 'Active',
+    inactive: 'Inactive',
+    exportSubscribers: 'Export Subscribers',
+    importSubscribers: 'Import Subscribers',
+    template: 'Template',
+    preview: 'Preview'
   }
 };
 
@@ -348,6 +440,22 @@ const App = () => {
   const [searchLogs, setSearchLogs] = useState([]); 
   const [monthlyStats, setMonthlyStats] = useState([]); 
 
+  // الحالات الخاصة بالحملات الإيميلية
+  const [emailCampaigns, setEmailCampaigns] = useState([]);
+  const [campaignName, setCampaignName] = useState('');
+  const [campaignSubject, setCampaignSubject] = useState('');
+  const [campaignContent, setCampaignContent] = useState('');
+  const [targetAudience, setTargetAudience] = useState('all');
+  const [targetInterests, setTargetInterests] = useState([]);
+  const [newInterest, setNewInterest] = useState('');
+  const [scheduleDate, setScheduleDate] = useState('');
+  const [scheduleTime, setScheduleTime] = useState('');
+  const [campaignStatus, setCampaignStatus] = useState('draft');
+  const [selectedCampaign, setSelectedCampaign] = useState(null);
+  const [activeTab, setActiveTab] = useState('campaigns');
+  const [testEmail, setTestEmail] = useState('');
+  
+  // متغيرات الإعدادات الأخرى
   const [newStoreName, setNewStoreName] = useState('');
   const [newStoreLink, setNewStoreLink] = useState('');
   const [newPartnerName, setNewPartnerName] = useState('');
@@ -355,7 +463,7 @@ const App = () => {
   const [newOfferMessage, setNewOfferMessage] = useState('');
   const [newOfferLink, setNewOfferLink] = useState('');
   const [newTrendingKeyword, setNewTrendingKeyword] = useState('');
-
+  
   // الحالات الجديدة لإضافة متاجر جديدة
   const [newStoreApiName, setNewStoreApiName] = useState('');
   const [newStoreApiKey, setNewStoreApiKey] = useState('');
@@ -445,6 +553,17 @@ const App = () => {
       cacheDuration: 3600,
       maxProducts: 20,
       currency: 'SAR'
+    },
+    
+    // === القسم 4: إعدادات البريد الإلكتروني ===
+    emailSettings: {
+      smtpServer: '',
+      smtpPort: 587,
+      smtpUsername: '',
+      smtpPassword: '',
+      fromName: 'مقارن',
+      fromEmail: 'noreply@moqaren.com',
+      replyTo: 'support@moqaren.com'
     }
   };
 
@@ -513,6 +632,36 @@ const App = () => {
         const filtered = prev.filter(t => t !== term);
         return [term, ...filtered].slice(0, 10);
     });
+  };
+  
+  // 9.8 إضافة اهتمام إلى قائمة الاهتمامات المستهدفة
+  const addInterest = () => {
+    if (newInterest.trim() && !targetInterests.includes(newInterest.trim().toLowerCase())) {
+      setTargetInterests([...targetInterests, newInterest.trim().toLowerCase()]);
+      setNewInterest('');
+    }
+  };
+  
+  // 9.9 إزالة اهتمام من القائمة
+  const removeInterest = (index) => {
+    setTargetInterests(targetInterests.filter((_, i) => i !== index));
+  };
+  
+  // 9.10 حساب عدد المشتركين المستهدفين
+  const calculateTargetCount = () => {
+    if (targetAudience === 'all') {
+      return subscribersList.length;
+    } else if (targetAudience === 'filtered' && targetInterests.length > 0) {
+      return subscribersList.filter(sub => {
+        if (!sub.interests) return false;
+        return targetInterests.some(interest => 
+          sub.interests.some(subInterest => 
+            subInterest.toLowerCase().includes(interest.toLowerCase())
+          )
+        );
+      }).length;
+    }
+    return 0;
   };
 
   // ============================
@@ -650,6 +799,15 @@ const App = () => {
   useEffect(() => {
     if (!isAdminAuthenticated) return;
     
+    // جلب الحملات الإيميلية
+    const campaignsRef = collection(db, 'artifacts', appId, 'public', 'data', 'email_campaigns');
+    const unsubCampaigns = onSnapshot(campaignsRef, (snapshot) => {
+      const campaigns = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      campaigns.sort((a, b) => new Date(b.createdAt || b.scheduledFor || 0) - new Date(a.createdAt || a.scheduledFor || 0));
+      setEmailCampaigns(campaigns);
+    }, (error) => console.log('Campaigns error', error));
+    
+    // جلب رسائل الواردة
     const inboxRef = collection(db, 'artifacts', appId, 'public', 'data', 'inbox');
     const unsubInbox = onSnapshot(inboxRef, (snapshot) => {
       const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -657,6 +815,7 @@ const App = () => {
       setInboxMessages(msgs);
     }, (error) => console.log('Inbox error', error));
     
+    // جلب إحصائيات البحث
     const fetchStats = async () => {
         try {
             const statsRef = collection(db, 'artifacts', appId, 'public', 'data', 'search_analytics');
@@ -668,6 +827,7 @@ const App = () => {
     };
     fetchStats();
 
+    // جلب سجلات البحث
     const logsRef = collection(db, 'artifacts', appId, 'public', 'data', 'search_logs');
     const unsubLogs = onSnapshot(logsRef, (snapshot) => {
         let logs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -675,6 +835,7 @@ const App = () => {
         setSearchLogs(logs.slice(0, 50));
     }, (error) => console.log('Logs error', error));
 
+    // جلب الإحصائيات الشهرية
     const monthlyRef = collection(db, 'artifacts', appId, 'public', 'data', 'analytics_monthly');
     const unsubMonthly = onSnapshot(monthlyRef, (snapshot) => {
         const stats = snapshot.docs.map(doc => ({ month: doc.id, ...doc.data() }));
@@ -682,6 +843,7 @@ const App = () => {
         setMonthlyStats(stats);
     }, (error) => console.log('Monthly stats error', error));
 
+    // جلب المشتركين
     const subRef = collection(db, 'artifacts', appId, 'public', 'data', 'newsletter_subscribers');
     const unsubSubscribers = onSnapshot(subRef, (snapshot) => {
         const subs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -689,6 +851,7 @@ const App = () => {
     }, (error) => console.log('Subscribers error', error));
 
     return () => { 
+      unsubCampaigns();
       unsubInbox(); 
       unsubLogs(); 
       unsubMonthly(); 
@@ -697,10 +860,148 @@ const App = () => {
   }, [isAdminAuthenticated]);
 
   // ============================
-  // 11. وظائف التسويق والاشتراكات
+  // 11. وظائف الحملات الإيميلية
   // ============================
   
-  // 11.1 الاشتراك في النشرة البريدية
+  // 11.1 إنشاء حملة جديدة
+  const handleCreateCampaign = async () => {
+    if (!campaignName || !campaignSubject || !campaignContent) {
+      showNotification('يرجى تعبئة جميع الحقول المطلوبة', 'error');
+      return;
+    }
+    
+    const targetCount = calculateTargetCount();
+    if (targetCount === 0) {
+      showNotification('لا يوجد مشتركين مستهدفين للحملة', 'error');
+      return;
+    }
+    
+    try {
+      const campaignData = {
+        name: campaignName,
+        subject: campaignSubject,
+        content: campaignContent,
+        targetAudience,
+        targetInterests: targetInterests,
+        targetCount,
+        status: campaignStatus,
+        createdAt: new Date().toISOString(),
+        createdBy: user.email || 'admin'
+      };
+      
+      // إذا كان هناك جدولة
+      if (scheduleDate && scheduleTime && campaignStatus === 'scheduled') {
+        const scheduledDateTime = new Date(`${scheduleDate}T${scheduleTime}`);
+        campaignData.scheduledFor = scheduledDateTime.toISOString();
+      }
+      
+      await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'email_campaigns'), campaignData);
+      
+      showNotification(t.campaignSaved, 'success');
+      
+      // إعادة تعيين الحقول
+      setCampaignName('');
+      setCampaignSubject('');
+      setCampaignContent('');
+      setTargetAudience('all');
+      setTargetInterests([]);
+      setScheduleDate('');
+      setScheduleTime('');
+      setCampaignStatus('draft');
+    } catch (error) {
+      console.error('Error creating campaign:', error);
+      showNotification('حدث خطأ أثناء إنشاء الحملة', 'error');
+    }
+  };
+  
+  // 11.2 إرسال حملة
+  const handleSendCampaign = async (campaignId) => {
+    try {
+      const campaignRef = doc(db, 'artifacts', appId, 'public', 'data', 'email_campaigns', campaignId);
+      await updateDoc(campaignRef, {
+        status: 'sent',
+        sentAt: new Date().toISOString(),
+        sentTo: calculateTargetCount()
+      });
+      
+      showNotification(t.campaignSent, 'success');
+      
+      // هنا يمكنك إضافة كود إرسال البريد الفعلي
+      // باستخدام خدمة البريد مثل SendGrid أو AWS SES
+      
+    } catch (error) {
+      console.error('Error sending campaign:', error);
+      showNotification('حدث خطأ أثناء إرسال الحملة', 'error');
+    }
+  };
+  
+  // 11.3 حذف حملة
+  const handleDeleteCampaign = async (campaignId) => {
+    if (!confirm('هل أنت متأكد من حذف هذه الحملة؟')) return;
+    
+    try {
+      await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'email_campaigns', campaignId));
+      showNotification('تم حذف الحملة', 'success');
+    } catch (error) {
+      console.error('Error deleting campaign:', error);
+      showNotification('حدث خطأ أثناء حذف الحملة', 'error');
+    }
+  };
+  
+  // 11.4 إرسال بريد تجريبي
+  const handleSendTestEmail = async () => {
+    if (!testEmail) {
+      showNotification('يرجى إدخال بريد إلكتروني تجريبي', 'error');
+      return;
+    }
+    
+    // هنا يمكنك إضافة كود إرسال البريد التجريبي
+    showNotification(t.testEmailSent, 'success');
+    setTestEmail('');
+  };
+  
+  // 11.5 تصدير قائمة المشتركين
+  const handleExportSubscribers = () => {
+    const csvContent = "data:text/csv;charset=utf-8," 
+      + ["Email,Subscribed Date,Last Activity,Interests,Status"]
+      .concat(subscribersList.map(sub => 
+        `"${sub.email}","${sub.joined_at || ''}","${sub.last_search || ''}","${sub.interests ? sub.interests.join(', ') : ''}","${sub.status || 'active'}"`
+      ))
+      .join("\n");
+    
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `moqaren_subscribers_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showNotification('تم تصدير قائمة المشتركين', 'success');
+  };
+  
+  // 11.6 إلغاء اشتراك مستخدم
+  const handleUnsubscribe = async (subscriberId) => {
+    if (!confirm('هل أنت متأكد من إلغاء اشتراك هذا المستخدم؟')) return;
+    
+    try {
+      const subRef = doc(db, 'artifacts', appId, 'public', 'data', 'newsletter_subscribers', subscriberId);
+      await updateDoc(subRef, {
+        status: 'inactive',
+        unsubscribedAt: new Date().toISOString()
+      });
+      showNotification('تم إلغاء الاشتراك', 'success');
+    } catch (error) {
+      console.error('Error unsubscribing:', error);
+      showNotification('حدث خطأ أثناء إلغاء الاشتراك', 'error');
+    }
+  };
+
+  // ============================
+  // 12. وظائف التسويق والاشتراكات
+  // ============================
+  
+  // 12.1 الاشتراك في النشرة البريدية
   const handleSubscribe = async (e) => {
       e.preventDefault();
       if (!promoEmail || !user) return;
@@ -711,7 +1012,8 @@ const App = () => {
           await setDoc(subDocRef, {
               email: email,
               joined_at: new Date().toISOString(),
-              interests: searchQuery ? [searchQuery.toLowerCase()] : [] 
+              interests: searchQuery ? [searchQuery.toLowerCase()] : [],
+              status: 'active'
           }, { merge: true });
 
           localStorage.setItem('moqaren_user_email', email);
@@ -724,7 +1026,7 @@ const App = () => {
       }
   };
 
-  // 11.2 تتبع كلمات البحث
+  // 12.2 تتبع كلمات البحث
   const trackSearchTerm = async (term) => {
       if (!user || !term) return;
       const cleanTerm = term.trim().toLowerCase();
@@ -767,18 +1069,7 @@ const App = () => {
       }
   };
 
-  // 11.3 إرسال حملة تسويقية
-  const handleSendCampaign = () => {
-      if (!marketingSubject || !marketingBody) {
-          showNotification('يرجى تعبئة العنوان والرسالة', 'error');
-          return;
-      }
-      showNotification(`تم إرسال الحملة إلى ${filteredSubscribers.length} مشترك بنجاح!`, 'success');
-      setMarketingSubject('');
-      setMarketingBody('');
-  };
-
-  // 11.4 زيادة عداد البحث العام
+  // 12.3 زيادة عداد البحث العام
   const incrementGlobalCounter = async () => {
       if (!user) return;
       const statsRef = doc(db, 'artifacts', appId, 'public', 'data', 'stats', 'global_counts');
@@ -788,10 +1079,10 @@ const App = () => {
   };
 
   // ============================
-  // 12. وظائف الإدارة والتحكم
+  // 13. وظائف الإدارة والتحكم
   // ============================
   
-  // 12.1 حفظ جميع التغييرات
+  // 13.1 حفظ جميع التغييرات
   const handleSaveAllChanges = async () => {
     if (!isAdminAuthenticated) {
         showNotification("ليس لديك صلاحية الحفظ", "error");
@@ -808,7 +1099,7 @@ const App = () => {
     }
   };
 
-  // 12.2 العودة للرئيسية
+  // 13.2 العودة للرئيسية
   const resetToHome = () => {
     setView('home');
     setResults(null);
@@ -818,7 +1109,7 @@ const App = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // 12.3 التمرير للقسم المحدد
+  // 13.3 التمرير للقسم المحدد
   const scrollToSection = (id) => {
     setView('home');
     setResults(null);
@@ -832,7 +1123,7 @@ const App = () => {
     }, 150);
   };
 
-  // 12.4 النقر على الشعار (للوصول للإدارة)
+  // 13.4 النقر على الشعار (للوصول للإدارة)
   const handleLogoClick = () => {
     const newCount = adminClickCount + 1;
     setAdminClickCount(newCount);
@@ -849,46 +1140,7 @@ const App = () => {
     clickTimeoutRef.current = setTimeout(() => setAdminClickCount(0), 3000);
   };
 
-  // 12.5 إرسال طلب شراكة
-  const handleMerchantSubmit = async (e) => {
-    e.preventDefault();
-    if (!user) return;
-    try {
-      await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'inbox'), { 
-        type: 'partner_request', 
-        store: merchantForm.store, 
-        email: merchantForm.email, 
-        timestamp: new Date().toISOString() 
-      });
-      showNotification(t.toastSuccess);
-      setMerchantForm({ store: '', email: '' });
-      resetToHome();
-    } catch (err) { 
-      showNotification(t.toastError, "error"); 
-    }
-  };
-
-  // 12.6 إرسال رسالة تواصل
-  const handleContactSubmit = async (e) => {
-    e.preventDefault();
-    if (!user) return;
-    try {
-      await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'inbox'), { 
-        type: 'contact_message', 
-        name: contactForm.name, 
-        email: contactForm.email, 
-        message: contactForm.message, 
-        timestamp: new Date().toISOString() 
-      });
-      showNotification(t.toastSuccess);
-      setContactForm({ name: '', email: '', message: '' });
-      resetToHome();
-    } catch (err) { 
-      showNotification(t.toastError, "error"); 
-    }
-  };
-
-  // 12.7 تسجيل دخول المدير
+  // 13.5 تسجيل دخول المدير
   const handleAdminLogin = async (e) => {
     e.preventDefault();
     setLoginError('');
@@ -903,7 +1155,7 @@ const App = () => {
     }
   };
   
-  // 12.8 تسجيل خروج
+  // 13.6 تسجيل خروج
   const handleLogout = async () => {
       await signOut(auth);
       setIsAdminAuthenticated(false);
@@ -911,7 +1163,7 @@ const App = () => {
       showNotification('تم الخروج بنجاح');
   };
 
-  // 12.9 حذف الرسالة
+  // 13.7 حذف الرسالة
   const handleDeleteMessage = async (msgId) => {
     if (!confirm('هل أنت متأكد من حذف هذه الرسالة؟')) return;
     try { 
@@ -920,7 +1172,7 @@ const App = () => {
     } catch (err) { }
   };
 
-  // 12.10 إضافة متجر جديد للروابط
+  // 13.8 إضافة متجر جديد للروابط
   const handleAddStore = () => { 
     if (newStoreName && newStoreLink) { 
       setAdminConfig({ 
@@ -933,7 +1185,7 @@ const App = () => {
     }
   };
 
-  // 12.11 حذف متجر من الروابط
+  // 13.9 حذف متجر من الروابط
   const handleDeleteStore = (i) => { 
     const u = [...adminConfig.affiliateLinks]; 
     u.splice(i, 1); 
@@ -941,7 +1193,7 @@ const App = () => {
     showNotification('تم حذف رابط المتجر');
   };
 
-  // 12.12 إضافة عرض خاص
+  // 13.10 إضافة عرض خاص
   const handleAddOffer = () => { 
     if (newOfferKeyword && newOfferMessage && newOfferLink) { 
       setAdminConfig({ 
@@ -959,7 +1211,7 @@ const App = () => {
     }
   };
 
-  // 12.13 حذف عرض
+  // 13.11 حذف عرض
   const handleDeleteOffer = (i) => { 
     const u = [...adminConfig.exclusiveOffers]; 
     u.splice(i, 1); 
@@ -967,7 +1219,7 @@ const App = () => {
     showNotification('تم حذف العرض الخاص');
   };
 
-  // 12.14 إضافة كلمة رائجة
+  // 13.12 إضافة كلمة رائجة
   const handleAddTrendingKeyword = () => { 
     if (newTrendingKeyword) { 
       setAdminConfig({ 
@@ -979,7 +1231,7 @@ const App = () => {
     }
   };
 
-  // 12.15 حذف كلمة رائجة
+  // 13.13 حذف كلمة رائجة
   const handleDeleteTrendingKeyword = (index) => { 
     const updated = [...(adminConfig.trendingKeywords || [])]; 
     updated.splice(index, 1); 
@@ -987,7 +1239,7 @@ const App = () => {
     showNotification('تم حذف الكلمة الرائجة');
   };
 
-  // 12.16 إضافة متجر جديد مع API - الوظيفة الجديدة
+  // 13.14 إضافة متجر جديد مع API
   const handleAddCustomStore = () => { 
     if (newStoreApiName && newStoreApiKey) { 
       const newStore = {
@@ -1017,7 +1269,7 @@ const App = () => {
     }
   };
 
-  // 12.17 حذف متجر مخصص
+  // 13.15 حذف متجر مخصص
   const handleDeleteCustomStore = (index) => { 
     const updated = [...(adminConfig.storeApiKeys?.customStores || [])]; 
     updated.splice(index, 1); 
@@ -1031,7 +1283,7 @@ const App = () => {
     showNotification('تم حذف المتجر المخصص');
   };
 
-  // 12.18 تفعيل/تعطيل متجر
+  // 13.16 تفعيل/تعطيل متجر
   const toggleStoreEnabled = (storeType, index = null) => {
     if (storeType === 'amazon' || storeType === 'noon' || storeType === 'jarir' || storeType === 'xcite' || storeType === 'extra') {
       setAdminConfig({
@@ -1061,7 +1313,7 @@ const App = () => {
   };
 
   // ============================
-  // 13. وظيفة الذكاء الاصطناعي (Gemini)
+  // 14. وظيفة الذكاء الاصطناعي (Gemini)
   // ============================
   const callGeminiAI = async (product, stores) => {
     const geminiApiKey = adminConfig.aiSettings?.geminiApiKey;
@@ -1153,7 +1405,7 @@ const App = () => {
   };
 
   // ============================
-  // 14. وظيفة البحث الرئيسية
+  // 15. وظيفة البحث الرئيسية
   // ============================
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -1438,7 +1690,7 @@ const App = () => {
   };
 
   // ============================
-  // 15. حساب المشتركين المفلترين
+  // 16. حساب المشتركين المفلترين
   // ============================
   const filteredSubscribers = subscribersList.filter(sub => {
       if (!marketingFilter) return true;
@@ -1449,12 +1701,12 @@ const App = () => {
   });
 
   // ============================
-  // 16. الواجهة الرئيسية (Home View)
+  // 17. الواجهة الرئيسية (Home View)
   // ============================
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-blue-200 selection:text-blue-900" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
       
-      {/* 16.1 مكونات SEO */}
+      {/* 17.1 مكونات SEO */}
       <SEOHead 
         title={view === 'home' && !results ? t.siteTitle : `${searchQuery ? searchQuery + ' | ' : ''} ${t.siteTitle}`} 
         description={t.siteDesc} 
@@ -1463,7 +1715,7 @@ const App = () => {
       />
       <SchemaMarkup />
 
-      {/* 16.2 الإشعارات */}
+      {/* 17.2 الإشعارات */}
       {notification && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-top-4 duration-300">
           <div className={`px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 border-2 ${notification.type === 'error' ? 'bg-red-50 border-red-100 text-red-600' : 'bg-white border-green-100 text-green-700'}`}>
@@ -1473,7 +1725,7 @@ const App = () => {
         </div>
       )}
 
-      {/* 16.3 نافذة الاشتراك */}
+      {/* 17.3 نافذة الاشتراك */}
       {showPromoPopup && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
               <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={() => setShowPromoPopup(false)}></div>
@@ -1504,7 +1756,7 @@ const App = () => {
           </div>
       )}
 
-      {/* 16.4 زر فتح لوحة المساحة الشخصية */}
+      {/* 17.4 زر فتح لوحة المساحة الشخصية */}
       <button 
         onClick={() => setShowSidePanel(true)}
         className="fixed left-0 top-1/2 -translate-y-1/2 bg-white/80 backdrop-blur-md p-3 rounded-r-2xl shadow-lg border border-slate-200 z-40 hover:pl-5 transition-all group border-l-0"
@@ -1516,7 +1768,7 @@ const App = () => {
         </div>
       </button>
 
-      {/* 16.5 لوحة المساحة الشخصية */}
+      {/* 17.5 لوحة المساحة الشخصية */}
       <div className={`fixed inset-0 z-[60] transition-all duration-500 ${showSidePanel ? 'visible' : 'invisible'}`}>
         <div className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-500 ${showSidePanel ? 'opacity-100' : 'opacity-0'}`} onClick={() => setShowSidePanel(false)}></div>
         <div className={`absolute left-0 top-0 h-full w-full md:w-[400px] bg-white shadow-2xl transition-transform duration-500 ease-in-out transform ${showSidePanel ? 'translate-x-0' : '-translate-x-full'}`}>
@@ -1576,7 +1828,7 @@ const App = () => {
         </div>
       </div>
 
-      {/* 16.6 زر تبديل اللغة */}
+      {/* 17.6 زر تبديل اللغة */}
       <button 
         onClick={toggleLanguage} 
         className={`fixed ${lang === 'ar' ? 'left-4' : 'right-4'} top-24 md:top-6 z-[100] bg-white/90 backdrop-blur-xl shadow-xl border border-white/50 p-3 rounded-full hover:scale-110 transition-all active:scale-95 group`}
@@ -1588,7 +1840,7 @@ const App = () => {
         </span>
       </button>
 
-      {/* 16.7 إشعار العرض الخاص */}
+      {/* 17.7 إشعار العرض الخاص */}
       {showExclusiveToast && currentOffer && (
         <div className={`fixed bottom-6 ${lang === 'ar' ? 'left-4' : 'right-4'} md:max-w-sm z-[100] animate-in slide-in-from-bottom-10 duration-500`}>
           <div className="bg-gradient-to-l from-blue-600 to-indigo-600 text-white p-6 rounded-[2rem] shadow-2xl relative border-4 border-white/20 backdrop-blur-md">
@@ -1603,7 +1855,7 @@ const App = () => {
         </div>
       )}
 
-      {/* 16.8 شريط التنقل */}
+      {/* 17.8 شريط التنقل */}
       <nav className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
         <div className="bg-white/90 backdrop-blur-xl shadow-2xl shadow-blue-900/10 rounded-full px-2 py-2 flex items-center gap-1 md:gap-2 pointer-events-auto border border-white/50 max-w-full overflow-x-auto no-scrollbar">
           <div className="flex items-center gap-2 px-4 cursor-pointer group select-none" onClick={handleLogoClick}>
@@ -1627,11 +1879,11 @@ const App = () => {
       </nav>
 
       {/* ============================ */}
-      {/* 17. الواجهة الرئيسية (Home View) */}
+      {/* 18. الواجهة الرئيسية (Home View) */}
       {/* ============================ */}
       {view === 'home' && (
         <>
-          {/* 17.1 قسم الهيرو */}
+          {/* 18.1 قسم الهيرو */}
           <div className="bg-gradient-to-b from-slate-950 via-blue-950 to-indigo-900 text-white pt-40 pb-32 px-4 relative overflow-hidden rounded-b-[3rem] md:rounded-b-[5rem] shadow-2xl">
             
             {/* خلفيات متحركة */}
@@ -1706,10 +1958,8 @@ const App = () => {
             </div>
           </div>
 
-          {/* 17.2 المحتوى الرئيسية */}
+          {/* 18.2 المحتوى الرئيسية */}
           <main className="max-w-7xl mx-auto px-4 -mt-20 relative z-20">
-            {/* تم إزالة قسم شركاء الموقع بالكامل */}
-            
             {/* حالة التحميل */}
             {isSearching && (
               <div className="bg-white rounded-[3rem] p-12 md:p-20 shadow-xl border border-slate-100 text-center mb-32">
@@ -1886,12 +2136,12 @@ const App = () => {
       )}
 
       {/* ============================ */}
-      {/* 18. لوحة الإدارة (Admin View) */}
+      {/* 19. لوحة الإدارة (Admin View) */}
       {/* ============================ */}
       {view === 'admin' && (
-        <div className="max-w-5xl mx-auto px-4 py-32 animate-in fade-in">
+        <div className="max-w-7xl mx-auto px-4 py-32 animate-in fade-in">
           {!isAdminAuthenticated ? (
-            // 18.1 واجهة تسجيل دخول المدير
+            // 19.1 واجهة تسجيل دخول المدير
             <div className="bg-white rounded-[3rem] shadow-2xl p-12 max-w-sm mx-auto text-center border border-slate-100">
                <Lock size={40} className="mx-auto mb-6 text-slate-900" />
                <h1 className="text-2xl font-black mb-6">{t.adminLogin}</h1>
@@ -1905,7 +2155,7 @@ const App = () => {
                <button onClick={resetToHome} className="mt-6 text-slate-400 font-bold text-sm">{t.back}</button>
             </div>
           ) : (
-            // 18.2 لوحة التحكم الرئيسية
+            // 19.2 لوحة التحكم الرئيسية
             <div className="bg-white rounded-[3rem] shadow-2xl p-10 md:p-16 border border-slate-100">
               {/* رأس لوحة التحكم */}
               <div className="flex justify-between items-center mb-10 border-b pb-6">
@@ -1919,693 +2169,750 @@ const App = () => {
                 </div>
               </div>
               
-              {/* ==================== */}
-              {/* القسم 1: الذكاء الاصطناعي المتقدم */}
-              {/* ==================== */}
-              <div className="mb-12 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-[2rem] p-8">
-                <h3 className="font-black text-blue-900 border-b border-blue-200 pb-4 mb-6 flex items-center gap-2">
-                  <Brain className="text-blue-600" />
-                  إعدادات الذكاء الاصطناعي المتقدم
-                </h3>
-                
-                <div className="grid md:grid-cols-2 gap-8">
-                  {/* جيميني */}
-                  <div className="bg-white p-6 rounded-2xl border border-blue-100 shadow-sm">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="bg-blue-100 p-2 rounded-xl">
-                        <Hexagon className="text-blue-600" size={24} />
-                      </div>
-                      <h4 className="font-black text-blue-800 text-lg">Google Gemini</h4>
-                    </div>
-                    
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 mb-2 block">API Key</label>
-                        <div className="relative">
-                          <input 
-                            type="password" 
-                            value={adminConfig.aiSettings?.geminiApiKey || ''}
-                            onChange={(e) => setAdminConfig({
-                              ...adminConfig, 
-                              aiSettings: { 
-                                ...adminConfig.aiSettings, 
-                                geminiApiKey: e.target.value 
-                              }
-                            })} 
-                            className="w-full p-3 rounded-xl bg-slate-50 border border-blue-200 font-bold text-sm pr-10"
-                            placeholder="sk-proj-xxxxxxxxxx"
-                          />
-                          <Eye size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-300 cursor-pointer" 
-                            onClick={(e) => {
-                              const input = e.target.previousSibling;
-                              if (input.type === 'password') input.type = 'text';
-                              else input.type = 'password';
-                            }}
-                          />
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 mb-2 block">الموديل</label>
-                        <select 
-                          value={adminConfig.aiSettings?.geminiModel || 'gemini-2.0-flash-exp'}
-                          onChange={(e) => setAdminConfig({
-                            ...adminConfig, 
-                            aiSettings: { 
-                              ...adminConfig.aiSettings, 
-                              geminiModel: e.target.value 
-                            }
-                          })}
-                          className="w-full p-3 rounded-xl bg-slate-50 border border-blue-200 font-bold text-sm"
-                        >
-                          <option value="gemini-2.0-flash-exp">Flash (أسرع)</option>
-                          <option value="gemini-1.5-pro">Pro (أدق)</option>
-                          <option value="gemini-2.0-pro-exp">Pro Experimental</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* ميزات التحليل */}
-                  <div className="bg-white p-6 rounded-2xl border border-blue-100 shadow-sm">
-                    <h4 className="font-black text-blue-800 mb-4">ميزات التحليل المتقدم</h4>
-                    
-                    <div className="space-y-3">
-                      {[
-                        { key: 'priceComparison', label: 'مقارنة الأسعار بين المتاجر', icon: TrendingDown },
-                        { key: 'reviewAnalysis', label: 'تحليل آخر 100 تعليق', icon: MessageSquare },
-                        { key: 'materialComparison', label: 'مقارنة مواد المنتج', icon: Database },
-                        { key: 'warrantyCheck', label: 'فحص الضمانات', icon: Shield },
-                        { key: 'deliverySpeed', label: 'سرعة التوصيل', icon: Rocket },
-                        { key: 'competitorAnalysis', label: 'تحليل المنافسين', icon: BarChart3 }
-                      ].map((feature, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-3 bg-blue-50 rounded-xl">
-                          <div className="flex items-center gap-3">
-                            <feature.icon size={18} className="text-blue-600" />
-                            <span className="font-bold text-sm text-slate-700">{feature.label}</span>
-                          </div>
-                          <div className="relative">
-                            <input 
-                              type="checkbox" 
-                              checked={adminConfig.aiSettings?.geminiFeatures?.[feature.key] || false}
-                              onChange={(e) => setAdminConfig({
-                                ...adminConfig,
-                                aiSettings: {
-                                  ...adminConfig.aiSettings,
-                                  geminiFeatures: {
-                                    ...adminConfig.aiSettings?.geminiFeatures,
-                                    [feature.key]: e.target.checked
-                                  }
-                                }
-                              })}
-                              className="sr-only"
-                              id={`feature-${feature.key}`}
-                            />
-                            <label 
-                              htmlFor={`feature-${feature.key}`}
-                              className={`block w-10 h-6 rounded-full cursor-pointer ${adminConfig.aiSettings?.geminiFeatures?.[feature.key] ? 'bg-blue-600' : 'bg-slate-300'}`}
-                            >
-                              <span className={`block w-4 h-4 mt-1 ml-1 rounded-full bg-white transform transition-transform ${adminConfig.aiSettings?.geminiFeatures?.[feature.key] ? 'translate-x-4' : ''}`}></span>
-                            </label>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+              {/* تبطيقات الإدارة */}
+              <div className="mb-8">
+                <div className="flex bg-slate-100 p-1 rounded-2xl mb-6">
+                  <button 
+                    onClick={() => setActiveTab('campaigns')} 
+                    className={`flex-1 py-3 rounded-xl text-sm font-black transition-all flex items-center justify-center gap-2 ${activeTab === 'campaigns' ? 'bg-white shadow-md text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}
+                  >
+                    <MailCheck size={16} /> {t.emailCampaigns}
+                  </button>
+                  <button 
+                    onClick={() => setActiveTab('subscribers')} 
+                    className={`flex-1 py-3 rounded-xl text-sm font-black transition-all flex items-center justify-center gap-2 ${activeTab === 'subscribers' ? 'bg-white shadow-md text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}
+                  >
+                    <Users2 size={16} /> {t.subscribersList}
+                  </button>
+                  <button 
+                    onClick={() => setActiveTab('settings')} 
+                    className={`flex-1 py-3 rounded-xl text-sm font-black transition-all flex items-center justify-center gap-2 ${activeTab === 'settings' ? 'bg-white shadow-md text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}
+                  >
+                    <Settings size={16} /> الإعدادات
+                  </button>
                 </div>
               </div>
 
               {/* ==================== */}
-              {/* القسم 2: مفاتيح المتاجر - المحدث */}
+              {/* 19.3 قسم الحملات الإيميلية */}
               {/* ==================== */}
-              <div className="mb-12 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-100 rounded-[2rem] p-8">
-                <h3 className="font-black text-green-900 border-b border-green-200 pb-4 mb-6 flex items-center gap-2">
-                  <ShoppingCart className="text-green-600" />
-                  مفاتيح API للمتاجر
-                </h3>
-                
-                <div className="space-y-6">
-                  {/* المتاجر الأساسية */}
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {/* أمازون */}
-                    <div className="bg-white p-4 rounded-xl border border-green-100">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <div className="bg-orange-100 text-orange-600 p-2 rounded-lg">
-                            <span className="font-black text-sm">A</span>
-                          </div>
-                          <h4 className="font-black text-green-800">Amazon Saudi</h4>
-                        </div>
-                        <div className="relative">
-                          <input 
-                            type="checkbox" 
-                            checked={adminConfig.storeApiKeys?.amazon?.enabled !== false}
-                            onChange={() => toggleStoreEnabled('amazon')}
-                            className="sr-only"
-                            id="amazon-enabled"
-                          />
-                          <label 
-                            htmlFor="amazon-enabled"
-                            className={`block w-10 h-6 rounded-full cursor-pointer ${adminConfig.storeApiKeys?.amazon?.enabled !== false ? 'bg-green-600' : 'bg-slate-300'}`}
-                          >
-                            <span className={`block w-4 h-4 mt-1 ml-1 rounded-full bg-white transform transition-transform ${adminConfig.storeApiKeys?.amazon?.enabled !== false ? 'translate-x-4' : ''}`}></span>
-                          </label>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
+              {activeTab === 'campaigns' && (
+                <div className="space-y-8">
+                  {/* إحصائيات المشتركين */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-2xl p-6">
+                      <div className="flex items-center justify-between">
                         <div>
-                          <label className="text-xs font-bold text-slate-500 mb-1 block">Access Key</label>
-                          <input 
-                            type="text" 
-                            value={adminConfig.storeApiKeys?.amazon?.accessKey || ''}
-                            onChange={(e) => setAdminConfig({
-                              ...adminConfig,
-                              storeApiKeys: {
-                                ...adminConfig.storeApiKeys,
-                                amazon: { ...adminConfig.storeApiKeys?.amazon, accessKey: e.target.value }
-                              }
-                            })} 
-                            className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold"
-                          />
+                          <h3 className="text-blue-800 font-bold text-sm mb-1">{t.totalSubscribers}</h3>
+                          <p className="text-3xl font-black text-blue-900">{subscribersList.length}</p>
                         </div>
-                        <div>
-                          <label className="text-xs font-bold text-slate-500 mb-1 block">Secret Key</label>
-                          <input 
-                            type="password" 
-                            value={adminConfig.storeApiKeys?.amazon?.secretKey || ''}
-                            onChange={(e) => setAdminConfig({
-                              ...adminConfig,
-                              storeApiKeys: {
-                                ...adminConfig.storeApiKeys,
-                                amazon: { ...adminConfig.storeApiKeys?.amazon, secretKey: e.target.value }
-                              }
-                            })} 
-                            className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold"
-                          />
+                        <div className="bg-blue-100 p-3 rounded-xl">
+                          <Users2 className="text-blue-600" size={24} />
                         </div>
                       </div>
                     </div>
-                    
-                    {/* نون */}
-                    <div className="bg-white p-4 rounded-xl border border-green-100">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <div className="bg-yellow-100 text-yellow-600 p-2 rounded-lg">
-                            <span className="font-black text-sm">N</span>
-                          </div>
-                          <h4 className="font-black text-green-800">Noon</h4>
+                    <div className="bg-gradient-to-r from-green-50 to-green-100 border border-green-200 rounded-2xl p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-green-800 font-bold text-sm mb-1">{t.activeSubscribers}</h3>
+                          <p className="text-3xl font-black text-green-900">{subscribersList.filter(s => s.status !== 'inactive').length}</p>
                         </div>
-                        <div className="relative">
-                          <input 
-                            type="checkbox" 
-                            checked={adminConfig.storeApiKeys?.noon?.enabled !== false}
-                            onChange={() => toggleStoreEnabled('noon')}
-                            className="sr-only"
-                            id="noon-enabled"
-                          />
-                          <label 
-                            htmlFor="noon-enabled"
-                            className={`block w-10 h-6 rounded-full cursor-pointer ${adminConfig.storeApiKeys?.noon?.enabled !== false ? 'bg-green-600' : 'bg-slate-300'}`}
-                          >
-                            <span className={`block w-4 h-4 mt-1 ml-1 rounded-full bg-white transform transition-transform ${adminConfig.storeApiKeys?.noon?.enabled !== false ? 'translate-x-4' : ''}`}></span>
-                          </label>
+                        <div className="bg-green-100 p-3 rounded-xl">
+                          <ChartBar className="text-green-600" size={24} />
                         </div>
                       </div>
-                      <div className="space-y-2">
+                    </div>
+                    <div className="bg-gradient-to-r from-purple-50 to-purple-100 border border-purple-200 rounded-2xl p-6">
+                      <div className="flex items-center justify-between">
                         <div>
-                          <label className="text-xs font-bold text-slate-500 mb-1 block">API Key</label>
-                          <input 
-                            type="text" 
-                            value={adminConfig.storeApiKeys?.noon?.apiKey || ''}
-                            onChange={(e) => setAdminConfig({
-                              ...adminConfig,
-                              storeApiKeys: {
-                                ...adminConfig.storeApiKeys,
-                                noon: { ...adminConfig.storeApiKeys?.noon, apiKey: e.target.value }
-                              }
-                            })} 
-                            className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold"
-                          />
+                          <h3 className="text-purple-800 font-bold text-sm mb-1">الحملات النشطة</h3>
+                          <p className="text-3xl font-black text-purple-900">{emailCampaigns.filter(c => c.status === 'scheduled' || c.status === 'draft').length}</p>
                         </div>
-                        <div>
-                          <label className="text-xs font-bold text-slate-500 mb-1 block">Secret Key</label>
-                          <input 
-                            type="password" 
-                            value={adminConfig.storeApiKeys?.noon?.secretKey || ''}
-                            onChange={(e) => setAdminConfig({
-                              ...adminConfig,
-                              storeApiKeys: {
-                                ...adminConfig.storeApiKeys,
-                                noon: { ...adminConfig.storeApiKeys?.noon, secretKey: e.target.value }
-                              }
-                            })} 
-                            className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold"
-                          />
+                        <div className="bg-purple-100 p-3 rounded-xl">
+                          <BellRing className="text-purple-600" size={24} />
                         </div>
                       </div>
                     </div>
                   </div>
-                  
-                  {/* إضافة متجر جديد - القسم الجديد */}
-                  <div className="bg-white/50 border-2 border-dashed border-green-200 rounded-2xl p-6">
-                    <h4 className="font-black text-green-800 mb-4 flex items-center gap-2">
-                      <Plus className="text-green-600" size={20} />
-                      إضافة متجر جديد
-                    </h4>
-                    <p className="text-sm text-slate-500 mb-4">أضف متاجر جديدة وسيتم البحث فيها تلقائياً مع الذكاء الاصطناعي</p>
+
+                  {/* إنشاء حملة جديدة */}
+                  <div className="bg-gradient-to-r from-slate-50 to-white border border-slate-200 rounded-[2rem] p-8">
+                    <h3 className="font-black text-slate-900 border-b pb-4 mb-6 flex items-center gap-2">
+                      <Plus className="text-blue-600" />
+                      {t.createNewCampaign}
+                    </h3>
                     
-                    <div className="space-y-3">
-                      <div className="grid md:grid-cols-2 gap-3">
+                    <div className="space-y-6">
+                      <div className="grid md:grid-cols-2 gap-6">
                         <div>
-                          <label className="text-xs font-bold text-slate-500 mb-1 block">اسم المتجر</label>
+                          <label className="text-sm font-bold text-slate-700 mb-2 block">{t.campaignName}</label>
                           <input 
                             type="text" 
-                            placeholder="مثال: متجر إلكتروني"
-                            value={newStoreApiName}
-                            onChange={(e) => setNewStoreApiName(e.target.value)}
-                            className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold"
+                            value={campaignName}
+                            onChange={(e) => setCampaignName(e.target.value)}
+                            className="w-full p-4 rounded-xl bg-white border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
+                            placeholder="مثال: عرض خاص على الهواتف الذكية"
                           />
                         </div>
                         <div>
-                          <label className="text-xs font-bold text-slate-500 mb-1 block">مفتاح API</label>
+                          <label className="text-sm font-bold text-slate-700 mb-2 block">{t.campaignSubject}</label>
                           <input 
-                            type="password" 
-                            placeholder="مفتاح API الخاص بالمتجر"
-                            value={newStoreApiKey}
-                            onChange={(e) => setNewStoreApiKey(e.target.value)}
-                            className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold"
+                            type="text" 
+                            value={campaignSubject}
+                            onChange={(e) => setCampaignSubject(e.target.value)}
+                            className="w-full p-4 rounded-xl bg-white border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
+                            placeholder="عرض خاص لا تفوته! خصم 20% على الهواتف"
                           />
                         </div>
                       </div>
                       
-                      <div className="grid md:grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-xs font-bold text-slate-500 mb-1 block">الرمز السري (اختياري)</label>
-                          <input 
-                            type="password" 
-                            placeholder="الرمز السري للـ API"
-                            value={newStoreApiSecret}
-                            onChange={(e) => setNewStoreApiSecret(e.target.value)}
-                            className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold"
-                          />
+                      <div>
+                        <label className="text-sm font-bold text-slate-700 mb-2 block">{t.targetAudience}</label>
+                        <div className="flex gap-4 mb-4">
+                          <label className="flex items-center gap-2">
+                            <input 
+                              type="radio" 
+                              name="targetAudience" 
+                              value="all" 
+                              checked={targetAudience === 'all'}
+                              onChange={(e) => setTargetAudience(e.target.value)}
+                              className="text-blue-600"
+                            />
+                            <span>{t.allSubscribers} ({subscribersList.length})</span>
+                          </label>
+                          <label className="flex items-center gap-2">
+                            <input 
+                              type="radio" 
+                              name="targetAudience" 
+                              value="filtered" 
+                              checked={targetAudience === 'filtered'}
+                              onChange={(e) => setTargetAudience(e.target.value)}
+                              className="text-blue-600"
+                            />
+                            <span>{t.filterByInterests}</span>
+                          </label>
                         </div>
-                        <div>
-                          <label className="text-xs font-bold text-slate-500 mb-1 block">رابط API (اختياري)</label>
-                          <input 
-                            type="text" 
-                            placeholder="https://api.example.com/search"
-                            value={newStoreApiUrl}
-                            onChange={(e) => setNewStoreApiUrl(e.target.value)}
-                            className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold text-left"
-                            dir="ltr"
-                          />
-                        </div>
-                      </div>
-                      
-                      <button 
-                        onClick={handleAddCustomStore}
-                        className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-bold text-sm transition-colors flex items-center justify-center gap-2 mt-2"
-                      >
-                        <Plus size={16} />
-                        إضافة متجر جديد
-                      </button>
-                    </div>
-                  </div>
-                  
-                  {/* المتاجر المضافة مسبقاً */}
-                  {adminConfig.storeApiKeys?.customStores && adminConfig.storeApiKeys.customStores.length > 0 && (
-                    <div className="mt-6">
-                      <h5 className="font-bold text-green-700 mb-3">المتاجر المضافة:</h5>
-                      <div className="space-y-3">
-                        {adminConfig.storeApiKeys.customStores.map((store, index) => (
-                          <div key={index} className="bg-white p-4 rounded-xl border border-green-100 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="bg-green-100 text-green-600 p-2 rounded-lg">
-                                <span className="font-black text-sm">{store.name.charAt(0)}</span>
-                              </div>
-                              <div>
-                                <h6 className="font-bold text-green-800">{store.name}</h6>
-                                <p className="text-xs text-slate-500 truncate max-w-[200px]">
-                                  {store.apiUrl || 'API مخصص'}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <div className="relative">
-                                <input 
-                                  type="checkbox" 
-                                  checked={store.enabled !== false}
-                                  onChange={() => toggleStoreEnabled('custom', index)}
-                                  className="sr-only"
-                                  id={`store-${index}-enabled`}
-                                />
-                                <label 
-                                  htmlFor={`store-${index}-enabled`}
-                                  className={`block w-10 h-6 rounded-full cursor-pointer ${store.enabled !== false ? 'bg-green-600' : 'bg-slate-300'}`}
-                                >
-                                  <span className={`block w-4 h-4 mt-1 ml-1 rounded-full bg-white transform transition-transform ${store.enabled !== false ? 'translate-x-4' : ''}`}></span>
-                                </label>
-                              </div>
+                        
+                        {targetAudience === 'filtered' && (
+                          <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                            <label className="text-sm font-bold text-slate-700 mb-2 block">{t.interestsPlaceholder}</label>
+                            <div className="flex gap-2 mb-3">
+                              <input 
+                                type="text" 
+                                value={newInterest}
+                                onChange={(e) => setNewInterest(e.target.value)}
+                                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addInterest())}
+                                className="flex-1 p-3 rounded-lg border border-blue-200"
+                                placeholder="اكتب اهتماماً واضغط Enter"
+                              />
                               <button 
-                                onClick={() => handleDeleteCustomStore(index)}
-                                className="p-2 text-red-400 hover:text-red-600 transition-colors"
+                                onClick={addInterest}
+                                className="bg-blue-600 text-white px-4 py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors"
                               >
-                                <Trash2 size={16} />
+                                إضافة
                               </button>
                             </div>
+                            
+                            {targetInterests.length > 0 && (
+                              <div className="flex flex-wrap gap-2">
+                                {targetInterests.map((interest, index) => (
+                                  <div key={index} className="bg-white px-3 py-2 rounded-lg border border-blue-200 flex items-center gap-2">
+                                    <span className="text-sm font-bold text-blue-700">{interest}</span>
+                                    <button 
+                                      onClick={() => removeInterest(index)}
+                                      className="text-red-400 hover:text-red-600"
+                                    >
+                                      <X size={14} />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            
+                            <div className="mt-3 text-sm text-blue-600 font-bold">
+                              سيتم إرسال الحملة إلى: {calculateTargetCount()} مشترك
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div>
+                        <label className="text-sm font-bold text-slate-700 mb-2 block">{t.campaignContent}</label>
+                        <textarea 
+                          value={campaignContent}
+                          onChange={(e) => setCampaignContent(e.target.value)}
+                          rows={8}
+                          className="w-full p-4 rounded-xl bg-white border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none resize-none"
+                          placeholder="اكتب محتوى الرسالة هنا... يمكنك استخدام HTML للتنسيق"
+                        />
+                        <div className="text-xs text-slate-500 mt-2">
+                          يمكنك استخدام: {"{{name}}"} لاسم المشترك، {"{{interests}}"} لاهتماماته
+                        </div>
+                      </div>
+                      
+                      <div className="grid md:grid-cols-2 gap-6">
+                        <div>
+                          <label className="text-sm font-bold text-slate-700 mb-2 block">{t.scheduleSend}</label>
+                          <div className="flex gap-4 mb-4">
+                            <label className="flex items-center gap-2">
+                              <input 
+                                type="radio" 
+                                name="sendOption" 
+                                value="now" 
+                                checked={campaignStatus === 'draft'}
+                                onChange={() => setCampaignStatus('draft')}
+                                className="text-blue-600"
+                              />
+                              <span>{t.sendNow}</span>
+                            </label>
+                            <label className="flex items-center gap-2">
+                              <input 
+                                type="radio" 
+                                name="sendOption" 
+                                value="later" 
+                                checked={campaignStatus === 'scheduled'}
+                                onChange={() => setCampaignStatus('scheduled')}
+                                className="text-blue-600"
+                              />
+                              <span>{t.sendLater}</span>
+                            </label>
+                          </div>
+                          
+                          {campaignStatus === 'scheduled' && (
+                            <div className="grid grid-cols-2 gap-3">
+                              <input 
+                                type="date" 
+                                value={scheduleDate}
+                                onChange={(e) => setScheduleDate(e.target.value)}
+                                className="p-3 rounded-lg border border-slate-300"
+                              />
+                              <input 
+                                type="time" 
+                                value={scheduleTime}
+                                onChange={(e) => setScheduleTime(e.target.value)}
+                                className="p-3 rounded-lg border border-slate-300"
+                              />
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="flex items-end">
+                          <button 
+                            onClick={handleCreateCampaign}
+                            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-xl font-bold text-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg"
+                          >
+                            {campaignStatus === 'scheduled' ? t.scheduleSend : t.createCampaign}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* قائمة الحملات */}
+                  <div className="bg-slate-50 border border-slate-200 rounded-[2rem] p-8">
+                    <h3 className="font-black text-slate-900 border-b pb-4 mb-6">الحملات السابقة والجدولة</h3>
+                    
+                    {emailCampaigns.length === 0 ? (
+                      <div className="text-center py-12 text-slate-400 font-bold">لا توجد حملات بعد</div>
+                    ) : (
+                      <div className="space-y-4">
+                        {emailCampaigns.map((campaign) => (
+                          <div key={campaign.id} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="flex justify-between items-start mb-4">
+                              <div>
+                                <h4 className="font-black text-lg text-slate-900 mb-1">{campaign.name}</h4>
+                                <div className="flex items-center gap-4 text-sm">
+                                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${campaign.status === 'sent' ? 'bg-green-100 text-green-700' : campaign.status === 'scheduled' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                    {campaign.status === 'sent' ? t.sent : campaign.status === 'scheduled' ? t.scheduled : t.draft}
+                                  </span>
+                                  <span className="text-slate-500">الموضوع: {campaign.subject}</span>
+                                </div>
+                              </div>
+                              <div className="flex gap-2">
+                                {campaign.status === 'draft' && (
+                                  <button 
+                                    onClick={() => handleSendCampaign(campaign.id)}
+                                    className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-bold hover:bg-green-700"
+                                  >
+                                    {t.sendNow}
+                                  </button>
+                                )}
+                                <button 
+                                  onClick={() => handleDeleteCampaign(campaign.id)}
+                                  className="px-4 py-2 bg-red-100 text-red-600 rounded-lg text-sm font-bold hover:bg-red-200"
+                                >
+                                  {t.deleteCampaign}
+                                </button>
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                              <div className="bg-slate-50 p-3 rounded-lg">
+                                <div className="text-slate-500 font-bold mb-1">{t.sentTo}</div>
+                                <div className="font-black text-slate-900">{campaign.targetCount || 0}</div>
+                              </div>
+                              <div className="bg-slate-50 p-3 rounded-lg">
+                                <div className="text-slate-500 font-bold mb-1">تاريخ الإنشاء</div>
+                                <div className="font-black text-slate-900">
+                                  {new Date(campaign.createdAt).toLocaleDateString('ar-SA')}
+                                </div>
+                              </div>
+                              {campaign.scheduledFor && (
+                                <div className="bg-slate-50 p-3 rounded-lg">
+                                  <div className="text-slate-500 font-bold mb-1">مجدول للإرسال</div>
+                                  <div className="font-black text-slate-900">
+                                    {new Date(campaign.scheduledFor).toLocaleDateString('ar-SA')}
+                                  </div>
+                                </div>
+                              )}
+                              {campaign.sentAt && (
+                                <div className="bg-slate-50 p-3 rounded-lg">
+                                  <div className="text-slate-500 font-bold mb-1">تاريخ الإرسال</div>
+                                  <div className="font-black text-slate-900">
+                                    {new Date(campaign.sentAt).toLocaleDateString('ar-SA')}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                            
+                            {campaign.targetInterests && campaign.targetInterests.length > 0 && (
+                              <div className="mt-4">
+                                <div className="text-slate-500 text-sm font-bold mb-2">الاهتمامات المستهدفة:</div>
+                                <div className="flex flex-wrap gap-2">
+                                  {campaign.targetInterests.map((interest, idx) => (
+                                    <span key={idx} className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-bold">
+                                      {interest}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
-                    </div>
-                  )}
-                  
-                  {/* قسم روابط المتاجر داخل نفس القسم */}
-                  <div className="bg-white p-4 rounded-xl border border-green-100 mt-6">
-                    <h4 className="font-bold text-green-800 mb-3 flex items-center gap-2">
-                      <Link className="text-green-600" size={18} />
-                      روابط المتاجر (لروابط العمولة)
-                    </h4>
-                    <p className="text-sm text-slate-500 mb-4">أضف روابط المتاجر لربطها بنتائج البحث</p>
-                    
-                    <div className="space-y-3">
-                      {adminConfig.affiliateLinks?.map((store, index) => (
-                        <div key={index} className="flex gap-2">
-                          <input 
-                            type="text" 
-                            value={store.link}
-                            onChange={(e) => { 
-                              const newLinks = [...adminConfig.affiliateLinks]; 
-                              newLinks[index].link = e.target.value; 
-                              setAdminConfig({...adminConfig, affiliateLinks: newLinks}); 
-                            }} 
-                            className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 font-bold text-xs text-left"
-                            dir="ltr"
-                            placeholder="رابط المتجر"
-                          />
-                          <div className="w-24 p-2 rounded-lg bg-green-100 font-black text-center text-xs flex items-center justify-center">
-                            {store.name.toUpperCase()}
-                          </div>
-                          <button 
-                            onClick={() => handleDeleteStore(index)} 
-                            className="p-2 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition-colors"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      ))}
-                      
-                      <div className="flex gap-2 mt-2">
-                        <input 
-                          type="text" 
-                          placeholder="اسم المتجر (مثال: amazon)"
-                          className="w-1/3 p-2 rounded-lg border border-green-200 text-sm font-bold"
-                          value={newStoreName}
-                          onChange={(e) => setNewStoreName(e.target.value)}
-                        />
-                        <input 
-                          type="text" 
-                          placeholder="رابط المتجر (https://...)"
-                          className="flex-1 p-2 rounded-lg border border-green-200 text-sm font-bold text-left"
-                          dir="ltr"
-                          value={newStoreLink}
-                          onChange={(e) => setNewStoreLink(e.target.value)}
-                        />
-                        <button 
-                          onClick={handleAddStore}
-                          className="bg-green-600 text-white px-4 rounded-lg font-bold text-sm hover:bg-green-700 transition-colors flex items-center gap-1"
-                        >
-                          <Plus size={16} />
-                          إضافة
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              {/* ==================== */}
-              {/* القسم 3: إعدادات عامة */}
-              {/* ==================== */}
-              <div className="mb-12 bg-slate-50 border border-slate-100 rounded-[2rem] p-8">
-                <h3 className="font-black text-slate-900 border-b border-slate-200 pb-4 mb-6 flex items-center gap-2">
-                  <Settings className="text-slate-600" />
-                  إعدادات النظام العامة
-                </h3>
-                
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="bg-white p-4 rounded-xl border border-slate-100">
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
-                        <h4 className="font-bold text-slate-800 text-sm">استخدام بيانات حقيقية</h4>
-                        <p className="text-xs text-slate-400">البحث في APIs الحقيقية للمتاجر</p>
-                      </div>
-                      <div className="relative">
-                        <input 
-                          type="checkbox" 
-                          checked={adminConfig.apiSettings?.useRealData !== false}
-                          onChange={(e) => setAdminConfig({
-                            ...adminConfig,
-                            apiSettings: {
-                              ...adminConfig.apiSettings,
-                              useRealData: e.target.checked
-                            }
-                          })}
-                          className="sr-only"
-                          id="use-real-data"
-                        />
-                        <label 
-                          htmlFor="use-real-data"
-                          className={`block w-10 h-6 rounded-full cursor-pointer ${adminConfig.apiSettings?.useRealData !== false ? 'bg-green-600' : 'bg-slate-300'}`}
-                        >
-                          <span className={`block w-4 h-4 mt-1 ml-1 rounded-full bg-white transform transition-transform ${adminConfig.apiSettings?.useRealData !== false ? 'translate-x-4' : ''}`}></span>
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-white p-4 rounded-xl border border-slate-100">
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
-                        <h4 className="font-bold text-slate-800 text-sm">الرجوع للبيانات الوهمية</h4>
-                        <p className="text-xs text-slate-400">إذا فشل الاتصال بالـ APIs</p>
-                      </div>
-                      <div className="relative">
-                        <input 
-                          type="checkbox" 
-                          checked={adminConfig.apiSettings?.fallbackToMock !== false}
-                          onChange={(e) => setAdminConfig({
-                            ...adminConfig,
-                            apiSettings: {
-                              ...adminConfig.apiSettings,
-                              fallbackToMock: e.target.checked
-                            }
-                          })}
-                          className="sr-only"
-                          id="fallback-mock"
-                        />
-                        <label 
-                          htmlFor="fallback-mock"
-                          className={`block w-10 h-6 rounded-full cursor-pointer ${adminConfig.apiSettings?.fallbackToMock !== false ? 'bg-green-600' : 'bg-slate-300'}`}
-                        >
-                          <span className={`block w-4 h-4 mt-1 ml-1 rounded-full bg-white transform transition-transform ${adminConfig.apiSettings?.fallbackToMock !== false ? 'translate-x-4' : ''}`}></span>
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* ==================== */}
-              {/* باقي الإعدادات */}
-              {/* ==================== */}
-              
-              {/* إحصائيات البحث المتقدمة */}
-              <div className="mb-12 bg-indigo-50 border border-indigo-100 rounded-[2rem] p-8">
-                <h3 className="font-black text-indigo-900 border-b border-indigo-200 pb-4 mb-6 flex items-center gap-2"><BarChart2 className="text-indigo-600" />إحصائيات البحث المتقدمة</h3>
-                
-                <div className="mb-8">
-                  <p className="text-sm font-bold text-indigo-400 mb-4 flex items-center gap-2"><TrendingUp size={16} /> النمو الشهري (Monthly Growth)</p>
-                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-indigo-50 h-64 flex items-end gap-4 overflow-x-auto custom-scrollbar">
-                    {monthlyStats.length > 0 ? (
-                      (() => {
-                        const maxMonthly = Math.max(...monthlyStats.map(s => s.total_searches));
-                        return monthlyStats.map((stat, idx) => {
-                          const heightPercent = (stat.total_searches / maxMonthly) * 100;
-                          return (
-                            <div key={idx} className="flex flex-col items-center gap-2 group min-w-[50px]">
-                              <div className="w-12 bg-gradient-to-t from-indigo-500 to-blue-400 rounded-t-xl transition-all duration-500 relative shadow-md group-hover:scale-105" style={{ height: `${heightPercent}%` }}>
-                                <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity font-bold whitespace-nowrap">{stat.total_searches}</span>
-                              </div>
-                              <span className="text-[10px] font-black text-slate-400" dir="ltr">{stat.month}</span>
-                            </div>
-                          );
-                        });
-                      })()
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs font-bold">جاري جمع بيانات شهرية...</div>
                     )}
                   </div>
                 </div>
+              )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div>
-                    <p className="text-sm font-bold text-indigo-400 mb-4">الكلمات الأكثر بحثاً</p>
-                    <div className="flex items-end gap-2 h-64 mt-6 bg-white p-4 rounded-xl border border-indigo-50 shadow-inner">
-                      {topSearchTerms.length > 0 ? (
-                        (() => {
-                          const maxCount = Math.max(...topSearchTerms.map(t => t.count));
-                          return topSearchTerms.map((item, idx) => {
-                            const heightPercent = (item.count / maxCount) * 100;
-                            return (
-                              <div key={idx} className="flex-1 flex flex-col items-center group relative h-full justify-end">
-                                <div className="w-full bg-indigo-500 rounded-t-lg transition-all duration-500 hover:bg-indigo-600 relative shadow-sm" style={{ height: `${heightPercent}%` }}>
-                                  <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 font-bold">{item.count} بحث</span>
-                                </div>
-                              </div>
-                            );
-                          });
-                        })()
-                      ) : (<div className="w-full h-full flex items-center justify-center text-slate-400 text-xs font-bold">لا توجد بيانات كافية</div>)}
+              {/* ==================== */}
+              {/* 19.4 قسم المشتركين */}
+              {/* ==================== */}
+              {activeTab === 'subscribers' && (
+                <div className="space-y-8">
+                  {/* إحصائيات المشتركين */}
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-2xl p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-blue-800 font-bold text-sm mb-1">إجمالي المشتركين</h3>
+                          <p className="text-3xl font-black text-blue-900">{subscribersList.length}</p>
+                        </div>
+                        <div className="bg-blue-100 p-3 rounded-xl">
+                          <Users2 className="text-blue-600" size={24} />
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex gap-2 mt-2">{topSearchTerms.map((item, idx) => (<span key={idx} className="flex-1 text-[8px] text-center text-slate-500 font-bold truncate block">{item.term}</span>))}</div>
+                    <div className="bg-gradient-to-r from-green-50 to-green-100 border border-green-200 rounded-2xl p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-green-800 font-bold text-sm mb-1">نشطين</h3>
+                          <p className="text-3xl font-black text-green-900">{subscribersList.filter(s => s.status !== 'inactive').length}</p>
+                        </div>
+                        <div className="bg-green-100 p-3 rounded-xl">
+                          <Activity className="text-green-600" size={24} />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="bg-gradient-to-r from-purple-50 to-purple-100 border border-purple-200 rounded-2xl p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-purple-800 font-bold text-sm mb-1">اهتمامات شائعة</h3>
+                          <p className="text-3xl font-black text-purple-900">
+                            {(() => {
+                              const allInterests = subscribersList.flatMap(s => s.interests || []);
+                              const interestCount = {};
+                              allInterests.forEach(interest => {
+                                interestCount[interest] = (interestCount[interest] || 0) + 1;
+                              });
+                              const sorted = Object.keys(interestCount).sort((a, b) => interestCount[b] - interestCount[a]);
+                              return sorted.slice(0, 3).join(', ');
+                            })()}
+                          </p>
+                        </div>
+                        <div className="bg-purple-100 p-3 rounded-xl">
+                          <Target className="text-purple-600" size={24} />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="bg-gradient-to-r from-orange-50 to-orange-100 border border-orange-200 rounded-2xl p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-orange-800 font-bold text-sm mb-1">زيادة الشهر</h3>
+                          <p className="text-3xl font-black text-orange-900">
+                            {(() => {
+                              const thisMonth = new Date().toISOString().slice(0, 7);
+                              const monthSubs = subscribersList.filter(s => {
+                                const subDate = s.joined_at ? new Date(s.joined_at).toISOString().slice(0, 7) : '';
+                                return subDate === thisMonth;
+                              }).length;
+                              return `+${monthSubs}`;
+                            })()}
+                          </p>
+                        </div>
+                        <div className="bg-orange-100 p-3 rounded-xl">
+                          <TrendingUp className="text-orange-600" size={24} />
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  
-                  <div className="flex flex-col h-[350px]">
-                    <p className="text-sm font-bold text-indigo-400 mb-4 flex items-center gap-2"><Clock size={16} /> سجل البحث المباشر (Live Feed)</p>
-                    <div className="bg-white rounded-2xl shadow-sm border border-indigo-50 flex-1 overflow-hidden flex flex-col">
-                      <div className="flex bg-indigo-50 p-3 text-[10px] font-black text-indigo-800 uppercase tracking-wider">
-                        <div className="w-1/3">الوقت</div>
-                        <div className="flex-1">كلمة البحث</div>
-                        <div className="w-1/4">الجهاز</div>
+
+                  {/* أدوات المشتركين */}
+                  <div className="bg-white border border-slate-200 rounded-2xl p-6">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                      <h3 className="font-black text-lg text-slate-900">{t.subscribersList}</h3>
+                      <div className="flex gap-3">
+                        <button 
+                          onClick={handleExportSubscribers}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-lg font-bold text-sm hover:bg-blue-700 transition-colors flex items-center gap-2"
+                        >
+                          <FileText size={16} /> {t.exportSubscribers}
+                        </button>
+                        <div className="relative">
+                          <input 
+                            type="email"
+                            value={testEmail}
+                            onChange={(e) => setTestEmail(e.target.value)}
+                            placeholder="بريد تجريبي"
+                            className="p-2 rounded-lg border border-slate-300 text-sm"
+                          />
+                          <button 
+                            onClick={handleSendTestEmail}
+                            className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600"
+                          >
+                            <Send size={16} />
+                          </button>
+                        </div>
                       </div>
-                      <div className="overflow-y-auto custom-scrollbar flex-1 p-2 space-y-1">
-                        {searchLogs.length > 0 ? (
-                          searchLogs.map((log, idx) => (
-                            <div key={idx} className="flex items-center p-3 text-xs border-b border-slate-50 last:border-0 hover:bg-indigo-50/50 transition-colors rounded-lg">
-                              <div className="w-1/3 text-slate-400 font-bold" dir="ltr">
-                                {new Date(log.timestamp).toLocaleDateString('en-GB')} <br/>
-                                <span className="text-indigo-300">{new Date(log.timestamp).toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'})}</span>
-                              </div>
-                              <div className="flex-1 font-black text-slate-700">{log.term}</div>
-                              <div className="w-1/4 text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-full text-center">{log.device || 'Desktop'}</div>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="text-center py-10 text-slate-300 text-xs font-bold">لا توجد عمليات بحث حديثة</div>
-                        )}
-                      </div>
+                    </div>
+                    
+                    {/* فلترة المشتركين */}
+                    <div className="mb-6">
+                      <input 
+                        type="text" 
+                        value={marketingFilter}
+                        onChange={(e) => setMarketingFilter(e.target.value)}
+                        placeholder="فلترة حسب الاهتمامات (مثال: آيفون, لابتوب)"
+                        className="w-full p-3 rounded-xl border border-slate-300"
+                      />
+                    </div>
+                    
+                    {/* قائمة المشتركين */}
+                    <div className="overflow-x-auto rounded-xl border border-slate-200">
+                      <table className="w-full">
+                        <thead className="bg-slate-50">
+                          <tr>
+                            <th className="text-right p-4 text-sm font-bold text-slate-700">{t.email}</th>
+                            <th className="text-right p-4 text-sm font-bold text-slate-700">{t.subscribedDate}</th>
+                            <th className="text-right p-4 text-sm font-bold text-slate-700">{t.lastActivity}</th>
+                            <th className="text-right p-4 text-sm font-bold text-slate-700">{t.interests}</th>
+                            <th className="text-right p-4 text-sm font-bold text-slate-700">{t.status}</th>
+                            <th className="text-right p-4 text-sm font-bold text-slate-700">إجراءات</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredSubscribers.length === 0 ? (
+                            <tr>
+                              <td colSpan="6" className="text-center p-8 text-slate-400">
+                                لا توجد نتائج مطابقة للفلتر
+                              </td>
+                            </tr>
+                          ) : (
+                            filteredSubscribers.map((subscriber) => (
+                              <tr key={subscriber.id} className="border-b border-slate-100 hover:bg-slate-50">
+                                <td className="p-4 text-sm font-bold text-slate-900">{subscriber.email}</td>
+                                <td className="p-4 text-sm text-slate-600">
+                                  {subscriber.joined_at ? new Date(subscriber.joined_at).toLocaleDateString('ar-SA') : 'غير معروف'}
+                                </td>
+                                <td className="p-4 text-sm text-slate-600">
+                                  {subscriber.last_search ? new Date(subscriber.last_search).toLocaleDateString('ar-SA') : 'لا يوجد'}
+                                </td>
+                                <td className="p-4">
+                                  <div className="flex flex-wrap gap-1">
+                                    {subscriber.interests?.slice(0, 3).map((interest, idx) => (
+                                      <span key={idx} className="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs">
+                                        {interest}
+                                      </span>
+                                    ))}
+                                    {subscriber.interests?.length > 3 && (
+                                      <span className="text-slate-400 text-xs">+{subscriber.interests.length - 3}</span>
+                                    )}
+                                  </div>
+                                </td>
+                                <td className="p-4">
+                                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${subscriber.status === 'inactive' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                                    {subscriber.status === 'inactive' ? t.inactive : t.active}
+                                  </span>
+                                </td>
+                                <td className="p-4">
+                                  <button 
+                                    onClick={() => handleUnsubscribe(subscriber.id)}
+                                    className="px-3 py-1 bg-red-100 text-red-600 rounded text-xs font-bold hover:bg-red-200 transition-colors"
+                                  >
+                                    إلغاء الاشتراك
+                                  </button>
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                    
+                    <div className="mt-4 text-sm text-slate-500 text-center">
+                      عرض {filteredSubscribers.length} من أصل {subscribersList.length} مشترك
                     </div>
                   </div>
                 </div>
-              </div>
+              )}
 
-              {/* الرسائل والطلبات الواردة */}
-              <div className="mb-12"><h3 className="font-black text-slate-900 border-b pb-4 mb-6 flex items-center gap-2"><MessageCircle className="text-blue-600" />الرسائل والطلبات الواردة</h3><div className="bg-slate-50 rounded-[2rem] p-6 max-h-[400px] overflow-y-auto custom-scrollbar">{inboxMessages.length === 0 ? (<div className="text-center py-12 text-slate-400 font-bold">لا توجد رسائل جديدة</div>) : (<div className="space-y-4">{inboxMessages.map((msg) => (<div key={msg.id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative group"><button onClick={() => handleDeleteMessage(msg.id)} className="absolute top-4 left-4 text-slate-300 hover:text-red-500 transition-colors"><Trash2 size={18} /></button><div className="flex items-center gap-3 mb-2"><span className={`text-[10px] font-black px-3 py-1 rounded-full ${msg.type === 'partner_request' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'}`}>{msg.type === 'partner_request' ? 'طلب شراكة' : 'رسالة تواصل'}</span><span className="text-xs text-slate-400 font-bold" dir="ltr">{new Date(msg.timestamp).toLocaleDateString('en-GB')}</span></div><h4 className="font-black text-lg text-slate-900 mb-1">{msg.type === 'partner_request' ? msg.store : msg.name}</h4><p className="text-blue-600 font-bold text-sm mb-2" dir="ltr">{msg.email}</p>{msg.message && (<p className="text-slate-600 text-sm leading-relaxed bg-slate-50 p-3 rounded-xl mt-2">"{msg.message}"</p>)}</div>))}</div>)}</div></div>
+              {/* ==================== */}
+              {/* 19.5 قسم الإعدادات العامة */}
+              {/* ==================== */}
+              {activeTab === 'settings' && (
+                <div className="space-y-8">
+                  
+                  {/* إعدادات الذكاء الاصطناعي */}
+                  <div className="mb-12 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-[2rem] p-8">
+                    <h3 className="font-black text-blue-900 border-b border-blue-200 pb-4 mb-6 flex items-center gap-2">
+                      <Brain className="text-blue-600" />
+                      إعدادات الذكاء الاصطناعي المتقدم
+                    </h3>
+                    
+                    <div className="grid md:grid-cols-2 gap-8">
+                      <div className="bg-white p-6 rounded-2xl border border-blue-100 shadow-sm">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="bg-blue-100 p-2 rounded-xl">
+                            <Hexagon className="text-blue-600" size={24} />
+                          </div>
+                          <h4 className="font-black text-blue-800 text-lg">Google Gemini</h4>
+                        </div>
+                        
+                        <div className="space-y-4">
+                          <div>
+                            <label className="text-xs font-bold text-slate-500 mb-2 block">API Key</label>
+                            <div className="relative">
+                              <input 
+                                type="password" 
+                                value={adminConfig.aiSettings?.geminiApiKey || ''}
+                                onChange={(e) => setAdminConfig({
+                                  ...adminConfig, 
+                                  aiSettings: { 
+                                    ...adminConfig.aiSettings, 
+                                    geminiApiKey: e.target.value 
+                                  }
+                                })} 
+                                className="w-full p-3 rounded-xl bg-slate-50 border border-blue-200 font-bold text-sm pr-10"
+                                placeholder="sk-proj-xxxxxxxxxx"
+                              />
+                              <Eye size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-300 cursor-pointer" 
+                                onClick={(e) => {
+                                  const input = e.target.previousSibling;
+                                  if (input.type === 'password') input.type = 'text';
+                                  else input.type = 'password';
+                                }}
+                              />
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <label className="text-xs font-bold text-slate-500 mb-2 block">الموديل</label>
+                            <select 
+                              value={adminConfig.aiSettings?.geminiModel || 'gemini-2.0-flash-exp'}
+                              onChange={(e) => setAdminConfig({
+                                ...adminConfig, 
+                                aiSettings: { 
+                                  ...adminConfig.aiSettings, 
+                                  geminiModel: e.target.value 
+                                }
+                              })}
+                              className="w-full p-3 rounded-xl bg-slate-50 border border-blue-200 font-bold text-sm"
+                            >
+                              <option value="gemini-2.0-flash-exp">Flash (أسرع)</option>
+                              <option value="gemini-1.5-pro">Pro (أدق)</option>
+                              <option value="gemini-2.0-pro-exp">Pro Experimental</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-white p-6 rounded-2xl border border-blue-100 shadow-sm">
+                        <h4 className="font-black text-blue-800 mb-4">ميزات التحليل المتقدم</h4>
+                        
+                        <div className="space-y-3">
+                          {[
+                            { key: 'priceComparison', label: 'مقارنة الأسعار بين المتاجر', icon: TrendingDown },
+                            { key: 'reviewAnalysis', label: 'تحليل آخر 100 تعليق', icon: MessageSquare },
+                            { key: 'materialComparison', label: 'مقارنة مواد المنتج', icon: Database },
+                            { key: 'warrantyCheck', label: 'فحص الضمانات', icon: Shield },
+                            { key: 'deliverySpeed', label: 'سرعة التوصيل', icon: Rocket },
+                            { key: 'competitorAnalysis', label: 'تحليل المنافسين', icon: BarChart3 }
+                          ].map((feature, idx) => (
+                            <div key={idx} className="flex items-center justify-between p-3 bg-blue-50 rounded-xl">
+                              <div className="flex items-center gap-3">
+                                <feature.icon size={18} className="text-blue-600" />
+                                <span className="font-bold text-sm text-slate-700">{feature.label}</span>
+                              </div>
+                              <div className="relative">
+                                <input 
+                                  type="checkbox" 
+                                  checked={adminConfig.aiSettings?.geminiFeatures?.[feature.key] || false}
+                                  onChange={(e) => setAdminConfig({
+                                    ...adminConfig,
+                                    aiSettings: {
+                                      ...adminConfig.aiSettings,
+                                      geminiFeatures: {
+                                        ...adminConfig.aiSettings?.geminiFeatures,
+                                        [feature.key]: e.target.checked
+                                      }
+                                    }
+                                  })}
+                                  className="sr-only"
+                                  id={`feature-${feature.key}`}
+                                />
+                                <label 
+                                  htmlFor={`feature-${feature.key}`}
+                                  className={`block w-10 h-6 rounded-full cursor-pointer ${adminConfig.aiSettings?.geminiFeatures?.[feature.key] ? 'bg-blue-600' : 'bg-slate-300'}`}
+                                >
+                                  <span className={`block w-4 h-4 mt-1 ml-1 rounded-full bg-white transform transition-transform ${adminConfig.aiSettings?.geminiFeatures?.[feature.key] ? 'translate-x-4' : ''}`}></span>
+                                </label>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
-               {/* إدارة الكلمات الرائجة */}
-               <div className="mb-12 bg-orange-50 border border-orange-100 rounded-[2rem] p-8"><h3 className="font-black text-orange-900 border-b border-orange-200 pb-4 mb-6 flex items-center gap-2"><Flame className="text-orange-600" />إدارة الكلمات الرائجة (تظهر في الرئيسية)</h3><div className="space-y-4"><div className="flex flex-wrap gap-2 mb-4">{adminConfig.trendingKeywords?.map((kw, idx) => (<div key={idx} className="bg-white text-orange-800 px-3 py-2 rounded-xl text-sm font-bold flex items-center gap-2 shadow-sm border border-orange-100">{kw}<button onClick={() => handleDeleteTrendingKeyword(idx)} className="text-orange-300 hover:text-red-500 transition-colors"><X size={14} /></button></div>))}</div><div className="flex gap-2"><input type="text" placeholder="أضف كلمة جديدة" className="flex-1 p-4 rounded-xl text-sm font-bold border-none shadow-sm" value={newTrendingKeyword} onChange={(e) => setNewTrendingKeyword(e.target.value)} /><button onClick={handleAddTrendingKeyword} className="bg-orange-600 text-white px-6 rounded-xl font-bold text-sm hover:bg-orange-700 shadow-lg shadow-orange-200"><Plus size={20} /></button></div></div></div>
+                  {/* إعدادات البريد الإلكتروني */}
+                  <div className="mb-12 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-100 rounded-[2rem] p-8">
+                    <h3 className="font-black text-green-900 border-b border-green-200 pb-4 mb-6 flex items-center gap-2">
+                      <Mail className="text-green-600" />
+                      إعدادات البريد الإلكتروني
+                    </h3>
+                    
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="text-sm font-bold text-slate-700 mb-2 block">SMTP Server</label>
+                        <input 
+                          type="text" 
+                          value={adminConfig.emailSettings?.smtpServer || ''}
+                          onChange={(e) => setAdminConfig({
+                            ...adminConfig,
+                            emailSettings: {
+                              ...adminConfig.emailSettings,
+                              smtpServer: e.target.value
+                            }
+                          })}
+                          className="w-full p-3 rounded-lg border border-green-200"
+                          placeholder="smtp.gmail.com"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-bold text-slate-700 mb-2 block">SMTP Port</label>
+                        <input 
+                          type="number" 
+                          value={adminConfig.emailSettings?.smtpPort || 587}
+                          onChange={(e) => setAdminConfig({
+                            ...adminConfig,
+                            emailSettings: {
+                              ...adminConfig.emailSettings,
+                              smtpPort: parseInt(e.target.value)
+                            }
+                          })}
+                          className="w-full p-3 rounded-lg border border-green-200"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-bold text-slate-700 mb-2 block">SMTP Username</label>
+                        <input 
+                          type="text" 
+                          value={adminConfig.emailSettings?.smtpUsername || ''}
+                          onChange={(e) => setAdminConfig({
+                            ...adminConfig,
+                            emailSettings: {
+                              ...adminConfig.emailSettings,
+                              smtpUsername: e.target.value
+                            }
+                          })}
+                          className="w-full p-3 rounded-lg border border-green-200"
+                          placeholder="your-email@gmail.com"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-bold text-slate-700 mb-2 block">SMTP Password</label>
+                        <input 
+                          type="password" 
+                          value={adminConfig.emailSettings?.smtpPassword || ''}
+                          onChange={(e) => setAdminConfig({
+                            ...adminConfig,
+                            emailSettings: {
+                              ...adminConfig.emailSettings,
+                              smtpPassword: e.target.value
+                            }
+                          })}
+                          className="w-full p-3 rounded-lg border border-green-200"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-bold text-slate-700 mb-2 block">اسم المرسل</label>
+                        <input 
+                          type="text" 
+                          value={adminConfig.emailSettings?.fromName || ''}
+                          onChange={(e) => setAdminConfig({
+                            ...adminConfig,
+                            emailSettings: {
+                              ...adminConfig.emailSettings,
+                              fromName: e.target.value
+                            }
+                          })}
+                          className="w-full p-3 rounded-lg border border-green-200"
+                          placeholder="مقارن"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-bold text-slate-700 mb-2 block">بريد المرسل</label>
+                        <input 
+                          type="email" 
+                          value={adminConfig.emailSettings?.fromEmail || ''}
+                          onChange={(e) => setAdminConfig({
+                            ...adminConfig,
+                            emailSettings: {
+                              ...adminConfig.emailSettings,
+                              fromEmail: e.target.value
+                            }
+                          })}
+                          className="w-full p-3 rounded-lg border border-green-200"
+                          placeholder="noreply@moqaren.com"
+                        />
+                      </div>
+                    </div>
+                  </div>
 
-               {/* الإعدادات المختلفة */}
-               <div className="grid md:grid-cols-2 gap-10 mb-12">
-                 <div className="space-y-6"><h3 className="font-black text-blue-900 border-b pb-2">بيانات التواصل</h3><div className="space-y-2"><label className="text-xs font-bold text-slate-400">الواتساب</label><input type="text" value={adminConfig.whatsappNumber} onChange={(e) => setAdminConfig({...adminConfig, whatsappNumber: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div><div className="space-y-2"><label className="text-xs font-bold text-slate-400">الإيميل</label><input type="email" value={adminConfig.supportEmail} onChange={(e) => setAdminConfig({...adminConfig, supportEmail: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div><div className="space-y-2"><label className="text-xs font-bold text-slate-400">تويتر</label><input type="text" value={adminConfig.twitterLink} onChange={(e) => setAdminConfig({...adminConfig, twitterLink: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div><div className="space-y-2"><label className="text-xs font-bold text-slate-400">إنستقرام</label><input type="text" value={adminConfig.instagramLink} onChange={(e) => setAdminConfig({...adminConfig, instagramLink: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div></div>
-                 <div className="space-y-6"><h3 className="font-black text-purple-600 border-b pb-2">العروض الخاصة</h3><div className="max-h-64 overflow-y-auto pr-2 space-y-3 custom-scrollbar">{adminConfig.exclusiveOffers?.map((offer, index) => (<div key={index} className="bg-purple-50 p-3 rounded-xl text-xs relative group"><button onClick={() => handleDeleteOffer(index)} className="absolute top-2 left-2 text-red-400 hover:text-red-600"><X size={14} /></button><p className="font-black text-purple-900">كلمة البحث: {offer.keyword}</p><p className="text-slate-600 truncate">{offer.message}</p></div>))}</div><div className="bg-purple-50 p-4 rounded-2xl border border-purple-100"><h4 className="font-bold text-purple-700 text-sm mb-3">إضافة عرض ذكي</h4><input type="text" placeholder="كلمة البحث" className="w-full p-2 mb-2 rounded-lg border text-xs font-bold" value={newOfferKeyword} onChange={(e) => setNewOfferKeyword(e.target.value)} /><input type="text" placeholder="رسالة العرض" className="w-full p-2 mb-2 rounded-lg border text-xs font-bold" value={newOfferMessage} onChange={(e) => setNewOfferMessage(e.target.value)} /><input type="text" placeholder="رابط العرض" className="w-full p-2 mb-2 rounded-lg border text-xs font-bold text-left" dir="ltr" value={newOfferLink} onChange={(e) => setNewOfferLink(e.target.value)} /><button onClick={handleAddOffer} className="w-full bg-purple-600 text-white py-2 rounded-xl font-bold text-sm hover:bg-purple-700 flex items-center justify-center gap-2"><Plus size={16} /> إضافة عرض</button></div></div>
-               </div>
+                  {/* باقي الإعدادات */}
+                  <div className="mb-12">
+                    <div className="grid md:grid-cols-2 gap-10 mb-12">
+                      <div className="space-y-6"><h3 className="font-black text-blue-900 border-b pb-2">بيانات التواصل</h3><div className="space-y-2"><label className="text-xs font-bold text-slate-400">الواتساب</label><input type="text" value={adminConfig.whatsappNumber} onChange={(e) => setAdminConfig({...adminConfig, whatsappNumber: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div><div className="space-y-2"><label className="text-xs font-bold text-slate-400">الإيميل</label><input type="email" value={adminConfig.supportEmail} onChange={(e) => setAdminConfig({...adminConfig, supportEmail: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div><div className="space-y-2"><label className="text-xs font-bold text-slate-400">تويتر</label><input type="text" value={adminConfig.twitterLink} onChange={(e) => setAdminConfig({...adminConfig, twitterLink: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div><div className="space-y-2"><label className="text-xs font-bold text-slate-400">إنستقرام</label><input type="text" value={adminConfig.instagramLink} onChange={(e) => setAdminConfig({...adminConfig, instagramLink: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div></div>
+                      <div className="space-y-6"><h3 className="font-black text-purple-600 border-b pb-2">العروض الخاصة</h3><div className="max-h-64 overflow-y-auto pr-2 space-y-3 custom-scrollbar">{adminConfig.exclusiveOffers?.map((offer, index) => (<div key={index} className="bg-purple-50 p-3 rounded-xl text-xs relative group"><button onClick={() => handleDeleteOffer(index)} className="absolute top-2 left-2 text-red-400 hover:text-red-600"><X size={14} /></button><p className="font-black text-purple-900">كلمة البحث: {offer.keyword}</p><p className="text-slate-600 truncate">{offer.message}</p></div>))}</div><div className="bg-purple-50 p-4 rounded-2xl border border-purple-100"><h4 className="font-bold text-purple-700 text-sm mb-3">إضافة عرض ذكي</h4><input type="text" placeholder="كلمة البحث" className="w-full p-2 mb-2 rounded-lg border text-xs font-bold" value={newOfferKeyword} onChange={(e) => setNewOfferKeyword(e.target.value)} /><input type="text" placeholder="رسالة العرض" className="w-full p-2 mb-2 rounded-lg border text-xs font-bold" value={newOfferMessage} onChange={(e) => setNewOfferMessage(e.target.value)} /><input type="text" placeholder="رابط العرض" className="w-full p-2 mb-2 rounded-lg border text-xs font-bold text-left" dir="ltr" value={newOfferLink} onChange={(e) => setNewOfferLink(e.target.value)} /><button onClick={handleAddOffer} className="w-full bg-purple-600 text-white py-2 rounded-xl font-bold text-sm hover:bg-purple-700 flex items-center justify-center gap-2"><Plus size={16} /> إضافة عرض</button></div></div>
+                    </div>
+
+                    {/* إدارة الكلمات الرائجة */}
+                    <div className="mb-12 bg-orange-50 border border-orange-100 rounded-[2rem] p-8"><h3 className="font-black text-orange-900 border-b border-orange-200 pb-4 mb-6 flex items-center gap-2"><Flame className="text-orange-600" />إدارة الكلمات الرائجة (تظهر في الرئيسية)</h3><div className="space-y-4"><div className="flex flex-wrap gap-2 mb-4">{adminConfig.trendingKeywords?.map((kw, idx) => (<div key={idx} className="bg-white text-orange-800 px-3 py-2 rounded-xl text-sm font-bold flex items-center gap-2 shadow-sm border border-orange-100">{kw}<button onClick={() => handleDeleteTrendingKeyword(idx)} className="text-orange-300 hover:text-red-500 transition-colors"><X size={14} /></button></div>))}</div><div className="flex gap-2"><input type="text" placeholder="أضف كلمة جديدة" className="flex-1 p-4 rounded-xl text-sm font-bold border-none shadow-sm" value={newTrendingKeyword} onChange={(e) => setNewTrendingKeyword(e.target.value)} /><button onClick={handleAddTrendingKeyword} className="bg-orange-600 text-white px-6 rounded-xl font-bold text-sm hover:bg-orange-700 shadow-lg shadow-orange-200"><Plus size={20} /></button></div></div></div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
-        </div>
-      )}
-
-      {/* ============================ */}
-      {/* 19. صفحات أخرى */}
-      {/* ============================ */}
-      
-      {/* 19.1 صفحة الشركاء */}
-      {view === 'merchant' && (
-        <div className="max-w-4xl mx-auto px-4 py-32 animate-in fade-in">
-           <div className="bg-white rounded-[3rem] shadow-2xl p-10 md:p-20 border border-slate-100 text-center">
-             <Award size={48} className="text-blue-600 mx-auto mb-6" />
-             <h1 className="text-3xl font-black text-slate-900 mb-4">شريك أعمال مقارن</h1>
-             <p className="text-slate-500 font-bold text-lg mb-10">وصل منتجاتك لآلاف العملاء.</p>
-             <form className="space-y-6 text-right max-w-xl mx-auto" onSubmit={handleMerchantSubmit}>
-               <input type="text" className="w-full p-5 rounded-2xl bg-slate-50 font-bold border" placeholder="اسم المتجر" required value={merchantForm.store} onChange={e => setMerchantForm({...merchantForm, store: e.target.value})} />
-               <input type="email" className="w-full p-5 rounded-2xl bg-slate-50 font-bold border" placeholder="إيميل التواصل" required value={merchantForm.email} onChange={e => setMerchantForm({...merchantForm, email: e.target.value})} />
-               <button type="submit" className="w-full bg-blue-600 text-white py-5 rounded-2xl font-black text-xl shadow-xl hover:bg-blue-700 transition-colors">إرسال الطلب</button>
-             </form>
-             <button onClick={resetToHome} className="mt-8 text-slate-400 font-bold underline">الرجوع</button>
-           </div>
-        </div>
-      )}
-
-      {/* 19.2 صفحة سياسة الخصوصية */}
-      {view === 'privacy' && (
-        <div className="max-w-4xl mx-auto px-4 py-32 animate-in fade-in">
-           <div className="bg-white rounded-[3rem] shadow-2xl p-10 md:p-20 border border-slate-100 relative overflow-hidden">
-             <div className="relative z-10">
-                <h1 className="text-3xl font-black text-slate-900 mb-8 flex items-center gap-3"><Lock className="text-blue-600" /> {t.privacy}</h1>
-                <div className="space-y-8 text-slate-600 font-bold leading-loose text-base md:text-lg">
-                  <div className="bg-slate-50 p-6 rounded-2xl">
-                    <h3 className="text-xl font-black text-slate-900 mb-2">1. مقدمة</h3>
-                    <p>في "مقارن"، نأخذ خصوصيتك على محمل الجد. تشرح هذه الوثيقة كيف نجمع بياناتك ونستخدمها ونحميها عند استخدامك لموقعنا.</p>
-                  </div>
-                  <div className="bg-slate-50 p-6 rounded-2xl">
-                    <h3 className="text-xl font-black text-slate-900 mb-2">2. البيانات التي نجمعها</h3>
-                    <ul className="list-disc list-inside space-y-2">
-                        <li><strong>بيانات البحث:</strong> نقوم بتخزين كلمات البحث (بدون هوية) لتحسين خوارزمياتنا واقتراح منتجات أفضل.</li>
-                        <li><strong>بيانات الجهاز:</strong> مثل نوع المتصفح والجهاز لضمان أفضل تجربة تصفح.</li>
-                    </ul>
-                  </div>
-                  <div className="bg-slate-50 p-6 rounded-2xl">
-                    <h3 className="text-xl font-black text-slate-900 mb-2">3. ملفات تعريف الارتباط (Cookies)</h3>
-                    <p>نستخدم الكوكيز لتحسين تجربتك وتذكر تفضيلاتك. يمكنك تعطيل الكوكيز من إعدادات متصفحك، لكن قد يؤثر ذلك على بعض وظائف الموقع.</p>
-                  </div>
-                  <div className="bg-slate-50 p-6 rounded-2xl">
-                    <h3 className="text-xl font-black text-slate-900 mb-2">4. الروابط الخارجية والعمولات</h3>
-                    <p>يحتوي موقعنا على روابط لمتاجر خارجية (مثل أمازون ونون). عند النقر عليها، قد نتحصل على عمولة بسيطة دون أي تكلفة إضافية عليك. نحن غير مسؤولين عن سياسات الخصوصية الخاصة بتلك المتاجر.</p>
-                  </div>
-                  <div className="bg-slate-50 p-6 rounded-2xl">
-                    <h3 className="text-xl font-black text-slate-900 mb-2">5. أمان البيانات</h3>
-                    <p>نستخدم بروتوكولات تشفير متقدمة (SSL) لحماية اتصالك بالموقع. لا نقوم ببيع بياناتك لأي طرف ثالث.</p>
-                  </div>
-                </div>
-                <button onClick={resetToHome} className="mt-12 bg-slate-900 text-white px-10 py-4 rounded-2xl font-black hover:bg-blue-600 transition-colors">الرجوع للرئيسية</button>
-             </div>
-           </div>
-        </div>
-      )}
-
-      {/* 19.3 صفحة التواصل */}
-      {view === 'contact' && (
-        <div className="max-w-6xl mx-auto px-4 py-32 animate-in fade-in">
-           <div className="text-center mb-16">
-              <h1 className="text-4xl font-black text-slate-900 mb-4">{t.contactTitle} 📞</h1>
-              <p className="text-slate-500 font-bold text-xl">حنا هنا عشان نسمعك، سواء عندك اقتراح أو مشكلة.</p>
-           </div>
-           <div className="grid md:grid-cols-2 gap-10">
-              <div className="space-y-6">
-                 <div className="bg-white p-8 rounded-[2.5rem] shadow-lg border border-slate-50 flex items-center gap-6 hover:-translate-y-1 transition-transform">
-                    <div className="bg-blue-100 text-blue-600 p-4 rounded-2xl"><Mail size={28} /></div>
-                    <div><h3 className="font-black text-lg text-slate-800">الإيميل</h3><p className="text-blue-600 font-bold">{adminConfig.supportEmail}</p></div>
-                 </div>
-                 <div className="bg-white p-8 rounded-[2.5rem] shadow-lg border border-slate-50 flex items-center gap-6 hover:-translate-y-1 transition-transform">
-                    <div className="bg-green-100 text-green-600 p-4 rounded-2xl"><MessageSquare size={28} /></div>
-                    <div><h3 className="font-black text-lg text-slate-800">واتساب</h3><p className="text-green-600 font-bold" dir="ltr">{adminConfig.whatsappNumber}</p></div>
-                 </div>
-                 <div className="bg-white p-8 rounded-[2.5rem] shadow-lg border border-slate-50 flex items-center gap-6 hover:-translate-y-1 transition-transform">
-                    <div className="bg-purple-100 text-purple-600 p-4 rounded-2xl"><Send size={28} /></div>
-                    <div><h3 className="font-black text-lg text-slate-800">سوشيال ميديا</h3><div className="flex gap-3 mt-1"><a href={adminConfig.twitterLink} className="text-slate-400 hover:text-blue-500 transition-colors"><Twitter size={20} /></a><a href={adminConfig.instagramLink} className="text-slate-400 hover:text-pink-500 transition-colors"><Instagram size={20} /></a></div></div>
-                 </div>
-              </div>
-              <div className="bg-white p-10 rounded-[2.5rem] shadow-xl border border-slate-50 h-full">
-                 <h3 className="text-2xl font-black mb-6 text-slate-900">أرسل رسالة مباشرة ✉️</h3>
-                 <form className="space-y-4" onSubmit={handleContactSubmit}>
-                    <input type="text" className="w-full p-4 rounded-2xl bg-slate-50 border-none font-bold focus:ring-4 focus:ring-blue-100" placeholder="الاسم" required value={contactForm.name} onChange={e => setContactForm({...contactForm, name: e.target.value})} />
-                    <input type="email" className="w-full p-4 rounded-2xl bg-slate-50 border-none font-bold focus:ring-4 focus:ring-blue-100" placeholder="الإيميل" required value={contactForm.email} onChange={e => setContactForm({...contactForm, email: e.target.value})} />
-                    <textarea className="w-full p-4 rounded-2xl bg-slate-50 border-none font-bold focus:ring-4 focus:ring-blue-100 h-32 resize-none" placeholder="اكتب رسالتك هنا..." required value={contactForm.message} onChange={e => setContactForm({...contactForm, message: e.target.value})}></textarea>
-                    <button type="submit" className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-lg shadow-lg hover:bg-slate-800 transition-all">إرسال</button>
-                 </form>
-              </div>
-           </div>
-           <div className="text-center mt-16"><button onClick={resetToHome} className="text-slate-400 font-bold hover:text-blue-600 flex items-center justify-center gap-2 mx-auto"><ArrowLeft size={16} /> الرجوع للرئيسية</button></div>
         </div>
       )}
 

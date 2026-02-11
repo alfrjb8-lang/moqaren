@@ -1557,10 +1557,10 @@ const App = () => {
         </div>
       </nav>
 
-      {/* الواجهة الرئيسية - تم نزول الهيدر الأزرق للأسفل (pt-32 بدل pt-40) */}
+      {/* الواجهة الرئيسية */}
       {view === 'home' && (
         <>
-          <div className="bg-gradient-to-b from-slate-950 via-blue-950 to-indigo-900 text-white pt-32 pb-24 px-4 relative overflow-hidden rounded-b-[3rem] md:rounded-b-[5rem] shadow-2xl">
+          <div className="bg-gradient-to-b from-slate-950 via-blue-950 to-indigo-900 text-white pt-40 pb-32 px-4 relative overflow-hidden rounded-b-[3rem] md:rounded-b-[5rem] shadow-2xl">
             <div className="absolute top-0 left-0 w-full h-full opacity-30 pointer-events-none">
                 <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-blue-500 rounded-full blur-[120px] animate-pulse"></div>
                 <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-indigo-500 rounded-full blur-[120px] animate-pulse" style={{animationDelay: '1s'}}></div>

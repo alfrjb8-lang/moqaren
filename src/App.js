@@ -9,7 +9,7 @@ import {
   Instagram, Twitter, Send, Settings, Eye, EyeOff, Save, ArrowLeft, Plus, Trash2, X,
   FileText, Activity, Globe, ChevronLeft, Coins, Database, Bell, MessageCircle, BarChart2, Flame, Languages, Link, Server,
   ChevronRight, Clock, XCircle, Share2, Calendar, TrendingUp, Filter, UserCheck, LogOut,
-  Brain, Hexagon, Key, Play, Pause, PlayCircle, StopCircle, RefreshCw
+  Brain, Hexagon, Key
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, onSnapshot, collection, increment, updateDoc, addDoc, deleteDoc, getDocs, arrayUnion } from 'firebase/firestore';
@@ -27,13 +27,11 @@ const MapPinIcon = () => (
 // ============================
 const translations = {
   ar: {
-    // SEO Data
     siteTitle: 'مقارن | محرك بحث الأسعار الأول في السعودية',
     siteDesc: 'قارن أسعار الجوالات، الإلكترونيات، والعطور في السعودية. محرك مقارن يبحث لك في أمازون، نون، جرير وإكسترا ويعطيك أرخص سعر في ثانية.',
     keywords: 'مقارنة أسعار, أرخص سعر ايفون, عروض السعودية, أمازون السعودية, نون, جرير, تسوق ذكي',
     ogTitle: 'وفر فلوسك مع مقارن - دليلك لأرخص الأسعار',
     
-    // UI Texts
     home: 'الرئيسية',
     about: 'وش مقارن؟',
     features: 'ليش نثق فينا؟',
@@ -117,13 +115,10 @@ const translations = {
     swipeHint: 'اسحب لليمين ←'
   },
   en: {
-    // SEO Data
     siteTitle: 'Moqaren | #1 Price Comparison Engine in Saudi Arabia',
     siteDesc: 'Compare prices for phones, electronics, and perfumes in KSA. Moqaren searches Amazon, Noon, Jarir, and Xcite to find you the best deal instantly.',
     keywords: 'price comparison, cheapest iphone, ksa deals, amazon saudi, noon, jarir, smart shopping',
     ogTitle: 'Save Money with Moqaren - Your Guide to Best Prices',
-
-    // UI Texts
     home: 'Home',
     about: 'About Us',
     features: 'Why Trust Us?',
@@ -213,7 +208,6 @@ const translations = {
 // ============================
 const ADMIN_UID = process.env.REACT_APP_ADMIN_ID; 
 
-// --- إعدادات Firebase من البيئة ---
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
   authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
@@ -232,7 +226,7 @@ const db = getFirestore(app);
 const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
 // ============================
-// 6. مكون SEOHead (للتحكم في SEO)
+// 6. مكون SEOHead
 // ============================
 const SEOHead = ({ title, description, keywords, lang }) => {
   useEffect(() => {
@@ -250,26 +244,23 @@ const SEOHead = ({ title, description, keywords, lang }) => {
 
     updateMeta('description', description);
     updateMeta('keywords', keywords);
-    
     updateMeta('og:title', title, 'property');
     updateMeta('og:description', description, 'property');
     updateMeta('og:type', 'website', 'property');
     updateMeta('og:locale', lang === 'ar' ? 'ar_SA' : 'en_US', 'property');
-    
     updateMeta('twitter:card', 'summary_large_image', 'name');
     updateMeta('twitter:title', title, 'name');
     updateMeta('twitter:description', description, 'name');
 
     document.documentElement.lang = lang;
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-
   }, [title, description, keywords, lang]);
 
   return null;
 };
 
 // ============================
-// 7. مكون SchemaMarkup (لتحسين SEO)
+// 7. مكون SchemaMarkup
 // ============================
 const SchemaMarkup = () => {
   const jsonLd = {
@@ -333,25 +324,9 @@ const App = () => {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [subscriberEmail, setSubscriberEmail] = useState('');
   
-  // ===== حالات الحملات البريدية =====
+  // ===== حالات إدارة المشتركين والفلترة =====
   const [marketingFilter, setMarketingFilter] = useState('');
-  const [marketingSubject, setMarketingSubject] = useState('');
-  const [marketingBody, setMarketingBody] = useState('');
   const [subscribersList, setSubscribersList] = useState([]);
-  const [selectedCampaign, setSelectedCampaign] = useState(null);
-  const [campaignStatus, setCampaignStatus] = useState({});
-  const [campaignSending, setCampaignSending] = useState(false);
-  const [campaigns, setCampaigns] = useState([]);
-  const [newCampaign, setNewCampaign] = useState({
-    name: '',
-    subject: '',
-    body: '',
-    filterKeywords: '',
-    status: 'draft', // draft, active, paused, sent
-    createdAt: '',
-    sentAt: '',
-    sentCount: 0
-  });
   
   const [lang, setLang] = useState('ar');
   const [notification, setNotification] = useState(null);
@@ -373,7 +348,6 @@ const App = () => {
   const [newOfferLink, setNewOfferLink] = useState('');
   const [newTrendingKeyword, setNewTrendingKeyword] = useState('');
 
-  // الحالات الجديدة لإضافة متاجر جديدة
   const [newStoreApiName, setNewStoreApiName] = useState('');
   const [newStoreApiKey, setNewStoreApiKey] = useState('');
   const [newStoreApiSecret, setNewStoreApiSecret] = useState('');
@@ -383,7 +357,7 @@ const App = () => {
   const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
 
   // ============================
-  // 8.2 الإعدادات الافتراضية للإدارة - محدثة مع الحملات
+  // 8.2 الإعدادات الافتراضية للإدارة
   // ============================
   const defaultAdminConfig = {
     supportEmail: "support@moqaren.com",
@@ -402,7 +376,6 @@ const App = () => {
       { keyword: 'ساعة', message: 'سير مجاني مع كل ساعة ذكية', link: 'https://noon.com/watches' }
     ],
     
-    // === القسم 1: إعدادات الذكاء الاصطناعي ===
     aiSettings: {
       geminiApiKey: '',
       geminiModel: 'gemini-2.0-flash-exp',
@@ -422,102 +395,103 @@ const App = () => {
       }
     },
     
-    // === القسم 2: مفاتيح المتاجر ===
     storeApiKeys: {
-      amazon: {
-        accessKey: '',
-        secretKey: '',
-        tagId: '',
-        region: 'sa',
-        enabled: true
-      },
-      noon: {
-        apiKey: '',
-        secretKey: '',
-        partnerId: '',
-        enabled: true
-      },
-      jarir: {
-        apiKey: '',
-        storeId: '',
-        enabled: true
-      },
-      xcite: {
-        apiKey: '',
-        affiliateId: '',
-        enabled: true
-      },
-      extra: {
-        apiKey: '',
-        enabled: true
-      },
+      amazon: { accessKey: '', secretKey: '', tagId: '', region: 'sa', enabled: true },
+      noon: { apiKey: '', secretKey: '', partnerId: '', enabled: true },
+      jarir: { apiKey: '', storeId: '', enabled: true },
+      xcite: { apiKey: '', affiliateId: '', enabled: true },
+      extra: { apiKey: '', enabled: true },
       customStores: []
     },
     
-    // === القسم 3: الإعدادات العامة ===
     apiSettings: {
       useRealData: true,
       fallbackToMock: true,
       cacheDuration: 3600,
       maxProducts: 20,
       currency: 'SAR'
-    },
-    
-    // === القسم 4: إعدادات الحملات البريدية (جديد) ===
-    emailSettings: {
-      smtpHost: '',
-      smtpPort: 587,
-      smtpUser: '',
-      smtpPass: '',
-      fromEmail: 'campaigns@moqaren.com',
-      fromName: 'مقارن - عروض حصرية',
-      replyTo: 'support@moqaren.com'
-    },
-    
-    // الحملات المحفوظة
-    emailCampaigns: [
-      {
-        id: 'camp1',
-        name: 'عروض الآيفون',
-        subject: '🔥 عرض خاص لمتابعي آيفون: خصم 50 ريال!',
-        body: 'مرحباً {name}،\n\nلاحظنا أنك مهتم بشراء آيفون. إليك عرض حصري: خصم 50 ريال على جميع أجهزة آبل.\n\nتسوق الآن: {link}\n\nفريق مقارن',
-        filterKeywords: 'آيفون ايفون iphone apple أبل',
-        status: 'draft',
-        createdAt: new Date().toISOString(),
-        sentCount: 0
-      },
-      {
-        id: 'camp2',
-        name: 'عروض الساعات الذكية',
-        subject: '⌚ سير مجاني مع كل ساعة ذكية',
-        body: 'مرحباً،\n\nسير مجاني مع كل ساعة ذكية تشتريها من متجر نون. لفترة محدودة!\n\nتسوق الآن: {link}\n\nفريق مقارن',
-        filterKeywords: 'ساعة ساعات ذكية سمارت واتش watch',
-        status: 'active',
-        createdAt: new Date().toISOString(),
-        sentCount: 23
-      }
-    ]
+    }
   };
 
   const [adminConfig, setAdminConfig] = useState(defaultAdminConfig);
   const t = translations[lang];
 
   // ============================
-  // 9. الدوال المساعدة
+  // 9. دوال المشتركين والفلترة (الجزء المهم)
   // ============================
   
-  // 9.1 عرض الإشعارات
+  // 9.1 فلترة المشتركين حسب الكلمات المفتاحية
+  const filterSubscribersByKeywords = (keywords) => {
+    if (!keywords || keywords.trim() === '') return subscribersList;
+    
+    const keywordList = keywords.toLowerCase().split(' ').filter(k => k.trim() !== '');
+    if (keywordList.length === 0) return subscribersList;
+    
+    return subscribersList.filter(sub => {
+      if (!sub.interests || sub.interests.length === 0) return false;
+      return sub.interests.some(interest => 
+        keywordList.some(keyword => interest.toLowerCase().includes(keyword))
+      );
+    });
+  };
+  
+  // 9.2 تصدير المشتركين المفلترين كملف CSV
+  const handleExportSubscribers = () => {
+    const filtered = filterSubscribersByKeywords(marketingFilter);
+    
+    if (filtered.length === 0) {
+      showNotification('لا يوجد مشتركين للتصدير', 'error');
+      return;
+    }
+    
+    // إنشاء محتوى CSV
+    let csvContent = "البريد الإلكتروني,تاريخ الاشتراك,الاهتمامات,آخر بحث\n";
+    
+    filtered.forEach(sub => {
+      const email = sub.email || '';
+      const joinedAt = sub.joined_at ? new Date(sub.joined_at).toLocaleDateString('ar-SA') : '';
+      const interests = sub.interests ? sub.interests.join(' | ') : '';
+      const lastSearch = sub.last_search ? new Date(sub.last_search).toLocaleDateString('ar-SA') : '';
+      
+      // التأكد من عدم وجود فواصل تسبب مشاكل في CSV
+      const escapedInterests = interests.replace(/,/g, '،');
+      
+      csvContent += `${email},${joinedAt},"${escapedInterests}",${lastSearch}\n`;
+    });
+    
+    // إنشاء رابط التحميل
+    const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' }); // \uFEFF للعربية
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `moqaren_subscribers_${new Date().getTime()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    showNotification(`✅ تم تصدير ${filtered.length} مشترك بنجاح`);
+  };
+  
+  // 9.3 مسح حقل الفلترة
+  const clearFilter = () => {
+    setMarketingFilter('');
+    showNotification('تم مسح الفلترة');
+  };
+
+  // ============================
+  // 10. الدوال المساعدة
+  // ============================
+  
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 4000);
   };
 
-  // 9.2 تبديل اللغة
   const toggleLanguage = () => {
     setLang(prev => prev === 'ar' ? 'en' : 'ar');
   };
 
-  // 9.3 إضافة/حذف المفضلة
   const toggleFavorite = (item) => {
     const exists = myFavorites.find(fav => fav.store === item.store && fav.price === item.price);
     if (exists) {
@@ -529,18 +503,15 @@ const App = () => {
     }
   };
 
-  // 9.4 التحقق من المفضلة
   const isFavorite = (item) => {
     return myFavorites.some(fav => fav.store === item.store && fav.price === item.price);
   };
   
-  // 9.5 الحصول على رابط المتجر
   const getStoreLink = (key) => { 
     const store = adminConfig.affiliateLinks?.find(s => s.name === key); 
     return store ? store.link : "#"; 
   };
 
-  // 9.6 مشاركة المنتج
   const handleShare = (item) => {
     const link = getStoreLink(item.storeKey);
     const message = `${t.shareText}\n${item.store} ${t.sharePrice} ${item.price} ${item.currency}\n${t.shareLink} ${link}`;
@@ -558,7 +529,6 @@ const App = () => {
     copyToClipboard(message);
   };
 
-  // 9.7 إضافة إلى سجل البحث
   const addToHistory = (term) => {
     setMySearchHistory(prev => {
         const filtered = prev.filter(t => t !== term);
@@ -567,168 +537,9 @@ const App = () => {
   };
 
   // ============================
-  // 10. دوال الحملات البريدية (جديد)
-  // ============================
-  
-  // 10.1 فلترة المشتركين حسب الكلمات المفتاحية
-  const filterSubscribersByKeywords = (keywords) => {
-    if (!keywords || keywords.trim() === '') return subscribersList;
-    
-    const keywordList = keywords.toLowerCase().split(' ').filter(k => k.trim() !== '');
-    if (keywordList.length === 0) return subscribersList;
-    
-    return subscribersList.filter(sub => {
-      if (!sub.interests || sub.interests.length === 0) return false;
-      return sub.interests.some(interest => 
-        keywordList.some(keyword => interest.toLowerCase().includes(keyword))
-      );
-    });
-  };
-  
-  // 10.2 إضافة حملة جديدة
-  const handleAddCampaign = () => {
-    if (!newCampaign.name || !newCampaign.subject || !newCampaign.body) {
-      showNotification('يرجى تعبئة جميع الحقول المطلوبة', 'error');
-      return;
-    }
-    
-    const campaign = {
-      ...newCampaign,
-      id: 'camp_' + Date.now(),
-      createdAt: new Date().toISOString(),
-      status: 'draft',
-      sentCount: 0
-    };
-    
-    setAdminConfig({
-      ...adminConfig,
-      emailCampaigns: [...(adminConfig.emailCampaigns || []), campaign]
-    });
-    
-    setNewCampaign({
-      name: '',
-      subject: '',
-      body: '',
-      filterKeywords: '',
-      status: 'draft',
-      createdAt: '',
-      sentAt: '',
-      sentCount: 0
-    });
-    
-    showNotification('تم إضافة الحملة بنجاح');
-  };
-  
-  // 10.3 حذف حملة
-  const handleDeleteCampaign = (campaignId) => {
-    if (!confirm('هل أنت متأكد من حذف هذه الحملة؟')) return;
-    
-    const updatedCampaigns = (adminConfig.emailCampaigns || []).filter(c => c.id !== campaignId);
-    setAdminConfig({
-      ...adminConfig,
-      emailCampaigns: updatedCampaigns
-    });
-    
-    showNotification('تم حذف الحملة');
-  };
-  
-  // 10.4 تغيير حالة الحملة (تشغيل/إيقاف/إرسال)
-  const handleCampaignStatusChange = (campaignId, newStatus) => {
-    const updatedCampaigns = (adminConfig.emailCampaigns || []).map(c => {
-      if (c.id === campaignId) {
-        return {
-          ...c,
-          status: newStatus,
-          ...(newStatus === 'sent' ? { sentAt: new Date().toISOString() } : {})
-        };
-      }
-      return c;
-    });
-    
-    setAdminConfig({
-      ...adminConfig,
-      emailCampaigns: updatedCampaigns
-    });
-    
-    const statusMessages = {
-      active: 'تم تشغيل الحملة ✅',
-      paused: 'تم إيقاف الحملة مؤقتاً ⏸️',
-      sent: 'تم إرسال الحملة 📨',
-      draft: 'تم حفظ المسودة 📝'
-    };
-    
-    showNotification(statusMessages[newStatus] || 'تم تحديث حالة الحملة');
-  };
-  
-  // 10.5 إرسال الحملة فعلياً
-  const handleSendCampaign = async (campaignId) => {
-    const campaign = (adminConfig.emailCampaigns || []).find(c => c.id === campaignId);
-    if (!campaign) return;
-    
-    setCampaignSending(true);
-    
-    // محاكاة إرسال الإيميلات
-    try {
-      const filteredSubs = filterSubscribersByKeywords(campaign.filterKeywords);
-      
-      // هنا راح تستدعي API حقيقي للإيميلات (SendGrid, AWS SES, إلخ)
-      await new Promise(resolve => setTimeout(resolve, 2000)); // محاكاة
-      
-      // تحديث عدد المرسلات
-      const updatedCampaigns = (adminConfig.emailCampaigns || []).map(c => {
-        if (c.id === campaignId) {
-          return {
-            ...c,
-            status: 'sent',
-            sentAt: new Date().toISOString(),
-            sentCount: filteredSubs.length
-          };
-        }
-        return c;
-      });
-      
-      setAdminConfig({
-        ...adminConfig,
-        emailCampaigns: updatedCampaigns
-      });
-      
-      showNotification(`✅ تم إرسال الحملة إلى ${filteredSubs.length} مشترك`);
-    } catch (error) {
-      console.error('Error sending campaign:', error);
-      showNotification('❌ فشل إرسال الحملة', 'error');
-    } finally {
-      setCampaignSending(false);
-    }
-  };
-  
-  // 10.6 معاينة الحملة
-  const handlePreviewCampaign = (campaign) => {
-    setSelectedCampaign(campaign);
-  };
-  
-  // 10.7 تصدير المشتركين المفلترين
-  const handleExportSubscribers = () => {
-    const filtered = filterSubscribersByKeywords(marketingFilter);
-    const csvContent = "data:text/csv;charset=utf-8," 
-      + "البريد الإلكتروني,تاريخ الاشتراك,الاهتمامات\n"
-      + filtered.map(sub => `${sub.email},${sub.joined_at || ''},${(sub.interests || []).join(' | ')}`).join("\n");
-    
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "moqaren_subscribers.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    showNotification('تم تصدير قائمة المشتركين');
-  };
-
-  // ============================
   // 11. useEffect Hooks
   // ============================
   
-  // 11.1 تأثير السحب للنتائج في الجوال
   useEffect(() => {
     const container = resultsContainerRef.current;
     if (!container || !results || window.innerWidth >= 768) return;
@@ -743,13 +554,8 @@ const App = () => {
       scrollLeft = container.scrollLeft;
     };
 
-    const handleMouseLeave = () => {
-      isDown = false;
-    };
-
-    const handleMouseUp = () => {
-      isDown = false;
-    };
+    const handleMouseLeave = () => { isDown = false; };
+    const handleMouseUp = () => { isDown = false; };
 
     const handleMouseMove = (e) => {
       if (!isDown) return;
@@ -764,17 +570,13 @@ const App = () => {
     container.addEventListener('mouseup', handleMouseUp);
     container.addEventListener('mousemove', handleMouseMove);
 
-    // Touch events for mobile
     container.addEventListener('touchstart', (e) => {
       isDown = true;
       startX = e.touches[0].pageX - container.offsetLeft;
       scrollLeft = container.scrollLeft;
     });
 
-    container.addEventListener('touchend', () => {
-      isDown = false;
-    });
-
+    container.addEventListener('touchend', () => { isDown = false; });
     container.addEventListener('touchmove', (e) => {
       if (!isDown) return;
       const x = e.touches[0].pageX - container.offsetLeft;
@@ -793,7 +595,6 @@ const App = () => {
     };
   }, [results]);
 
-  // 11.2 المصادقة الذكية
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -810,7 +611,6 @@ const App = () => {
     return () => unsubscribe();
   }, []);
 
-  // 11.3 إدارة النوافذ المنبثقة
   useEffect(() => {
     const savedEmail = localStorage.getItem('moqaren_user_email');
     if (savedEmail) {
@@ -826,7 +626,6 @@ const App = () => {
     }
   }, [view, isAdminAuthenticated]);
 
-  // 11.4 جلب الإعدادات والبيانات
   useEffect(() => {
     if (!user) return;
     const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'app_settings', 'main_config');
@@ -840,7 +639,6 @@ const App = () => {
     return () => unsubscribe();
   }, [user]);
 
-  // 11.5 العداد الحقيقي
   useEffect(() => {
     if (!user) return;
     const statsRef = doc(db, 'artifacts', appId, 'public', 'data', 'stats', 'global_counts');
@@ -855,17 +653,22 @@ const App = () => {
     return () => unsubscribe();
   }, [user]);
 
-  // 11.6 جلب بيانات لوحة التحكم
+  // ============================
+  // 12. جلب بيانات المشتركين (الأهم)
+  // ============================
   useEffect(() => {
     if (!isAdminAuthenticated) return;
     
-    const inboxRef = collection(db, 'artifacts', appId, 'public', 'data', 'inbox');
-    const unsubInbox = onSnapshot(inboxRef, (snapshot) => {
-      const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      msgs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-      setInboxMessages(msgs);
-    }, (error) => console.log('Inbox error', error));
+    // جلب المشتركين من Firebase
+    const subRef = collection(db, 'artifacts', appId, 'public', 'data', 'newsletter_subscribers');
+    const unsubSubscribers = onSnapshot(subRef, (snapshot) => {
+        const subs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // ترتيب من الأحدث للأقدم
+        subs.sort((a, b) => new Date(b.joined_at) - new Date(a.joined_at));
+        setSubscribersList(subs);
+    }, (error) => console.log('Subscribers error', error));
     
+    // جلب كلمات البحث الأكثر شيوعًا (للفلترة المقترحة)
     const fetchStats = async () => {
         try {
             const statsRef = collection(db, 'artifacts', appId, 'public', 'data', 'search_analytics');
@@ -876,6 +679,14 @@ const App = () => {
         } catch (e) { console.log('Analytics error', e) }
     };
     fetchStats();
+
+    // باقي الاستماعات للإحصائيات والرسائل
+    const inboxRef = collection(db, 'artifacts', appId, 'public', 'data', 'inbox');
+    const unsubInbox = onSnapshot(inboxRef, (snapshot) => {
+      const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      msgs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      setInboxMessages(msgs);
+    }, (error) => console.log('Inbox error', error));
 
     const logsRef = collection(db, 'artifacts', appId, 'public', 'data', 'search_logs');
     const unsubLogs = onSnapshot(logsRef, (snapshot) => {
@@ -891,25 +702,18 @@ const App = () => {
         setMonthlyStats(stats);
     }, (error) => console.log('Monthly stats error', error));
 
-    const subRef = collection(db, 'artifacts', appId, 'public', 'data', 'newsletter_subscribers');
-    const unsubSubscribers = onSnapshot(subRef, (snapshot) => {
-        const subs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setSubscribersList(subs);
-    }, (error) => console.log('Subscribers error', error));
-
     return () => { 
+      unsubSubscribers();
       unsubInbox(); 
       unsubLogs(); 
       unsubMonthly(); 
-      unsubSubscribers(); 
     };
   }, [isAdminAuthenticated]);
 
   // ============================
-  // 12. وظائف التسويق والاشتراكات
+  // 13. وظائف التسويق والاشتراكات
   // ============================
   
-  // 12.1 الاشتراك في النشرة البريدية
   const handleSubscribe = async (e) => {
       e.preventDefault();
       if (!promoEmail || !user) return;
@@ -933,7 +737,6 @@ const App = () => {
       }
   };
 
-  // 12.2 تتبع كلمات البحث
   const trackSearchTerm = async (term) => {
       if (!user || !term) return;
       const cleanTerm = term.trim().toLowerCase();
@@ -976,7 +779,6 @@ const App = () => {
       }
   };
 
-  // 12.3 زيادة عداد البحث العام
   const incrementGlobalCounter = async () => {
       if (!user) return;
       const statsRef = doc(db, 'artifacts', appId, 'public', 'data', 'stats', 'global_counts');
@@ -986,10 +788,9 @@ const App = () => {
   };
 
   // ============================
-  // 13. وظائف الإدارة والتحكم
+  // 14. وظائف الإدارة والتحكم
   // ============================
   
-  // 13.1 حفظ جميع التغييرات
   const handleSaveAllChanges = async () => {
     if (!isAdminAuthenticated) {
         showNotification("ليس لديك صلاحية الحفظ", "error");
@@ -1006,7 +807,6 @@ const App = () => {
     }
   };
 
-  // 13.2 العودة للرئيسية
   const resetToHome = () => {
     setView('home');
     setResults(null);
@@ -1016,7 +816,6 @@ const App = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // 13.3 التمرير للقسم المحدد
   const scrollToSection = (id) => {
     setView('home');
     setResults(null);
@@ -1030,7 +829,6 @@ const App = () => {
     }, 150);
   };
 
-  // 13.4 النقر على الشعار (للوصول للإدارة)
   const handleLogoClick = () => {
     const newCount = adminClickCount + 1;
     setAdminClickCount(newCount);
@@ -1047,7 +845,6 @@ const App = () => {
     clickTimeoutRef.current = setTimeout(() => setAdminClickCount(0), 3000);
   };
 
-  // 13.5 إرسال طلب شراكة
   const handleMerchantSubmit = async (e) => {
     e.preventDefault();
     if (!user) return;
@@ -1066,7 +863,6 @@ const App = () => {
     }
   };
 
-  // 13.6 إرسال رسالة تواصل
   const handleContactSubmit = async (e) => {
     e.preventDefault();
     if (!user) return;
@@ -1086,7 +882,6 @@ const App = () => {
     }
   };
 
-  // 13.7 تسجيل دخول المدير
   const handleAdminLogin = async (e) => {
     e.preventDefault();
     setLoginError('');
@@ -1101,7 +896,6 @@ const App = () => {
     }
   };
   
-  // 13.8 تسجيل خروج
   const handleLogout = async () => {
       await signOut(auth);
       setIsAdminAuthenticated(false);
@@ -1109,7 +903,6 @@ const App = () => {
       showNotification('تم الخروج بنجاح');
   };
 
-  // 13.9 حذف الرسالة
   const handleDeleteMessage = async (msgId) => {
     if (!confirm('هل أنت متأكد من حذف هذه الرسالة؟')) return;
     try { 
@@ -1118,7 +911,6 @@ const App = () => {
     } catch (err) { }
   };
 
-  // 13.10 إضافة متجر جديد للروابط
   const handleAddStore = () => { 
     if (newStoreName && newStoreLink) { 
       setAdminConfig({ 
@@ -1131,7 +923,6 @@ const App = () => {
     }
   };
 
-  // 13.11 حذف متجر من الروابط
   const handleDeleteStore = (i) => { 
     const u = [...adminConfig.affiliateLinks]; 
     u.splice(i, 1); 
@@ -1139,7 +930,6 @@ const App = () => {
     showNotification('تم حذف رابط المتجر');
   };
 
-  // 13.12 إضافة عرض خاص
   const handleAddOffer = () => { 
     if (newOfferKeyword && newOfferMessage && newOfferLink) { 
       setAdminConfig({ 
@@ -1157,7 +947,6 @@ const App = () => {
     }
   };
 
-  // 13.13 حذف عرض
   const handleDeleteOffer = (i) => { 
     const u = [...adminConfig.exclusiveOffers]; 
     u.splice(i, 1); 
@@ -1165,7 +954,6 @@ const App = () => {
     showNotification('تم حذف العرض الخاص');
   };
 
-  // 13.14 إضافة كلمة رائجة
   const handleAddTrendingKeyword = () => { 
     if (newTrendingKeyword) { 
       setAdminConfig({ 
@@ -1177,7 +965,6 @@ const App = () => {
     }
   };
 
-  // 13.15 حذف كلمة رائجة
   const handleDeleteTrendingKeyword = (index) => { 
     const updated = [...(adminConfig.trendingKeywords || [])]; 
     updated.splice(index, 1); 
@@ -1185,7 +972,6 @@ const App = () => {
     showNotification('تم حذف الكلمة الرائجة');
   };
 
-  // 13.16 إضافة متجر جديد مع API
   const handleAddCustomStore = () => { 
     if (newStoreApiName && newStoreApiKey) { 
       const newStore = {
@@ -1209,13 +995,12 @@ const App = () => {
       setNewStoreApiKey('');
       setNewStoreApiSecret('');
       setNewStoreApiUrl('');
-      showNotification(`تم إضافة متجر ${newStoreApiName} بنجاح! سيتم استخدامه في البحث`);
+      showNotification(`تم إضافة متجر ${newStoreApiName} بنجاح!`);
     } else {
       showNotification('يرجى إدخال اسم المتجر ومفتاح API على الأقل', 'error');
     }
   };
 
-  // 13.17 حذف متجر مخصص
   const handleDeleteCustomStore = (index) => { 
     const updated = [...(adminConfig.storeApiKeys?.customStores || [])]; 
     updated.splice(index, 1); 
@@ -1229,7 +1014,6 @@ const App = () => {
     showNotification('تم حذف المتجر المخصص');
   };
 
-  // 13.18 تفعيل/تعطيل متجر
   const toggleStoreEnabled = (storeType, index = null) => {
     if (storeType === 'amazon' || storeType === 'noon' || storeType === 'jarir' || storeType === 'xcite' || storeType === 'extra') {
       setAdminConfig({
@@ -1259,7 +1043,7 @@ const App = () => {
   };
 
   // ============================
-  // 14. وظيفة الذكاء الاصطناعي (Gemini)
+  // 15. وظيفة الذكاء الاصطناعي
   // ============================
   const callGeminiAI = async (product, stores) => {
     const geminiApiKey = adminConfig.aiSettings?.geminiApiKey;
@@ -1276,7 +1060,6 @@ const App = () => {
     
     const languageInstruction = lang === 'en' ? "Respond in English." : "الرد باللهجة السعودية الطبيعية.";
     
-    // بناء الـ Prompt المتقدم حسب الميزات المختارة
     let prompt = `أنت مساعد تسوق خبير لموقع 'مقارن' في السعودية. قم بتحليل المنتج: ${product}.`;
     
     if (adminConfig.aiSettings?.geminiFeatures?.priceComparison) {
@@ -1351,7 +1134,7 @@ const App = () => {
   };
 
   // ============================
-  // 15. وظيفة البحث الرئيسية
+  // 16. وظيفة البحث الرئيسية
   // ============================
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -1363,12 +1146,10 @@ const App = () => {
     setShowExclusiveToast(false);
     setCurrentOffer(null);
     
-    // تحديث الإحصائيات
     incrementGlobalCounter();
     trackSearchTerm(searchQuery);
     addToHistory(searchQuery);
 
-    // 1. تحقق من إعدادات النظام
     const useRealData = adminConfig.apiSettings?.useRealData !== false;
     const fallbackToMock = adminConfig.apiSettings?.fallbackToMock !== false;
     
@@ -1376,7 +1157,6 @@ const App = () => {
       let searchResults = [];
       let isRealData = false;
       
-      // 2. محاولة البحث في APIs الحقيقية
       if (useRealData) {
         searchResults = await searchWithRealAPIs(searchQuery);
         if (searchResults.length > 0) {
@@ -1384,24 +1164,20 @@ const App = () => {
         }
       }
       
-      // 3. إذا لم توجد نتائج حقيقية، استخدم البيانات الوهمية
       if (searchResults.length === 0 && fallbackToMock) {
         searchResults = getMockResults(searchQuery);
         isRealData = false;
       }
       
-      // 4. إضافة علامة مصدر البيانات
       searchResults = searchResults.map(item => ({
         ...item,
         isRealData: isRealData
       }));
       
-      // 5. استدعاء الذكاء الاصطناعي
       const aiResponse = await callGeminiAI(searchQuery, searchResults);
       setResults(searchResults);
       setAiSummary(aiResponse);
       
-      // 6. التحقق من العروض الخاصة
       const matchedOffer = adminConfig.exclusiveOffers?.find(offer => 
         searchQuery.toLowerCase().includes(offer.keyword.toLowerCase())
       );
@@ -1414,7 +1190,6 @@ const App = () => {
       console.error("خطأ في البحث:", err);
       showNotification("جارٍ استخدام البيانات التجريبية", "info");
       
-      // استخدام بيانات وهمية
       const mockResults = getMockResults(searchQuery).map(item => ({
         ...item,
         isRealData: false
@@ -1430,41 +1205,30 @@ const App = () => {
     }
   };
 
-  // البحث باستخدام APIs الحقيقية
   const searchWithRealAPIs = async (query) => {
-    const searchPromises = [];
     const results = [];
     
-    // البحث في Amazon (إذا كان هناك مفتاح ومفعل)
     if (adminConfig.storeApiKeys?.amazon?.accessKey && adminConfig.storeApiKeys?.amazon?.enabled !== false) {
       try {
         const amazonResults = await searchAmazonAPI(query);
         results.push(...amazonResults);
-      } catch (error) {
-        console.error("Amazon API error:", error);
-      }
+      } catch (error) { console.error("Amazon API error:", error); }
     }
     
-    // البحث في Noon (إذا كان هناك مفتاح ومفعل)
     if (adminConfig.storeApiKeys?.noon?.apiKey && adminConfig.storeApiKeys?.noon?.enabled !== false) {
       try {
         const noonResults = await searchNoonAPI(query);
         results.push(...noonResults);
-      } catch (error) {
-        console.error("Noon API error:", error);
-      }
+      } catch (error) { console.error("Noon API error:", error); }
     }
     
-    // البحث في المتاجر المخصصة (إذا كانت هناك متاجر مضافة)
     if (adminConfig.storeApiKeys?.customStores && adminConfig.storeApiKeys.customStores.length > 0) {
       for (const store of adminConfig.storeApiKeys.customStores) {
         if (store.enabled && store.apiKey) {
           try {
             const customResults = await searchCustomAPI(query, store);
             results.push(...customResults);
-          } catch (error) {
-            console.error(`Custom store API error (${store.name}):`, error);
-          }
+          } catch (error) { console.error(`Custom store API error (${store.name}):`, error); }
         }
       }
     }
@@ -1472,11 +1236,9 @@ const App = () => {
     return results;
   };
 
-  // البحث في Amazon API
   const searchAmazonAPI = async (query) => {
     try {
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
       const basePrice = Math.floor(Math.random() * 500) + 100;
       return [{
         id: Date.now(),
@@ -1494,16 +1256,12 @@ const App = () => {
         productName: query,
         isRealData: true
       }];
-    } catch (error) {
-      return [];
-    }
+    } catch (error) { return []; }
   };
 
-  // البحث في Noon API
   const searchNoonAPI = async (query) => {
     try {
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
       const basePrice = Math.floor(Math.random() * 500) + 100;
       return [{
         id: Date.now() + 1,
@@ -1521,19 +1279,14 @@ const App = () => {
         productName: query,
         isRealData: true
       }];
-    } catch (error) {
-      return [];
-    }
+    } catch (error) { return []; }
   };
 
-  // البحث في API مخصص لمتجر جديد
   const searchCustomAPI = async (query, store) => {
     try {
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
       const basePrice = Math.floor(Math.random() * 500) + 100;
       const adjustedPrice = basePrice + Math.floor(Math.random() * 100) - 50;
-      
       return [{
         id: Date.now() + Math.random(),
         store: store.name,
@@ -1550,34 +1303,26 @@ const App = () => {
         productName: query,
         isRealData: true
       }];
-    } catch (error) {
-      console.error(`Custom store API error (${store.name}):`, error);
-      return [];
-    }
+    } catch (error) { return []; }
   };
 
-  // دالة للحصول على لون عشوائي للمتجر
   const getRandomStoreColor = () => {
     const colors = ['bg-red-500', 'bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-pink-500', 'bg-indigo-500'];
     return colors[Math.floor(Math.random() * colors.length)];
   };
 
-  // دالة للحصول على توصيل عشوائي
   const getRandomDelivery = () => {
     const deliveries = [t.freeShipping, t.fastShipping, 'توصيل خلال 48 ساعة', 'توصيل مجاني مع الشحن السريع'];
     return deliveries[Math.floor(Math.random() * deliveries.length)];
   };
 
-  // دالة للحصول على ضمان عشوائي
   const getRandomWarranty = () => {
     const warranties = [t.agentWarranty, t.storeWarranty, 'سنة واحدة مع إمكانية التمديد', '6 أشهر ضمان متجر'];
     return warranties[Math.floor(Math.random() * warranties.length)];
   };
 
-  // البيانات الوهمية كبديل
   const getMockResults = (query) => {
     const basePrice = Math.floor(Math.random() * 500) + 100;
-    
     return [
       { 
         id: 1, 
@@ -1631,17 +1376,16 @@ const App = () => {
   };
 
   // ============================
-  // 16. حساب المشتركين المفلترين
+  // 17. حساب المشتركين المفلترين
   // ============================
   const filteredSubscribers = filterSubscribersByKeywords(marketingFilter);
 
   // ============================
-  // 17. الواجهة الرئيسية (Home View)
+  // 18. الواجهة الرئيسية (Home View)
   // ============================
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-blue-200 selection:text-blue-900" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
       
-      {/* 17.1 مكونات SEO */}
       <SEOHead 
         title={view === 'home' && !results ? t.siteTitle : `${searchQuery ? searchQuery + ' | ' : ''} ${t.siteTitle}`} 
         description={t.siteDesc} 
@@ -1650,7 +1394,7 @@ const App = () => {
       />
       <SchemaMarkup />
 
-      {/* 17.2 الإشعارات */}
+      {/* الإشعارات */}
       {notification && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-top-4 duration-300">
           <div className={`px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 border-2 ${notification.type === 'error' ? 'bg-red-50 border-red-100 text-red-600' : 'bg-white border-green-100 text-green-700'}`}>
@@ -1660,7 +1404,7 @@ const App = () => {
         </div>
       )}
 
-      {/* 17.3 نافذة الاشتراك */}
+      {/* نافذة الاشتراك */}
       {showPromoPopup && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
               <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={() => setShowPromoPopup(false)}></div>
@@ -1691,7 +1435,7 @@ const App = () => {
           </div>
       )}
 
-      {/* 17.4 زر فتح لوحة المساحة الشخصية */}
+      {/* زر فتح لوحة المساحة الشخصية */}
       <button 
         onClick={() => setShowSidePanel(true)}
         className="fixed left-0 top-1/2 -translate-y-1/2 bg-white/80 backdrop-blur-md p-3 rounded-r-2xl shadow-lg border border-slate-200 z-40 hover:pl-5 transition-all group border-l-0"
@@ -1703,7 +1447,7 @@ const App = () => {
         </div>
       </button>
 
-      {/* 17.5 لوحة المساحة الشخصية */}
+      {/* لوحة المساحة الشخصية */}
       <div className={`fixed inset-0 z-[60] transition-all duration-500 ${showSidePanel ? 'visible' : 'invisible'}`}>
         <div className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-500 ${showSidePanel ? 'opacity-100' : 'opacity-0'}`} onClick={() => setShowSidePanel(false)}></div>
         <div className={`absolute left-0 top-0 h-full w-full md:w-[400px] bg-white shadow-2xl transition-transform duration-500 ease-in-out transform ${showSidePanel ? 'translate-x-0' : '-translate-x-full'}`}>
@@ -1763,7 +1507,7 @@ const App = () => {
         </div>
       </div>
 
-      {/* 17.6 زر تبديل اللغة */}
+      {/* زر تبديل اللغة */}
       <button 
         onClick={toggleLanguage} 
         className={`fixed ${lang === 'ar' ? 'left-4' : 'right-4'} top-24 md:top-6 z-[100] bg-white/90 backdrop-blur-xl shadow-xl border border-white/50 p-3 rounded-full hover:scale-110 transition-all active:scale-95 group`}
@@ -1775,7 +1519,7 @@ const App = () => {
         </span>
       </button>
 
-      {/* 17.7 إشعار العرض الخاص */}
+      {/* إشعار العرض الخاص */}
       {showExclusiveToast && currentOffer && (
         <div className={`fixed bottom-6 ${lang === 'ar' ? 'left-4' : 'right-4'} md:max-w-sm z-[100] animate-in slide-in-from-bottom-10 duration-500`}>
           <div className="bg-gradient-to-l from-blue-600 to-indigo-600 text-white p-6 rounded-[2rem] shadow-2xl relative border-4 border-white/20 backdrop-blur-md">
@@ -1790,7 +1534,7 @@ const App = () => {
         </div>
       )}
 
-      {/* 17.8 شريط التنقل */}
+      {/* شريط التنقل */}
       <nav className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
         <div className="bg-white/90 backdrop-blur-xl shadow-2xl shadow-blue-900/10 rounded-full px-2 py-2 flex items-center gap-1 md:gap-2 pointer-events-auto border border-white/50 max-w-full overflow-x-auto no-scrollbar">
           <div className="flex items-center gap-2 px-4 cursor-pointer group select-none" onClick={handleLogoClick}>
@@ -1813,21 +1557,15 @@ const App = () => {
         </div>
       </nav>
 
-      {/* ============================ */}
-      {/* 18. الواجهة الرئيسية (Home View) */}
-      {/* ============================ */}
+      {/* الواجهة الرئيسية */}
       {view === 'home' && (
         <>
-          {/* 18.1 قسم الهيرو */}
           <div className="bg-gradient-to-b from-slate-950 via-blue-950 to-indigo-900 text-white pt-40 pb-32 px-4 relative overflow-hidden rounded-b-[3rem] md:rounded-b-[5rem] shadow-2xl">
-            
-            {/* خلفيات متحركة */}
             <div className="absolute top-0 left-0 w-full h-full opacity-30 pointer-events-none">
                 <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-blue-500 rounded-full blur-[120px] animate-pulse"></div>
                 <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-indigo-500 rounded-full blur-[120px] animate-pulse" style={{animationDelay: '1s'}}></div>
             </div>
 
-            {/* أنماط خلفية */}
             <svg className="absolute inset-0 w-full h-full text-white/5 mix-blend-overlay pointer-events-none" xmlns="http://www.w3.org/2000/svg">
               <pattern id="data-grid" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
                 <circle cx="1" cy="1" r="1" fill="currentColor" />
@@ -1847,7 +1585,6 @@ const App = () => {
                 <rect width="100%" height="100%" fill="url(#circuit-pattern)" />
             </svg>
 
-            {/* أيقونات خلفية */}
             <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
                 <Hexagon size={64} className="text-blue-300/10 absolute top-[10%] left-[5%] animate-spin-slow blur-sm" />
                 <Cpu size={48} className="text-indigo-300/10 absolute bottom-[20%] right-[10%] animate-bounce-slow blur-sm" />
@@ -1855,7 +1592,6 @@ const App = () => {
                 <Brain size={80} className="text-indigo-500/5 absolute bottom-[10%] left-[20%] animate-pulse blur-xl rotate-12" />
             </div>
 
-            {/* محتوى الهيرو */}
             <div className="max-w-4xl mx-auto text-center relative z-10">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/10 text-blue-200 text-xs font-black mb-8 backdrop-blur-md shadow-lg animate-in fade-in slide-in-from-top-4 duration-700">
                 <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span></span>
@@ -1864,7 +1600,6 @@ const App = () => {
               <h1 className="text-4xl md:text-7xl font-black mb-6 leading-tight drop-shadow-2xl text-white tracking-tight animate-in fade-in slide-in-from-bottom-8 duration-700">{t.heroTitlePart1} <br/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-indigo-300">{t.heroTitlePart2}</span></h1>
               <p className="text-blue-100 text-lg md:text-2xl mb-12 max-w-2xl mx-auto font-medium leading-relaxed opacity-90 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100">{t.heroDesc}</p>
               
-              {/* نموذج البحث */}
               <form onSubmit={handleSearch} className="relative max-w-3xl mx-auto group animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
                 <div className="absolute inset-0 bg-blue-400/20 blur-2xl rounded-[2.5rem] group-hover:bg-blue-400/30 transition-all duration-500"></div>
                 <input type="text" placeholder={t.searchPlaceholder} className="w-full py-6 md:py-8 px-16 rounded-[2.5rem] text-slate-900 shadow-2xl text-lg md:text-xl focus:outline-none focus:ring-4 focus:ring-blue-400/50 transition-all font-bold border-none relative z-10 placeholder:text-slate-400" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
@@ -1874,7 +1609,6 @@ const App = () => {
                 </button>
               </form>
               
-              {/* الكلمات الرائجة */}
               <div className="mt-10 flex flex-wrap justify-center gap-3 text-sm font-bold text-blue-200/60 animate-in fade-in duration-1000 delay-300">
                 <span>{t.trendingLabel}</span>
                 {adminConfig.trendingKeywords && adminConfig.trendingKeywords.length > 0 ? (
@@ -1893,10 +1627,7 @@ const App = () => {
             </div>
           </div>
 
-          {/* 18.2 المحتوى الرئيسية */}
           <main className="max-w-7xl mx-auto px-4 -mt-20 relative z-20">
-            
-            {/* حالة التحميل */}
             {isSearching && (
               <div className="bg-white rounded-[3rem] p-12 md:p-20 shadow-xl border border-slate-100 text-center mb-32">
                 <div className="relative w-24 h-24 mx-auto mb-8">
@@ -1909,10 +1640,8 @@ const App = () => {
               </div>
             )}
 
-            {/* عرض النتائج */}
             {results && !isSearching && (
               <div className="space-y-12 animate-in fade-in slide-in-from-bottom-10 duration-700 mb-32">
-                {/* ملخص الذكاء الاصطناعي */}
                 {aiSummary && (
                     <div className="bg-gradient-to-br from-slate-900 to-blue-950 text-white p-8 md:p-12 rounded-[3rem] shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-8 relative overflow-hidden border border-white/10">
                         <div className="absolute top-0 right-0 w-full h-full opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
@@ -1933,7 +1662,6 @@ const App = () => {
                     </div>
                 )}
                 
-                {/* النتائج في الجوال - أفقية مع سحب */}
                 <div className="relative">
                   <div className="md:hidden mb-6 text-center">
                     <p className="text-slate-600 text-sm font-bold flex items-center justify-center gap-2 animate-pulse">
@@ -1965,7 +1693,6 @@ const App = () => {
                               <div className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase backdrop-blur-md inline-flex items-center gap-1">
                                 <Shield size={10} /> {t.trusted}
                               </div>
-                              {/* مؤشر مصدر البيانات */}
                               {item.isRealData ? (
                                 <div className="bg-green-500/80 px-3 py-1 rounded-full text-[10px] font-black uppercase backdrop-blur-md inline-flex items-center gap-1">
                                   <CheckCircle size={10} /> بيانات حقيقية
@@ -2044,23 +1771,19 @@ const App = () => {
               </div>
             )}
 
-            {/* المحتوى الثابت (عندما لا توجد نتائج) */}
             {!results && !isSearching && (
               <>
-                {/* كيف يعمل مقارن */}
                 <section id="about" className="mb-32 scroll-mt-32">
                   <div className="text-center mb-16"><h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-6">{t.howItWorksTitle}</h2><p className="text-slate-500 font-bold text-xl">ثلاث خطوات بسيطة.. وتوفر فلوسك</p></div>
                   <div className="grid md:grid-cols-3 gap-8">{[{ icon: MousePointer2, title: t.step1Title, desc: t.step1Desc, color: 'blue' }, { icon: Cpu, title: t.step2Title, desc: t.step2Desc, color: 'indigo' }, { icon: Rocket, title: t.step3Title, desc: t.step3Desc, color: 'green' }].map((item, i) => (<div key={i} className="bg-white p-12 rounded-[3rem] shadow-xl border border-slate-100 hover:-translate-y-2 transition-all text-center group"><div className={`bg-${item.color}-50 text-${item.color}-600 w-24 h-24 rounded-[2rem] flex items-center justify-center mx-auto mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}><item.icon size={48} /></div><h3 className="text-2xl font-black mb-4 text-slate-900">{item.title}</h3><p className="text-slate-500 font-bold leading-relaxed">{item.desc}</p></div>))}</div>
                 </section>
                 
-                {/* كيف نربح */}
                 <section id="how-we-earn" className="bg-slate-900 rounded-[3rem] p-10 md:p-24 text-white text-center shadow-2xl mb-32 scroll-mt-32 relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-600/20 rounded-full blur-[120px]"></div><div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-indigo-600/20 rounded-full blur-[100px]"></div>
                     <h2 className="text-3xl md:text-5xl font-black mb-8 relative z-10">{t.earnTitle}</h2><p className="text-blue-100 text-lg md:text-2xl max-w-4xl mx-auto leading-relaxed mb-16 relative z-10 font-medium">{t.earnDesc}</p>
                     <div className="flex flex-wrap justify-center gap-6 relative z-10 font-black"><div className="bg-white/10 px-10 py-6 rounded-[2rem] backdrop-blur-md border border-white/10 flex items-center gap-3 hover:bg-white/20 transition-colors"><CheckCircle size={24} className="text-green-400" /> {t.neutrality}</div><div className="bg-white/10 px-10 py-6 rounded-[2rem] backdrop-blur-md border border-white/10 flex items-center gap-3 hover:bg-white/20 transition-colors"><CheckCircle size={24} className="text-green-400" /> {t.noExtraCost}</div></div>
                 </section>
                 
-                {/* لماذا تثق فينا */}
                 <section id="why-trust" className="mb-32 scroll-mt-32">
                     <div className="text-center mb-16"><h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-6">{t.trustTitle}</h2><div className="inline-flex items-center gap-3 bg-blue-50 text-blue-900 px-6 py-3 rounded-full font-black text-lg animate-bounce"><Activity size={24} className="text-blue-600" /><span>{realSearchCount.toLocaleString()} {t.realSearch}</span></div></div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8"><div className="bg-white p-12 rounded-[3rem] shadow-xl border border-slate-100 hover:shadow-2xl transition-all"><div className="bg-blue-50 text-blue-600 w-20 h-20 rounded-[2rem] flex items-center justify-center mb-8"><BarChart3 size={40} /></div><h3 className="text-2xl font-black mb-4 text-slate-900">{t.trust1Title}</h3><p className="text-slate-500 font-bold leading-relaxed">{t.trust1Desc}</p></div><div className="bg-white p-12 rounded-[3rem] shadow-xl border border-slate-100 hover:shadow-2xl transition-all"><div className="bg-green-50 text-green-600 w-20 h-20 rounded-[2rem] flex items-center justify-center mb-8"><Shield size={40} /></div><h3 className="text-2xl font-black mb-4 text-slate-900">{t.trust2Title}</h3><p className="text-slate-500 font-bold leading-relaxed">{t.trust2Desc}</p></div><div className="bg-white p-12 rounded-[3rem] shadow-xl border border-slate-100 hover:shadow-2xl transition-all"><div className="bg-purple-50 text-purple-600 w-20 h-20 rounded-[2rem] flex items-center justify-center mb-8"><Heart size={40} /></div><h3 className="text-2xl font-black mb-4 text-slate-900">{t.trust3Title}</h3><p className="text-slate-500 font-bold leading-relaxed">{t.trust3Desc}</p></div></div>
@@ -2072,12 +1795,11 @@ const App = () => {
       )}
 
       {/* ============================ */}
-      {/* 19. لوحة الإدارة (Admin View) */}
+      {/* 19. لوحة الإدارة (Admin View) - مع قسم المشتركين فقط */}
       {/* ============================ */}
       {view === 'admin' && (
         <div className="max-w-7xl mx-auto px-4 py-32 animate-in fade-in">
           {!isAdminAuthenticated ? (
-            // 19.1 واجهة تسجيل دخول المدير
             <div className="bg-white rounded-[3rem] shadow-2xl p-12 max-w-sm mx-auto text-center border border-slate-100">
                <Lock size={40} className="mx-auto mb-6 text-slate-900" />
                <h1 className="text-2xl font-black mb-6">{t.adminLogin}</h1>
@@ -2091,7 +1813,6 @@ const App = () => {
                <button onClick={resetToHome} className="mt-6 text-slate-400 font-bold text-sm">{t.back}</button>
             </div>
           ) : (
-            // 19.2 لوحة التحكم الرئيسية
             <div className="bg-white rounded-[3rem] shadow-2xl p-10 md:p-16 border border-slate-100">
               {/* رأس لوحة التحكم */}
               <div className="flex justify-between items-center mb-10 border-b pb-6">
@@ -2106,7 +1827,7 @@ const App = () => {
               </div>
               
               {/* ==================== */}
-              {/* القسم 1: الذكاء الاصطناعي المتقدم */}
+              {/* قسم الذكاء الاصطناعي */}
               {/* ==================== */}
               <div className="mb-12 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-[2rem] p-8">
                 <h3 className="font-black text-blue-900 border-b border-blue-200 pb-4 mb-6 flex items-center gap-2">
@@ -2115,7 +1836,6 @@ const App = () => {
                 </h3>
                 
                 <div className="grid md:grid-cols-2 gap-8">
-                  {/* جيميني */}
                   <div className="bg-white p-6 rounded-2xl border border-blue-100 shadow-sm">
                     <div className="flex items-center gap-3 mb-4">
                       <div className="bg-blue-100 p-2 rounded-xl">
@@ -2172,7 +1892,6 @@ const App = () => {
                     </div>
                   </div>
                   
-                  {/* ميزات التحليل */}
                   <div className="bg-white p-6 rounded-2xl border border-blue-100 shadow-sm">
                     <h4 className="font-black text-blue-800 mb-4">ميزات التحليل المتقدم</h4>
                     
@@ -2222,7 +1941,7 @@ const App = () => {
               </div>
 
               {/* ==================== */}
-              {/* القسم 2: مفاتيح المتاجر */}
+              {/* قسم مفاتيح المتاجر */}
               {/* ==================== */}
               <div className="mb-12 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-100 rounded-[2rem] p-8">
                 <h3 className="font-black text-green-900 border-b border-green-200 pb-4 mb-6 flex items-center gap-2">
@@ -2231,9 +1950,7 @@ const App = () => {
                 </h3>
                 
                 <div className="space-y-6">
-                  {/* المتاجر الأساسية */}
                   <div className="grid md:grid-cols-2 gap-4">
-                    {/* أمازون */}
                     <div className="bg-white p-4 rounded-xl border border-green-100">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
@@ -2292,7 +2009,6 @@ const App = () => {
                       </div>
                     </div>
                     
-                    {/* نون */}
                     <div className="bg-white p-4 rounded-xl border border-green-100">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
@@ -2352,7 +2068,6 @@ const App = () => {
                     </div>
                   </div>
                   
-                  {/* إضافة متجر جديد */}
                   <div className="bg-white/50 border-2 border-dashed border-green-200 rounded-2xl p-6">
                     <h4 className="font-black text-green-800 mb-4 flex items-center gap-2">
                       <Plus className="text-green-600" size={20} />
@@ -2418,7 +2133,6 @@ const App = () => {
                     </div>
                   </div>
                   
-                  {/* المتاجر المضافة مسبقاً */}
                   {adminConfig.storeApiKeys?.customStores && adminConfig.storeApiKeys.customStores.length > 0 && (
                     <div className="mt-6">
                       <h5 className="font-bold text-green-700 mb-3">المتاجر المضافة:</h5>
@@ -2465,7 +2179,6 @@ const App = () => {
                     </div>
                   )}
                   
-                  {/* قسم روابط المتاجر */}
                   <div className="bg-white p-4 rounded-xl border border-green-100 mt-6">
                     <h4 className="font-bold text-green-800 mb-3 flex items-center gap-2">
                       <Link className="text-green-600" size={18} />
@@ -2530,29 +2243,30 @@ const App = () => {
               </div>
               
               {/* ==================== */}
-              {/* القسم 3: إدارة الحملات البريدية الترويجية (جديد كامل) */}
+              {/* 🎯 القسم الوحيد المهم: إدارة المشتركين والفلترة */}
               {/* ==================== */}
-              <div className="mb-12 bg-gradient-to-r from-pink-50 to-rose-50 border-2 border-pink-200 rounded-[2rem] p-8 shadow-lg">
-                <h3 className="font-black text-pink-900 border-b-2 border-pink-200 pb-4 mb-8 flex items-center gap-3 text-xl">
-                  <Mail className="text-pink-600" size={28} />
-                  📧 إدارة الحملات البريدية الترويجية
-                  <span className="bg-pink-600 text-white text-xs px-3 py-1 rounded-full mr-auto">جديد</span>
+              <div className="mb-12 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-[2rem] p-8 shadow-lg">
+                <h3 className="font-black text-blue-900 border-b-2 border-blue-200 pb-4 mb-8 flex items-center gap-3 text-xl">
+                  <Users className="text-blue-600" size={28} />
+                  👥 إدارة المشتركين والفلترة الذكية
+                  <span className="bg-blue-600 text-white text-xs px-3 py-1 rounded-full mr-auto">جديد</span>
                 </h3>
 
-                {/* الإحصائيات السريعة */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                  <div className="bg-white p-5 rounded-xl border-2 border-pink-100 shadow-sm hover:shadow-md transition-shadow">
+                {/* ✅ إحصائيات سريعة للمشتركين */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                  <div className="bg-white p-5 rounded-xl border-2 border-blue-100 shadow-sm hover:shadow-md transition-shadow">
                     <div className="flex items-center gap-4">
-                      <div className="bg-pink-100 p-3 rounded-xl">
-                        <Users size={24} className="text-pink-600" />
+                      <div className="bg-blue-100 p-3 rounded-xl">
+                        <Users size={24} className="text-blue-600" />
                       </div>
                       <div>
                         <p className="text-xs text-slate-500 font-bold">إجمالي المشتركين</p>
-                        <p className="text-3xl font-black text-pink-600">{subscribersList.length}</p>
+                        <p className="text-3xl font-black text-blue-600">{subscribersList.length}</p>
                       </div>
                     </div>
                   </div>
-                  <div className="bg-white p-5 rounded-xl border-2 border-pink-100 shadow-sm hover:shadow-md transition-shadow">
+                  
+                  <div className="bg-white p-5 rounded-xl border-2 border-blue-100 shadow-sm hover:shadow-md transition-shadow">
                     <div className="flex items-center gap-4">
                       <div className="bg-green-100 p-3 rounded-xl">
                         <Filter size={24} className="text-green-600" />
@@ -2563,79 +2277,79 @@ const App = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="bg-white p-5 rounded-xl border-2 border-pink-100 shadow-sm hover:shadow-md transition-shadow">
+                  
+                  <div className="bg-white p-5 rounded-xl border-2 border-blue-100 shadow-sm hover:shadow-md transition-shadow">
                     <div className="flex items-center gap-4">
                       <div className="bg-purple-100 p-3 rounded-xl">
-                        <Send size={24} className="text-purple-600" />
+                        <FileText size={24} className="text-purple-600" />
                       </div>
                       <div>
-                        <p className="text-xs text-slate-500 font-bold">الحملات المرسلة</p>
-                        <p className="text-3xl font-black text-purple-600">
-                          {adminConfig.emailCampaigns?.filter(c => c.status === 'sent').length || 0}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="bg-white p-5 rounded-xl border-2 border-pink-100 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="flex items-center gap-4">
-                      <div className="bg-amber-100 p-3 rounded-xl">
-                        <Play size={24} className="text-amber-600" />
-                      </div>
-                      <div>
-                        <p className="text-xs text-slate-500 font-bold">قيد التشغيل</p>
-                        <p className="text-3xl font-black text-amber-600">
-                          {adminConfig.emailCampaigns?.filter(c => c.status === 'active').length || 0}
-                        </p>
+                        <p className="text-xs text-slate-500 font-bold">جاهز للتصدير</p>
+                        <p className="text-3xl font-black text-purple-600">{filteredSubscribers.length}</p>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* قسم الفلترة والبحث المتقدم */}
-                <div className="bg-white p-6 rounded-2xl border-2 border-pink-200 mb-8">
-                  <h4 className="font-black text-pink-800 mb-4 flex items-center gap-2 text-lg">
-                    <Filter size={20} className="text-pink-600" />
-                    فلترة الجمهور حسب الاهتمامات
+                {/* ✅ قسم الفلترة الذكية */}
+                <div className="bg-white p-6 rounded-2xl border-2 border-blue-200 mb-6">
+                  <h4 className="font-black text-blue-800 mb-4 flex items-center gap-2 text-lg">
+                    <Filter size={20} className="text-blue-600" />
+                    فلترة المشتركين حسب المنتجات
                   </h4>
+                  
                   <div className="grid md:grid-cols-2 gap-8">
-                    {/* الفلترة بالكلمات المفتاحية */}
+                    {/* جهة اليمين: حقل الفلترة */}
                     <div>
                       <label className="text-xs font-bold text-slate-500 mb-2 block">
-                        اكتب المنتجات/الكلمات للفلترة (مفصولة بمسافة)
+                        اكتب المنتجات اللي تبغى تفلتر عليها (مفصولة بمسافة)
                       </label>
                       <div className="relative">
                         <input
                           type="text"
                           value={marketingFilter}
                           onChange={(e) => setMarketingFilter(e.target.value)}
-                          className="w-full p-4 pr-12 rounded-xl bg-slate-50 border-2 border-pink-200 font-bold text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-200 transition-all"
+                          className="w-full p-4 pr-12 rounded-xl bg-slate-50 border-2 border-blue-200 font-bold text-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-200 transition-all"
                           placeholder="مثال: آيفون سامسونج ماك بوك ابل"
                         />
-                        <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-pink-400" />
+                        <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-400" />
                       </div>
                       
-                      {/* الكلمات الأكثر بحثاً */}
+                      {/* زر مسح الفلترة */}
+                      {marketingFilter && (
+                        <button 
+                          onClick={clearFilter}
+                          className="mt-2 text-xs text-red-500 hover:text-red-700 font-bold flex items-center gap-1"
+                        >
+                          <X size={14} /> مسح الفلترة
+                        </button>
+                      )}
+                      
+                      {/* الكلمات المقترحة من أشهر المنتجات */}
                       <div className="mt-4">
-                        <p className="text-xs font-bold text-slate-400 mb-2">كلمات مفتاحية مقترحة:</p>
+                        <p className="text-xs font-bold text-slate-400 mb-2">منتجات مقترحة للفلترة:</p>
                         <div className="flex flex-wrap gap-2">
-                          {topSearchTerms.slice(0, 8).map((term, idx) => (
+                          {topSearchTerms.slice(0, 10).map((term, idx) => (
                             <button
                               key={idx}
                               onClick={() => setMarketingFilter(term.term)}
-                              className="text-xs bg-pink-50 hover:bg-pink-100 text-pink-700 px-3 py-1.5 rounded-full font-bold transition-colors border border-pink-200"
+                              className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full font-bold transition-colors border border-blue-200"
                             >
                               {term.term} ({term.count})
                             </button>
                           ))}
+                          {topSearchTerms.length === 0 && (
+                            <span className="text-xs text-slate-400">لا توجد كلمات بحث بعد</span>
+                          )}
                         </div>
                       </div>
                     </div>
-
-                    {/* إحصائيات الفلترة ومعاينة سريعة */}
-                    <div className="bg-gradient-to-br from-pink-50 to-rose-50 p-5 rounded-xl border-2 border-pink-200">
+                    
+                    {/* جهة اليسار: معاينة سريعة + نسبة التغطية */}
+                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-5 rounded-xl border-2 border-blue-200">
                       <div className="flex items-center justify-between mb-4">
-                        <span className="font-bold text-pink-800">نتائج الفلترة:</span>
-                        <span className="bg-pink-600 text-white px-4 py-1.5 rounded-full text-xs font-black shadow-sm">
+                        <span className="font-bold text-blue-800">نتائج الفلترة:</span>
+                        <span className="bg-blue-600 text-white px-4 py-1.5 rounded-full text-xs font-black shadow-sm">
                           {filteredSubscribers.length} مشترك
                         </span>
                       </div>
@@ -2644,7 +2358,7 @@ const App = () => {
                       <div className="mb-4">
                         <div className="flex justify-between text-xs mb-1">
                           <span className="text-slate-500">نسبة التغطية</span>
-                          <span className="font-bold text-pink-600">
+                          <span className="font-bold text-blue-600">
                             {subscribersList.length > 0 
                               ? ((filteredSubscribers.length / subscribersList.length) * 100).toFixed(1) 
                               : 0}%
@@ -2652,7 +2366,7 @@ const App = () => {
                         </div>
                         <div className="w-full bg-slate-200 rounded-full h-2.5">
                           <div 
-                            className="bg-pink-600 h-2.5 rounded-full transition-all duration-500"
+                            className="bg-blue-600 h-2.5 rounded-full transition-all duration-500"
                             style={{ 
                               width: subscribersList.length > 0 
                                 ? `${(filteredSubscribers.length / subscribersList.length) * 100}%` 
@@ -2668,31 +2382,37 @@ const App = () => {
                           <span className="text-xs font-bold text-slate-500">معاينة سريعة:</span>
                           <button 
                             onClick={handleExportSubscribers}
-                            className="text-xs bg-white text-pink-600 px-3 py-1 rounded-full font-bold border border-pink-200 hover:bg-pink-50 transition-colors flex items-center gap-1"
+                            className="text-xs bg-white text-blue-600 px-3 py-1.5 rounded-full font-bold border border-blue-200 hover:bg-blue-50 transition-colors flex items-center gap-1"
                           >
                             <FileText size={12} />
                             تصدير CSV
                           </button>
                         </div>
-                        <div className="space-y-2 max-h-[160px] overflow-y-auto custom-scrollbar">
-                          {filteredSubscribers.slice(0, 4).map((sub, idx) => (
-                            <div key={idx} className="text-xs bg-white/80 p-2.5 rounded-lg flex items-center gap-2 border border-pink-100">
-                              <Mail size={14} className="text-pink-400" />
-                              <span className="font-bold text-slate-700 flex-1 truncate">{sub.email}</span>
-                              <span className="text-[10px] bg-pink-100 text-pink-700 px-2 py-0.5 rounded-full font-bold">
+                        <div className="space-y-2 max-h-[180px] overflow-y-auto custom-scrollbar">
+                          {filteredSubscribers.slice(0, 5).map((sub, idx) => (
+                            <div key={idx} className="text-xs bg-white/80 p-2.5 rounded-lg flex items-center gap-2 border border-blue-100">
+                              <Mail size={14} className="text-blue-400" />
+                              <span className="font-bold text-slate-700 flex-1 truncate" dir="ltr">{sub.email}</span>
+                              <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold">
                                 {sub.interests?.length || 0} اهتمامات
                               </span>
                             </div>
                           ))}
-                          {filteredSubscribers.length > 4 && (
+                          {filteredSubscribers.length > 5 && (
                             <p className="text-[10px] text-center text-slate-400 pt-1">
-                              + {filteredSubscribers.length - 4} مشترك آخر
+                              + {filteredSubscribers.length - 5} مشترك آخر
                             </p>
                           )}
                           {filteredSubscribers.length === 0 && (
-                            <p className="text-center text-slate-400 text-xs py-4">
-                              لا يوجد مشتركين متطابقين مع الفلترة
-                            </p>
+                            <div className="text-center py-6">
+                              <p className="text-slate-400 text-xs mb-2">لا يوجد مشتركين متطابقين مع الفلترة</p>
+                              <button 
+                                onClick={clearFilter}
+                                className="text-xs bg-slate-100 px-3 py-1.5 rounded-full font-bold"
+                              >
+                                مسح الفلترة
+                              </button>
+                            </div>
                           )}
                         </div>
                       </div>
@@ -2700,239 +2420,46 @@ const App = () => {
                   </div>
                 </div>
 
-                {/* إضافة حملة جديدة */}
-                <div className="bg-white p-6 rounded-2xl border-2 border-pink-200 mb-8">
-                  <h4 className="font-black text-pink-800 mb-4 flex items-center gap-2 text-lg">
-                    <PlusCircle size={20} className="text-pink-600" />
-                    إنشاء حملة بريدية جديدة
-                  </h4>
-                  
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 mb-1 block">
-                          اسم الحملة <span className="text-red-400">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={newCampaign.name}
-                          onChange={(e) => setNewCampaign({...newCampaign, name: e.target.value})}
-                          className="w-full p-3 rounded-xl bg-slate-50 border-2 border-pink-200 font-bold text-sm"
-                          placeholder="مثال: عروض الجمعة السوداء"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 mb-1 block">
-                          عنوان الإيميل <span className="text-red-400">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={newCampaign.subject}
-                          onChange={(e) => setNewCampaign({...newCampaign, subject: e.target.value})}
-                          className="w-full p-3 rounded-xl bg-slate-50 border-2 border-pink-200 font-bold text-sm"
-                          placeholder="🔥 عرض حصري لمتابعينا!"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 mb-1 block">
-                          كلمات الفلترة (مفصولة بمسافة)
-                        </label>
-                        <input
-                          type="text"
-                          value={newCampaign.filterKeywords}
-                          onChange={(e) => setNewCampaign({...newCampaign, filterKeywords: e.target.value})}
-                          className="w-full p-3 rounded-xl bg-slate-50 border-2 border-pink-200 font-bold text-sm"
-                          placeholder="آيفون ايفون iphone ابل"
-                        />
-                        <p className="text-[10px] text-slate-400 mt-1">
-                          سيتم إرسال الحملة فقط للمشتركين الذين بحثوا عن هذه الكلمات
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 mb-1 block">
-                          محتوى الإيميل <span className="text-red-400">*</span>
-                        </label>
-                        <textarea
-                          value={newCampaign.body}
-                          onChange={(e) => setNewCampaign({...newCampaign, body: e.target.value})}
-                          rows="6"
-                          className="w-full p-3 rounded-xl bg-slate-50 border-2 border-pink-200 font-bold text-sm resize-none"
-                          placeholder="مرحباً {name}،
-
-لاحظنا أنك مهتم بمنتجات آبل. إليك عرض حصري: خصم 50 ريال على جميع أجهزة آيفون!
-
-تسوق الآن: {link}
-
-فريق مقارن"
-                        ></textarea>
-                        <p className="text-[10px] text-slate-400 mt-1">
-                          استخدم {'{name}'} لاسم المشترك، {'{link}'} لرابط العرض
-                        </p>
-                      </div>
-                      
-                      <div className="flex gap-3 pt-2">
-                        <button
-                          onClick={handleAddCampaign}
-                          className="flex-1 bg-pink-600 hover:bg-pink-700 text-white py-3 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 shadow-lg shadow-pink-200"
-                        >
-                          <Plus size={18} />
-                          إنشاء الحملة
-                        </button>
-                        <button
-                          onClick={() => {
-                            setNewCampaign({
-                              name: '',
-                              subject: '',
-                              body: '',
-                              filterKeywords: '',
-                              status: 'draft',
-                              createdAt: '',
-                              sentAt: '',
-                              sentCount: 0
-                            });
-                          }}
-                          className="px-6 bg-slate-100 hover:bg-slate-200 text-slate-600 py-3 rounded-xl font-bold text-sm transition-colors"
-                        >
-                          <X size={18} />
-                        </button>
-                      </div>
-                    </div>
+                {/* ✅ قائمة جميع المشتركين (اختياري) */}
+                <div className="mt-6">
+                  <div className="flex justify-between items-center mb-3">
+                    <h4 className="font-bold text-blue-800">جميع المشتركين ({subscribersList.length})</h4>
+                    <button 
+                      onClick={() => setMarketingFilter('')}
+                      className="text-xs text-blue-600 hover:text-blue-800 font-bold"
+                    >
+                      عرض الكل
+                    </button>
                   </div>
-                </div>
-
-                {/* قائمة الحملات الحالية */}
-                <div>
-                  <h4 className="font-black text-pink-800 mb-4 flex items-center gap-2 text-lg">
-                    <List size={20} className="text-pink-600" />
-                    الحملات الحالية ({adminConfig.emailCampaigns?.length || 0})
-                  </h4>
-                  
-                  <div className="space-y-4">
-                    {adminConfig.emailCampaigns && adminConfig.emailCampaigns.length > 0 ? (
-                      adminConfig.emailCampaigns.map((campaign, index) => {
-                        // حساب عدد المشتركين المستهدفين لهذه الحملة
-                        const targetCount = filterSubscribersByKeywords(campaign.filterKeywords).length;
-                        
-                        return (
-                          <div key={campaign.id || index} className="bg-white p-6 rounded-xl border-2 border-pink-100 hover:border-pink-300 transition-colors">
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-                              <div className="flex items-start gap-4">
-                                {/* حالة الحملة */}
-                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center
-                                  ${campaign.status === 'active' ? 'bg-green-100 text-green-600' : 
-                                    campaign.status === 'paused' ? 'bg-amber-100 text-amber-600' : 
-                                    campaign.status === 'sent' ? 'bg-blue-100 text-blue-600' : 
-                                    'bg-slate-100 text-slate-600'}`}
-                                >
-                                  {campaign.status === 'active' && <Play size={24} />}
-                                  {campaign.status === 'paused' && <Pause size={24} />}
-                                  {campaign.status === 'sent' && <Send size={24} />}
-                                  {campaign.status === 'draft' && <FileText size={24} />}
-                                </div>
-                                
-                                <div>
-                                  <div className="flex items-center gap-3 mb-1">
-                                    <h5 className="font-black text-lg text-slate-900">{campaign.name}</h5>
-                                    <span className={`text-[10px] px-3 py-1 rounded-full font-bold
-                                      ${campaign.status === 'active' ? 'bg-green-100 text-green-700' : 
-                                        campaign.status === 'paused' ? 'bg-amber-100 text-amber-700' : 
-                                        campaign.status === 'sent' ? 'bg-blue-100 text-blue-700' : 
-                                        'bg-slate-100 text-slate-700'}`}
-                                    >
-                                      {campaign.status === 'active' ? '🟢 نشطة' : 
-                                       campaign.status === 'paused' ? '🟡 متوقفة' : 
-                                       campaign.status === 'sent' ? '✅ مرسلة' : 
-                                       '📝 مسودة'}
-                                    </span>
-                                  </div>
-                                  <p className="text-sm font-bold text-slate-700 mb-2">{campaign.subject}</p>
-                                  <div className="flex items-center gap-4 text-xs">
-                                    <span className="text-slate-500">
-                                      <Users size={14} className="inline ml-1" />
-                                      المستهدفون: <span className="font-black text-pink-600">{targetCount}</span>
-                                    </span>
-                                    <span className="text-slate-500">
-                                      <Send size={14} className="inline ml-1" />
-                                      تم الإرسال: <span className="font-black">{campaign.sentCount || 0}</span>
-                                    </span>
-                                    {campaign.sentAt && (
-                                      <span className="text-slate-400">
-                                        <Calendar size={14} className="inline ml-1" />
-                                        {new Date(campaign.sentAt).toLocaleDateString('ar-SA')}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                              
-                              {/* أزرار التحكم بالحملة */}
-                              <div className="flex items-center gap-2 mr-auto md:mr-0">
-                                {/* تشغيل/إيقاف */}
-                                {campaign.status !== 'sent' && (
-                                  <>
-                                    {campaign.status === 'active' ? (
-                                      <button
-                                        onClick={() => handleCampaignStatusChange(campaign.id, 'paused')}
-                                        className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-bold text-xs transition-colors flex items-center gap-1"
-                                      >
-                                        <Pause size={14} />
-                                        إيقاف
-                                      </button>
-                                    ) : (
-                                      <button
-                                        onClick={() => handleCampaignStatusChange(campaign.id, 'active')}
-                                        className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold text-xs transition-colors flex items-center gap-1"
-                                      >
-                                        <Play size={14} />
-                                        تشغيل
-                                      </button>
-                                    )}
-                                    
-                                    {/* إرسال الآن */}
-                                    <button
-                                      onClick={() => handleSendCampaign(campaign.id)}
-                                      disabled={campaignSending}
-                                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-xs transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                      <Send size={14} />
-                                      {campaignSending ? 'جاري الإرسال...' : 'إرسال الآن'}
-                                    </button>
-                                  </>
-                                )}
-                                
-                                {/* حذف */}
-                                <button
-                                  onClick={() => handleDeleteCampaign(campaign.id)}
-                                  className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                >
-                                  <Trash2 size={18} />
-                                </button>
-                              </div>
-                            </div>
-                            
-                            {/* معاينة مختصرة للمحتوى */}
-                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                              <p className="text-xs font-bold text-slate-400 mb-1">محتوى الإيميل:</p>
-                              <p className="text-sm text-slate-700 line-clamp-2">{campaign.body}</p>
-                              {campaign.filterKeywords && (
-                                <div className="mt-2 flex items-center gap-2">
-                                  <span className="text-[10px] bg-pink-100 text-pink-700 px-2 py-0.5 rounded-full">
-                                    فلترة: {campaign.filterKeywords}
-                                  </span>
-                                </div>
-                              )}
-                            </div>
+                  <div className="bg-white rounded-xl border border-blue-100 max-h-[250px] overflow-y-auto custom-scrollbar">
+                    {subscribersList.length > 0 ? (
+                      subscribersList.slice(0, 10).map((sub, idx) => (
+                        <div key={idx} className="flex items-center justify-between p-3 border-b border-slate-50 last:border-0 hover:bg-blue-50/50">
+                          <div className="flex items-center gap-2">
+                            <Mail size={14} className="text-slate-400" />
+                            <span className="text-sm font-bold text-slate-700" dir="ltr">{sub.email}</span>
                           </div>
-                        );
-                      })
+                          <div className="flex items-center gap-2">
+                            {sub.interests && sub.interests.length > 0 && (
+                              <span className="text-[10px] bg-slate-100 px-2 py-1 rounded-full">
+                                {sub.interests.slice(0, 2).join(', ')}
+                                {sub.interests.length > 2 && '...'}
+                              </span>
+                            )}
+                            <span className="text-[10px] text-slate-400">
+                              {sub.joined_at ? new Date(sub.joined_at).toLocaleDateString('ar-SA') : ''}
+                            </span>
+                          </div>
+                        </div>
+                      ))
                     ) : (
-                      <div className="bg-slate-50 p-12 rounded-xl text-center border-2 border-dashed border-slate-200">
-                        <Mail size={48} className="mx-auto mb-4 text-slate-300" />
-                        <p className="font-bold text-slate-400">لا توجد حملات بريدية بعد</p>
-                        <p className="text-sm text-slate-400 mt-2">قم بإنشاء حملتك الأولى من الأعلى</p>
+                      <div className="text-center py-8">
+                        <p className="text-slate-400 text-sm">لا يوجد مشتركين بعد</p>
+                      </div>
+                    )}
+                    {subscribersList.length > 10 && (
+                      <div className="p-3 text-center text-xs text-blue-600 font-bold">
+                        + {subscribersList.length - 10} مشترك آخر
                       </div>
                     )}
                   </div>
@@ -2940,7 +2467,7 @@ const App = () => {
               </div>
               
               {/* ==================== */}
-              {/* القسم 4: إعدادات عامة */}
+              {/* إعدادات عامة */}
               {/* ==================== */}
               <div className="mb-12 bg-slate-50 border border-slate-100 rounded-[2rem] p-8">
                 <h3 className="font-black text-slate-900 border-b border-slate-200 pb-4 mb-6 flex items-center gap-2">
@@ -3011,9 +2538,7 @@ const App = () => {
                 </div>
               </div>
 
-              {/* ==================== */}
               {/* إحصائيات البحث المتقدمة */}
-              {/* ==================== */}
               <div className="mb-12 bg-indigo-50 border border-indigo-100 rounded-[2rem] p-8">
                 <h3 className="font-black text-indigo-900 border-b border-indigo-200 pb-4 mb-6 flex items-center gap-2">
                   <BarChart2 className="text-indigo-600" />
@@ -3022,13 +2547,13 @@ const App = () => {
                 
                 <div className="mb-8">
                   <p className="text-sm font-bold text-indigo-400 mb-4 flex items-center gap-2">
-                    <TrendingUp size={16} /> النمو الشهري (Monthly Growth)
+                    <TrendingUp size={16} /> النمو الشهري
                   </p>
                   <div className="bg-white p-6 rounded-2xl shadow-sm border border-indigo-50 h-64 flex items-end gap-4 overflow-x-auto custom-scrollbar">
                     {monthlyStats.length > 0 ? (
                       (() => {
                         const maxMonthly = Math.max(...monthlyStats.map(s => s.total_searches));
-                        return monthlyStats.map((stat, idx) => {
+                        return monthlyStats.slice(-6).map((stat, idx) => {
                           const heightPercent = (stat.total_searches / maxMonthly) * 100;
                           return (
                             <div key={idx} className="flex flex-col items-center gap-2 group min-w-[50px]">
@@ -3075,7 +2600,7 @@ const App = () => {
                   
                   <div className="flex flex-col h-[350px]">
                     <p className="text-sm font-bold text-indigo-400 mb-4 flex items-center gap-2">
-                      <Clock size={16} /> سجل البحث المباشر (Live Feed)
+                      <Clock size={16} /> سجل البحث المباشر
                     </p>
                     <div className="bg-white rounded-2xl shadow-sm border border-indigo-50 flex-1 overflow-hidden flex flex-col">
                       <div className="flex bg-indigo-50 p-3 text-[10px] font-black text-indigo-800 uppercase tracking-wider">
@@ -3085,7 +2610,7 @@ const App = () => {
                       </div>
                       <div className="overflow-y-auto custom-scrollbar flex-1 p-2 space-y-1">
                         {searchLogs.length > 0 ? (
-                          searchLogs.map((log, idx) => (
+                          searchLogs.slice(0, 15).map((log, idx) => (
                             <div key={idx} className="flex items-center p-3 text-xs border-b border-slate-50 last:border-0 hover:bg-indigo-50/50 transition-colors rounded-lg">
                               <div className="w-1/3 text-slate-400 font-bold" dir="ltr">
                                 {new Date(log.timestamp).toLocaleDateString('en-GB')} <br/>
@@ -3146,7 +2671,7 @@ const App = () => {
               <div className="mb-12 bg-orange-50 border border-orange-100 rounded-[2rem] p-8">
                 <h3 className="font-black text-orange-900 border-b border-orange-200 pb-4 mb-6 flex items-center gap-2">
                   <Flame className="text-orange-600" />
-                  إدارة الكلمات الرائجة (تظهر في الرئيسية)
+                  إدارة الكلمات الرائجة
                 </h3>
                 <div className="space-y-4">
                   <div className="flex flex-wrap gap-2 mb-4">
@@ -3177,7 +2702,7 @@ const App = () => {
                 </div>
               </div>
 
-              {/* الإعدادات المختلفة */}
+              {/* بيانات التواصل والعروض */}
               <div className="grid md:grid-cols-2 gap-10 mb-12">
                 <div className="space-y-6">
                   <h3 className="font-black text-blue-900 border-b pb-2">بيانات التواصل</h3>
@@ -3271,11 +2796,7 @@ const App = () => {
         </div>
       )}
 
-      {/* ============================ */}
-      {/* 20. صفحات أخرى */}
-      {/* ============================ */}
-      
-      {/* 20.1 صفحة الشركاء */}
+      {/* صفحات أخرى */}
       {view === 'merchant' && (
         <div className="max-w-4xl mx-auto px-4 py-32 animate-in fade-in">
            <div className="bg-white rounded-[3rem] shadow-2xl p-10 md:p-20 border border-slate-100 text-center">
@@ -3308,7 +2829,6 @@ const App = () => {
         </div>
       )}
 
-      {/* 20.2 صفحة سياسة الخصوصية */}
       {view === 'privacy' && (
         <div className="max-w-4xl mx-auto px-4 py-32 animate-in fade-in">
            <div className="bg-white rounded-[3rem] shadow-2xl p-10 md:p-20 border border-slate-100 relative overflow-hidden">
@@ -3349,7 +2869,6 @@ const App = () => {
         </div>
       )}
 
-      {/* 20.3 صفحة التواصل */}
       {view === 'contact' && (
         <div className="max-w-6xl mx-auto px-4 py-32 animate-in fade-in">
            <div className="text-center mb-16">
@@ -3423,9 +2942,7 @@ const App = () => {
         </div>
       )}
 
-      {/* ============================ */}
-      {/* 21. التذييل (Footer) */}
-      {/* ============================ */}
+      {/* التذييل (Footer) */}
       <footer className="bg-slate-900 text-slate-400 py-16 mt-32 rounded-t-[3rem] relative overflow-hidden">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none"></div>
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-indigo-600/10 rounded-full blur-[100px] pointer-events-none"></div>
@@ -3476,9 +2993,7 @@ const App = () => {
         </div>
       </footer>
 
-      {/* ============================ */}
-      {/* 22. الأنماط المخصصة (CSS-in-JS) */}
-      {/* ============================ */}
+      {/* الأنماط المخصصة */}
       <style jsx>{`
         .scrollbar-hide {
           -ms-overflow-style: none;
@@ -3522,48 +3037,5 @@ const App = () => {
     </div>
   );
 };
-
-// أيقونة PlusCircle للإضافة
-const PlusCircle = (props) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width={props.size || 24} 
-    height={props.size || 24} 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    className={props.className}
-  >
-    <circle cx="12" cy="12" r="10"/>
-    <line x1="12" y1="8" x2="12" y2="16"/>
-    <line x1="8" y1="12" x2="16" y2="12"/>
-  </svg>
-);
-
-// أيقونة List للقوائم
-const List = (props) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width={props.size || 24} 
-    height={props.size || 24} 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    className={props.className}
-  >
-    <line x1="8" y1="6" x2="21" y2="6"/>
-    <line x1="8" y1="12" x2="21" y2="12"/>
-    <line x1="8" y1="18" x2="21" y2="18"/>
-    <line x1="3" y1="6" x2="3.01" y2="6"/>
-    <line x1="3" y1="12" x2="3.01" y2="12"/>
-    <line x1="3" y1="18" x2="3.01" y2="18"/>
-  </svg>
-);
 
 export default App;

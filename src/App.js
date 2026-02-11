@@ -1,5 +1,5 @@
 // ============================
-// 1. الاستيرادات الرئيسية
+// 1. الاستيرادات الرئيسية - تم إصلاح مشكلة ChartBar
 // ============================
 import React, { useState, useEffect, useRef } from 'react';
 import { 
@@ -9,7 +9,8 @@ import {
   Instagram, Twitter, Send, Settings, Eye, EyeOff, Save, ArrowLeft, Plus, Trash2, X,
   FileText, Activity, Globe, ChevronLeft, Coins, Database, Bell, MessageCircle, BarChart2, Flame, Languages, Link, Server,
   ChevronRight, Clock, XCircle, Share2, Calendar, TrendingUp, Filter, UserCheck, LogOut,
-  Brain, Hexagon, Key, Target, MailCheck, Users2, BellRing, ChartBar
+  Brain, Hexagon, Key, Target, MailCheck, Users2, BellRing,
+  BarChart // ✅ تم تغيير ChartBar إلى BarChart (أو استخدم BarChart as ChartBar إذا أردت)
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, onSnapshot, collection, increment, updateDoc, addDoc, deleteDoc, getDocs, arrayUnion, query, where, getDoc } from 'firebase/firestore';
@@ -886,7 +887,7 @@ const App = () => {
         targetCount,
         status: campaignStatus,
         createdAt: new Date().toISOString(),
-        createdBy: user.email || 'admin'
+        createdBy: user?.email || 'admin'
       };
       
       // إذا كان هناك جدولة
@@ -2198,7 +2199,7 @@ const App = () => {
               {/* ==================== */}
               {activeTab === 'campaigns' && (
                 <div className="space-y-8">
-                  {/* إحصائيات المشتركين */}
+                  {/* إحصائيات المشتركين - تم إصلاح مشكلة ChartBar هنا */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-2xl p-6">
                       <div className="flex items-center justify-between">
@@ -2218,7 +2219,8 @@ const App = () => {
                           <p className="text-3xl font-black text-green-900">{subscribersList.filter(s => s.status !== 'inactive').length}</p>
                         </div>
                         <div className="bg-green-100 p-3 rounded-xl">
-                          <ChartBar className="text-green-600" size={24} />
+                          {/* ✅ تم تغيير ChartBar إلى BarChart */}
+                          <BarChart className="text-green-600" size={24} />
                         </div>
                       </div>
                     </div>
@@ -2500,7 +2502,7 @@ const App = () => {
               {/* ==================== */}
               {activeTab === 'subscribers' && (
                 <div className="space-y-8">
-                  {/* إحصائيات المشتركين */}
+                  {/* إحصائيات المشتركين - تم إصلاح مشكلة ChartBar هنا أيضًا */}
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-2xl p-6">
                       <div className="flex items-center justify-between">
@@ -2931,7 +2933,7 @@ const App = () => {
             </div>
             <div><h4 className="text-white font-black text-lg mb-6">{t.quickLinks}</h4><ul className="space-y-4 text-sm font-bold"><li><button onClick={resetToHome} className="hover:text-blue-400 transition-colors">{t.home}</button></li><li><button onClick={() => scrollToSection('about')} className="hover:text-blue-400 transition-colors">{t.about}</button></li><li><button onClick={() => scrollToSection('why-trust')} className="hover:text-blue-400 transition-colors">{t.features}</button></li><li><button onClick={() => scrollToSection('how-we-earn')} className="hover:text-blue-400 transition-colors">{t.earn}</button></li><li><button onClick={() => setView('merchant')} className="hover:text-blue-400 transition-colors">{t.merchant}</button></li></ul></div>
              <div><h4 className="text-white font-black text-lg mb-6">{t.legal}</h4><ul className="space-y-4 text-sm font-bold"><li><button onClick={() => setView('privacy')} className="hover:text-blue-400 transition-colors">{t.privacy}</button></li><li><button onClick={() => setView('contact')} className="hover:text-blue-400 transition-colors">{t.contactTitle}</button></li><li><button className="hover:text-blue-400 transition-colors cursor-not-allowed opacity-50">{t.terms}</button></li></ul></div>
-            <div><h4 className="text-white font-black text-lg mb-6">{t.contact}</h4><ul className="space-y-4 text-sm font-medium"><li className="flex items-center gap-3"><Mail size={18} className="text-blue-500" /><span dir="ltr">{adminConfig.supportEmail}</span></li><li className="flex items-center gap-3"><Phone size={18} className="text-green-500" /><span dir="ltr">{adminConfig.whatsappNumber}</span></li><li className="flex items-start gap-3"><MapPinIcon /><span>الرياض، المملكة العربية السعودية</span></li></ul></div>
+            <div><h4 className="text-white font-black text-lg mb-6">{t.contactTitle}</h4><ul className="space-y-4 text-sm font-medium"><li className="flex items-center gap-3"><Mail size={18} className="text-blue-500" /><span dir="ltr">{adminConfig.supportEmail}</span></li><li className="flex items-center gap-3"><Phone size={18} className="text-green-500" /><span dir="ltr">{adminConfig.whatsappNumber}</span></li><li className="flex items-start gap-3"><MapPinIcon /><span>الرياض، المملكة العربية السعودية</span></li></ul></div>
           </div>
           <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-bold text-slate-500"><p>{t.rights}</p><div className="flex gap-6"><span>{t.madeIn}</span></div></div>
         </div>

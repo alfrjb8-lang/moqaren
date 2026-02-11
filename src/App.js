@@ -9,7 +9,7 @@ import {
   Instagram, Twitter, Send, Settings, Eye, EyeOff, Save, ArrowLeft, Plus, Trash2, X,
   FileText, Activity, Globe, ChevronLeft, Coins, Database, Bell, MessageCircle, BarChart2, Flame, Languages, Link, Server,
   ChevronRight, Clock, XCircle, Share2, Calendar, TrendingUp, Filter, UserCheck, LogOut,
-  Brain, Hexagon, Key
+  Brain, Hexagon, Key, Play, Pause, PlayCircle, StopCircle, RefreshCw
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, onSnapshot, collection, increment, updateDoc, addDoc, deleteDoc, getDocs, arrayUnion } from 'firebase/firestore';
@@ -332,10 +332,27 @@ const App = () => {
   const [promoEmail, setPromoEmail] = useState('');
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [subscriberEmail, setSubscriberEmail] = useState('');
+  
+  // ===== حالات الحملات البريدية =====
   const [marketingFilter, setMarketingFilter] = useState('');
   const [marketingSubject, setMarketingSubject] = useState('');
   const [marketingBody, setMarketingBody] = useState('');
   const [subscribersList, setSubscribersList] = useState([]);
+  const [selectedCampaign, setSelectedCampaign] = useState(null);
+  const [campaignStatus, setCampaignStatus] = useState({});
+  const [campaignSending, setCampaignSending] = useState(false);
+  const [campaigns, setCampaigns] = useState([]);
+  const [newCampaign, setNewCampaign] = useState({
+    name: '',
+    subject: '',
+    body: '',
+    filterKeywords: '',
+    status: 'draft', // draft, active, paused, sent
+    createdAt: '',
+    sentAt: '',
+    sentCount: 0
+  });
+  
   const [lang, setLang] = useState('ar');
   const [notification, setNotification] = useState(null);
   const [realSearchCount, setRealSearchCount] = useState(0);
@@ -366,7 +383,7 @@ const App = () => {
   const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
 
   // ============================
-  // 8.2 الإعدادات الافتراضية للإدارة - محدثة
+  // 8.2 الإعدادات الافتراضية للإدارة - محدثة مع الحملات
   // ============================
   const defaultAdminConfig = {
     supportEmail: "support@moqaren.com",
@@ -434,7 +451,6 @@ const App = () => {
         apiKey: '',
         enabled: true
       },
-      // متاجر مخصصة يمكن إضافتها
       customStores: []
     },
     
@@ -445,7 +461,42 @@ const App = () => {
       cacheDuration: 3600,
       maxProducts: 20,
       currency: 'SAR'
-    }
+    },
+    
+    // === القسم 4: إعدادات الحملات البريدية (جديد) ===
+    emailSettings: {
+      smtpHost: '',
+      smtpPort: 587,
+      smtpUser: '',
+      smtpPass: '',
+      fromEmail: 'campaigns@moqaren.com',
+      fromName: 'مقارن - عروض حصرية',
+      replyTo: 'support@moqaren.com'
+    },
+    
+    // الحملات المحفوظة
+    emailCampaigns: [
+      {
+        id: 'camp1',
+        name: 'عروض الآيفون',
+        subject: '🔥 عرض خاص لمتابعي آيفون: خصم 50 ريال!',
+        body: 'مرحباً {name}،\n\nلاحظنا أنك مهتم بشراء آيفون. إليك عرض حصري: خصم 50 ريال على جميع أجهزة آبل.\n\nتسوق الآن: {link}\n\nفريق مقارن',
+        filterKeywords: 'آيفون ايفون iphone apple أبل',
+        status: 'draft',
+        createdAt: new Date().toISOString(),
+        sentCount: 0
+      },
+      {
+        id: 'camp2',
+        name: 'عروض الساعات الذكية',
+        subject: '⌚ سير مجاني مع كل ساعة ذكية',
+        body: 'مرحباً،\n\nسير مجاني مع كل ساعة ذكية تشتريها من متجر نون. لفترة محدودة!\n\nتسوق الآن: {link}\n\nفريق مقارن',
+        filterKeywords: 'ساعة ساعات ذكية سمارت واتش watch',
+        status: 'active',
+        createdAt: new Date().toISOString(),
+        sentCount: 23
+      }
+    ]
   };
 
   const [adminConfig, setAdminConfig] = useState(defaultAdminConfig);
@@ -516,10 +567,168 @@ const App = () => {
   };
 
   // ============================
-  // 10. useEffect Hooks
+  // 10. دوال الحملات البريدية (جديد)
   // ============================
   
-  // 10.1 تأثير السحب للنتائج في الجوال
+  // 10.1 فلترة المشتركين حسب الكلمات المفتاحية
+  const filterSubscribersByKeywords = (keywords) => {
+    if (!keywords || keywords.trim() === '') return subscribersList;
+    
+    const keywordList = keywords.toLowerCase().split(' ').filter(k => k.trim() !== '');
+    if (keywordList.length === 0) return subscribersList;
+    
+    return subscribersList.filter(sub => {
+      if (!sub.interests || sub.interests.length === 0) return false;
+      return sub.interests.some(interest => 
+        keywordList.some(keyword => interest.toLowerCase().includes(keyword))
+      );
+    });
+  };
+  
+  // 10.2 إضافة حملة جديدة
+  const handleAddCampaign = () => {
+    if (!newCampaign.name || !newCampaign.subject || !newCampaign.body) {
+      showNotification('يرجى تعبئة جميع الحقول المطلوبة', 'error');
+      return;
+    }
+    
+    const campaign = {
+      ...newCampaign,
+      id: 'camp_' + Date.now(),
+      createdAt: new Date().toISOString(),
+      status: 'draft',
+      sentCount: 0
+    };
+    
+    setAdminConfig({
+      ...adminConfig,
+      emailCampaigns: [...(adminConfig.emailCampaigns || []), campaign]
+    });
+    
+    setNewCampaign({
+      name: '',
+      subject: '',
+      body: '',
+      filterKeywords: '',
+      status: 'draft',
+      createdAt: '',
+      sentAt: '',
+      sentCount: 0
+    });
+    
+    showNotification('تم إضافة الحملة بنجاح');
+  };
+  
+  // 10.3 حذف حملة
+  const handleDeleteCampaign = (campaignId) => {
+    if (!confirm('هل أنت متأكد من حذف هذه الحملة؟')) return;
+    
+    const updatedCampaigns = (adminConfig.emailCampaigns || []).filter(c => c.id !== campaignId);
+    setAdminConfig({
+      ...adminConfig,
+      emailCampaigns: updatedCampaigns
+    });
+    
+    showNotification('تم حذف الحملة');
+  };
+  
+  // 10.4 تغيير حالة الحملة (تشغيل/إيقاف/إرسال)
+  const handleCampaignStatusChange = (campaignId, newStatus) => {
+    const updatedCampaigns = (adminConfig.emailCampaigns || []).map(c => {
+      if (c.id === campaignId) {
+        return {
+          ...c,
+          status: newStatus,
+          ...(newStatus === 'sent' ? { sentAt: new Date().toISOString() } : {})
+        };
+      }
+      return c;
+    });
+    
+    setAdminConfig({
+      ...adminConfig,
+      emailCampaigns: updatedCampaigns
+    });
+    
+    const statusMessages = {
+      active: 'تم تشغيل الحملة ✅',
+      paused: 'تم إيقاف الحملة مؤقتاً ⏸️',
+      sent: 'تم إرسال الحملة 📨',
+      draft: 'تم حفظ المسودة 📝'
+    };
+    
+    showNotification(statusMessages[newStatus] || 'تم تحديث حالة الحملة');
+  };
+  
+  // 10.5 إرسال الحملة فعلياً
+  const handleSendCampaign = async (campaignId) => {
+    const campaign = (adminConfig.emailCampaigns || []).find(c => c.id === campaignId);
+    if (!campaign) return;
+    
+    setCampaignSending(true);
+    
+    // محاكاة إرسال الإيميلات
+    try {
+      const filteredSubs = filterSubscribersByKeywords(campaign.filterKeywords);
+      
+      // هنا راح تستدعي API حقيقي للإيميلات (SendGrid, AWS SES, إلخ)
+      await new Promise(resolve => setTimeout(resolve, 2000)); // محاكاة
+      
+      // تحديث عدد المرسلات
+      const updatedCampaigns = (adminConfig.emailCampaigns || []).map(c => {
+        if (c.id === campaignId) {
+          return {
+            ...c,
+            status: 'sent',
+            sentAt: new Date().toISOString(),
+            sentCount: filteredSubs.length
+          };
+        }
+        return c;
+      });
+      
+      setAdminConfig({
+        ...adminConfig,
+        emailCampaigns: updatedCampaigns
+      });
+      
+      showNotification(`✅ تم إرسال الحملة إلى ${filteredSubs.length} مشترك`);
+    } catch (error) {
+      console.error('Error sending campaign:', error);
+      showNotification('❌ فشل إرسال الحملة', 'error');
+    } finally {
+      setCampaignSending(false);
+    }
+  };
+  
+  // 10.6 معاينة الحملة
+  const handlePreviewCampaign = (campaign) => {
+    setSelectedCampaign(campaign);
+  };
+  
+  // 10.7 تصدير المشتركين المفلترين
+  const handleExportSubscribers = () => {
+    const filtered = filterSubscribersByKeywords(marketingFilter);
+    const csvContent = "data:text/csv;charset=utf-8," 
+      + "البريد الإلكتروني,تاريخ الاشتراك,الاهتمامات\n"
+      + filtered.map(sub => `${sub.email},${sub.joined_at || ''},${(sub.interests || []).join(' | ')}`).join("\n");
+    
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "moqaren_subscribers.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showNotification('تم تصدير قائمة المشتركين');
+  };
+
+  // ============================
+  // 11. useEffect Hooks
+  // ============================
+  
+  // 11.1 تأثير السحب للنتائج في الجوال
   useEffect(() => {
     const container = resultsContainerRef.current;
     if (!container || !results || window.innerWidth >= 768) return;
@@ -584,7 +793,7 @@ const App = () => {
     };
   }, [results]);
 
-  // 10.2 المصادقة الذكية
+  // 11.2 المصادقة الذكية
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -601,7 +810,7 @@ const App = () => {
     return () => unsubscribe();
   }, []);
 
-  // 10.3 إدارة النوافذ المنبثقة
+  // 11.3 إدارة النوافذ المنبثقة
   useEffect(() => {
     const savedEmail = localStorage.getItem('moqaren_user_email');
     if (savedEmail) {
@@ -617,7 +826,7 @@ const App = () => {
     }
   }, [view, isAdminAuthenticated]);
 
-  // 10.4 جلب الإعدادات والبيانات
+  // 11.4 جلب الإعدادات والبيانات
   useEffect(() => {
     if (!user) return;
     const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'app_settings', 'main_config');
@@ -631,7 +840,7 @@ const App = () => {
     return () => unsubscribe();
   }, [user]);
 
-  // 10.5 العداد الحقيقي
+  // 11.5 العداد الحقيقي
   useEffect(() => {
     if (!user) return;
     const statsRef = doc(db, 'artifacts', appId, 'public', 'data', 'stats', 'global_counts');
@@ -646,7 +855,7 @@ const App = () => {
     return () => unsubscribe();
   }, [user]);
 
-  // 10.6 جلب بيانات لوحة التحكم
+  // 11.6 جلب بيانات لوحة التحكم
   useEffect(() => {
     if (!isAdminAuthenticated) return;
     
@@ -697,10 +906,10 @@ const App = () => {
   }, [isAdminAuthenticated]);
 
   // ============================
-  // 11. وظائف التسويق والاشتراكات
+  // 12. وظائف التسويق والاشتراكات
   // ============================
   
-  // 11.1 الاشتراك في النشرة البريدية
+  // 12.1 الاشتراك في النشرة البريدية
   const handleSubscribe = async (e) => {
       e.preventDefault();
       if (!promoEmail || !user) return;
@@ -724,7 +933,7 @@ const App = () => {
       }
   };
 
-  // 11.2 تتبع كلمات البحث
+  // 12.2 تتبع كلمات البحث
   const trackSearchTerm = async (term) => {
       if (!user || !term) return;
       const cleanTerm = term.trim().toLowerCase();
@@ -767,18 +976,7 @@ const App = () => {
       }
   };
 
-  // 11.3 إرسال حملة تسويقية
-  const handleSendCampaign = () => {
-      if (!marketingSubject || !marketingBody) {
-          showNotification('يرجى تعبئة العنوان والرسالة', 'error');
-          return;
-      }
-      showNotification(`تم إرسال الحملة إلى ${filteredSubscribers.length} مشترك بنجاح!`, 'success');
-      setMarketingSubject('');
-      setMarketingBody('');
-  };
-
-  // 11.4 زيادة عداد البحث العام
+  // 12.3 زيادة عداد البحث العام
   const incrementGlobalCounter = async () => {
       if (!user) return;
       const statsRef = doc(db, 'artifacts', appId, 'public', 'data', 'stats', 'global_counts');
@@ -788,10 +986,10 @@ const App = () => {
   };
 
   // ============================
-  // 12. وظائف الإدارة والتحكم
+  // 13. وظائف الإدارة والتحكم
   // ============================
   
-  // 12.1 حفظ جميع التغييرات
+  // 13.1 حفظ جميع التغييرات
   const handleSaveAllChanges = async () => {
     if (!isAdminAuthenticated) {
         showNotification("ليس لديك صلاحية الحفظ", "error");
@@ -808,7 +1006,7 @@ const App = () => {
     }
   };
 
-  // 12.2 العودة للرئيسية
+  // 13.2 العودة للرئيسية
   const resetToHome = () => {
     setView('home');
     setResults(null);
@@ -818,7 +1016,7 @@ const App = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // 12.3 التمرير للقسم المحدد
+  // 13.3 التمرير للقسم المحدد
   const scrollToSection = (id) => {
     setView('home');
     setResults(null);
@@ -832,7 +1030,7 @@ const App = () => {
     }, 150);
   };
 
-  // 12.4 النقر على الشعار (للوصول للإدارة)
+  // 13.4 النقر على الشعار (للوصول للإدارة)
   const handleLogoClick = () => {
     const newCount = adminClickCount + 1;
     setAdminClickCount(newCount);
@@ -849,7 +1047,7 @@ const App = () => {
     clickTimeoutRef.current = setTimeout(() => setAdminClickCount(0), 3000);
   };
 
-  // 12.5 إرسال طلب شراكة
+  // 13.5 إرسال طلب شراكة
   const handleMerchantSubmit = async (e) => {
     e.preventDefault();
     if (!user) return;
@@ -868,7 +1066,7 @@ const App = () => {
     }
   };
 
-  // 12.6 إرسال رسالة تواصل
+  // 13.6 إرسال رسالة تواصل
   const handleContactSubmit = async (e) => {
     e.preventDefault();
     if (!user) return;
@@ -888,7 +1086,7 @@ const App = () => {
     }
   };
 
-  // 12.7 تسجيل دخول المدير
+  // 13.7 تسجيل دخول المدير
   const handleAdminLogin = async (e) => {
     e.preventDefault();
     setLoginError('');
@@ -903,7 +1101,7 @@ const App = () => {
     }
   };
   
-  // 12.8 تسجيل خروج
+  // 13.8 تسجيل خروج
   const handleLogout = async () => {
       await signOut(auth);
       setIsAdminAuthenticated(false);
@@ -911,7 +1109,7 @@ const App = () => {
       showNotification('تم الخروج بنجاح');
   };
 
-  // 12.9 حذف الرسالة
+  // 13.9 حذف الرسالة
   const handleDeleteMessage = async (msgId) => {
     if (!confirm('هل أنت متأكد من حذف هذه الرسالة؟')) return;
     try { 
@@ -920,7 +1118,7 @@ const App = () => {
     } catch (err) { }
   };
 
-  // 12.10 إضافة متجر جديد للروابط
+  // 13.10 إضافة متجر جديد للروابط
   const handleAddStore = () => { 
     if (newStoreName && newStoreLink) { 
       setAdminConfig({ 
@@ -933,7 +1131,7 @@ const App = () => {
     }
   };
 
-  // 12.11 حذف متجر من الروابط
+  // 13.11 حذف متجر من الروابط
   const handleDeleteStore = (i) => { 
     const u = [...adminConfig.affiliateLinks]; 
     u.splice(i, 1); 
@@ -941,7 +1139,7 @@ const App = () => {
     showNotification('تم حذف رابط المتجر');
   };
 
-  // 12.12 إضافة عرض خاص
+  // 13.12 إضافة عرض خاص
   const handleAddOffer = () => { 
     if (newOfferKeyword && newOfferMessage && newOfferLink) { 
       setAdminConfig({ 
@@ -959,7 +1157,7 @@ const App = () => {
     }
   };
 
-  // 12.13 حذف عرض
+  // 13.13 حذف عرض
   const handleDeleteOffer = (i) => { 
     const u = [...adminConfig.exclusiveOffers]; 
     u.splice(i, 1); 
@@ -967,7 +1165,7 @@ const App = () => {
     showNotification('تم حذف العرض الخاص');
   };
 
-  // 12.14 إضافة كلمة رائجة
+  // 13.14 إضافة كلمة رائجة
   const handleAddTrendingKeyword = () => { 
     if (newTrendingKeyword) { 
       setAdminConfig({ 
@@ -979,7 +1177,7 @@ const App = () => {
     }
   };
 
-  // 12.15 حذف كلمة رائجة
+  // 13.15 حذف كلمة رائجة
   const handleDeleteTrendingKeyword = (index) => { 
     const updated = [...(adminConfig.trendingKeywords || [])]; 
     updated.splice(index, 1); 
@@ -987,7 +1185,7 @@ const App = () => {
     showNotification('تم حذف الكلمة الرائجة');
   };
 
-  // 12.16 إضافة متجر جديد مع API - الوظيفة الجديدة
+  // 13.16 إضافة متجر جديد مع API
   const handleAddCustomStore = () => { 
     if (newStoreApiName && newStoreApiKey) { 
       const newStore = {
@@ -1017,7 +1215,7 @@ const App = () => {
     }
   };
 
-  // 12.17 حذف متجر مخصص
+  // 13.17 حذف متجر مخصص
   const handleDeleteCustomStore = (index) => { 
     const updated = [...(adminConfig.storeApiKeys?.customStores || [])]; 
     updated.splice(index, 1); 
@@ -1031,7 +1229,7 @@ const App = () => {
     showNotification('تم حذف المتجر المخصص');
   };
 
-  // 12.18 تفعيل/تعطيل متجر
+  // 13.18 تفعيل/تعطيل متجر
   const toggleStoreEnabled = (storeType, index = null) => {
     if (storeType === 'amazon' || storeType === 'noon' || storeType === 'jarir' || storeType === 'xcite' || storeType === 'extra') {
       setAdminConfig({
@@ -1061,7 +1259,7 @@ const App = () => {
   };
 
   // ============================
-  // 13. وظيفة الذكاء الاصطناعي (Gemini)
+  // 14. وظيفة الذكاء الاصطناعي (Gemini)
   // ============================
   const callGeminiAI = async (product, stores) => {
     const geminiApiKey = adminConfig.aiSettings?.geminiApiKey;
@@ -1153,7 +1351,7 @@ const App = () => {
   };
 
   // ============================
-  // 14. وظيفة البحث الرئيسية
+  // 15. وظيفة البحث الرئيسية
   // ============================
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -1276,9 +1474,7 @@ const App = () => {
 
   // البحث في Amazon API
   const searchAmazonAPI = async (query) => {
-    // هذا مثال - ستحتاج إلى تطبيق API حقيقي
     try {
-      // محاكاة استجابة API
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       const basePrice = Math.floor(Math.random() * 500) + 100;
@@ -1305,9 +1501,7 @@ const App = () => {
 
   // البحث في Noon API
   const searchNoonAPI = async (query) => {
-    // هذا مثال - ستحتاج إلى تطبيق API حقيقي
     try {
-      // محاكاة استجابة API
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       const basePrice = Math.floor(Math.random() * 500) + 100;
@@ -1335,7 +1529,6 @@ const App = () => {
   // البحث في API مخصص لمتجر جديد
   const searchCustomAPI = async (query, store) => {
     try {
-      // محاكاة استجابة API للمتاجر المخصصة
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       const basePrice = Math.floor(Math.random() * 500) + 100;
@@ -1438,23 +1631,17 @@ const App = () => {
   };
 
   // ============================
-  // 15. حساب المشتركين المفلترين
+  // 16. حساب المشتركين المفلترين
   // ============================
-  const filteredSubscribers = subscribersList.filter(sub => {
-      if (!marketingFilter) return true;
-      const keywords = marketingFilter.toLowerCase().split(' ');
-      return sub.interests && sub.interests.some(interest => 
-          keywords.some(keyword => interest.toLowerCase().includes(keyword))
-      );
-  });
+  const filteredSubscribers = filterSubscribersByKeywords(marketingFilter);
 
   // ============================
-  // 16. الواجهة الرئيسية (Home View)
+  // 17. الواجهة الرئيسية (Home View)
   // ============================
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-blue-200 selection:text-blue-900" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
       
-      {/* 16.1 مكونات SEO */}
+      {/* 17.1 مكونات SEO */}
       <SEOHead 
         title={view === 'home' && !results ? t.siteTitle : `${searchQuery ? searchQuery + ' | ' : ''} ${t.siteTitle}`} 
         description={t.siteDesc} 
@@ -1463,7 +1650,7 @@ const App = () => {
       />
       <SchemaMarkup />
 
-      {/* 16.2 الإشعارات */}
+      {/* 17.2 الإشعارات */}
       {notification && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-top-4 duration-300">
           <div className={`px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 border-2 ${notification.type === 'error' ? 'bg-red-50 border-red-100 text-red-600' : 'bg-white border-green-100 text-green-700'}`}>
@@ -1473,7 +1660,7 @@ const App = () => {
         </div>
       )}
 
-      {/* 16.3 نافذة الاشتراك */}
+      {/* 17.3 نافذة الاشتراك */}
       {showPromoPopup && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
               <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={() => setShowPromoPopup(false)}></div>
@@ -1504,7 +1691,7 @@ const App = () => {
           </div>
       )}
 
-      {/* 16.4 زر فتح لوحة المساحة الشخصية */}
+      {/* 17.4 زر فتح لوحة المساحة الشخصية */}
       <button 
         onClick={() => setShowSidePanel(true)}
         className="fixed left-0 top-1/2 -translate-y-1/2 bg-white/80 backdrop-blur-md p-3 rounded-r-2xl shadow-lg border border-slate-200 z-40 hover:pl-5 transition-all group border-l-0"
@@ -1516,7 +1703,7 @@ const App = () => {
         </div>
       </button>
 
-      {/* 16.5 لوحة المساحة الشخصية */}
+      {/* 17.5 لوحة المساحة الشخصية */}
       <div className={`fixed inset-0 z-[60] transition-all duration-500 ${showSidePanel ? 'visible' : 'invisible'}`}>
         <div className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-500 ${showSidePanel ? 'opacity-100' : 'opacity-0'}`} onClick={() => setShowSidePanel(false)}></div>
         <div className={`absolute left-0 top-0 h-full w-full md:w-[400px] bg-white shadow-2xl transition-transform duration-500 ease-in-out transform ${showSidePanel ? 'translate-x-0' : '-translate-x-full'}`}>
@@ -1576,7 +1763,7 @@ const App = () => {
         </div>
       </div>
 
-      {/* 16.6 زر تبديل اللغة */}
+      {/* 17.6 زر تبديل اللغة */}
       <button 
         onClick={toggleLanguage} 
         className={`fixed ${lang === 'ar' ? 'left-4' : 'right-4'} top-24 md:top-6 z-[100] bg-white/90 backdrop-blur-xl shadow-xl border border-white/50 p-3 rounded-full hover:scale-110 transition-all active:scale-95 group`}
@@ -1588,7 +1775,7 @@ const App = () => {
         </span>
       </button>
 
-      {/* 16.7 إشعار العرض الخاص */}
+      {/* 17.7 إشعار العرض الخاص */}
       {showExclusiveToast && currentOffer && (
         <div className={`fixed bottom-6 ${lang === 'ar' ? 'left-4' : 'right-4'} md:max-w-sm z-[100] animate-in slide-in-from-bottom-10 duration-500`}>
           <div className="bg-gradient-to-l from-blue-600 to-indigo-600 text-white p-6 rounded-[2rem] shadow-2xl relative border-4 border-white/20 backdrop-blur-md">
@@ -1603,7 +1790,7 @@ const App = () => {
         </div>
       )}
 
-      {/* 16.8 شريط التنقل */}
+      {/* 17.8 شريط التنقل */}
       <nav className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
         <div className="bg-white/90 backdrop-blur-xl shadow-2xl shadow-blue-900/10 rounded-full px-2 py-2 flex items-center gap-1 md:gap-2 pointer-events-auto border border-white/50 max-w-full overflow-x-auto no-scrollbar">
           <div className="flex items-center gap-2 px-4 cursor-pointer group select-none" onClick={handleLogoClick}>
@@ -1627,11 +1814,11 @@ const App = () => {
       </nav>
 
       {/* ============================ */}
-      {/* 17. الواجهة الرئيسية (Home View) */}
+      {/* 18. الواجهة الرئيسية (Home View) */}
       {/* ============================ */}
       {view === 'home' && (
         <>
-          {/* 17.1 قسم الهيرو */}
+          {/* 18.1 قسم الهيرو */}
           <div className="bg-gradient-to-b from-slate-950 via-blue-950 to-indigo-900 text-white pt-40 pb-32 px-4 relative overflow-hidden rounded-b-[3rem] md:rounded-b-[5rem] shadow-2xl">
             
             {/* خلفيات متحركة */}
@@ -1706,9 +1893,8 @@ const App = () => {
             </div>
           </div>
 
-          {/* 17.2 المحتوى الرئيسية */}
+          {/* 18.2 المحتوى الرئيسية */}
           <main className="max-w-7xl mx-auto px-4 -mt-20 relative z-20">
-            {/* تم إزالة قسم شركاء الموقع بالكامل */}
             
             {/* حالة التحميل */}
             {isSearching && (
@@ -1886,12 +2072,12 @@ const App = () => {
       )}
 
       {/* ============================ */}
-      {/* 18. لوحة الإدارة (Admin View) */}
+      {/* 19. لوحة الإدارة (Admin View) */}
       {/* ============================ */}
       {view === 'admin' && (
-        <div className="max-w-5xl mx-auto px-4 py-32 animate-in fade-in">
+        <div className="max-w-7xl mx-auto px-4 py-32 animate-in fade-in">
           {!isAdminAuthenticated ? (
-            // 18.1 واجهة تسجيل دخول المدير
+            // 19.1 واجهة تسجيل دخول المدير
             <div className="bg-white rounded-[3rem] shadow-2xl p-12 max-w-sm mx-auto text-center border border-slate-100">
                <Lock size={40} className="mx-auto mb-6 text-slate-900" />
                <h1 className="text-2xl font-black mb-6">{t.adminLogin}</h1>
@@ -1905,7 +2091,7 @@ const App = () => {
                <button onClick={resetToHome} className="mt-6 text-slate-400 font-bold text-sm">{t.back}</button>
             </div>
           ) : (
-            // 18.2 لوحة التحكم الرئيسية
+            // 19.2 لوحة التحكم الرئيسية
             <div className="bg-white rounded-[3rem] shadow-2xl p-10 md:p-16 border border-slate-100">
               {/* رأس لوحة التحكم */}
               <div className="flex justify-between items-center mb-10 border-b pb-6">
@@ -2036,7 +2222,7 @@ const App = () => {
               </div>
 
               {/* ==================== */}
-              {/* القسم 2: مفاتيح المتاجر - المحدث */}
+              {/* القسم 2: مفاتيح المتاجر */}
               {/* ==================== */}
               <div className="mb-12 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-100 rounded-[2rem] p-8">
                 <h3 className="font-black text-green-900 border-b border-green-200 pb-4 mb-6 flex items-center gap-2">
@@ -2166,7 +2352,7 @@ const App = () => {
                     </div>
                   </div>
                   
-                  {/* إضافة متجر جديد - القسم الجديد */}
+                  {/* إضافة متجر جديد */}
                   <div className="bg-white/50 border-2 border-dashed border-green-200 rounded-2xl p-6">
                     <h4 className="font-black text-green-800 mb-4 flex items-center gap-2">
                       <Plus className="text-green-600" size={20} />
@@ -2279,7 +2465,7 @@ const App = () => {
                     </div>
                   )}
                   
-                  {/* قسم روابط المتاجر داخل نفس القسم */}
+                  {/* قسم روابط المتاجر */}
                   <div className="bg-white p-4 rounded-xl border border-green-100 mt-6">
                     <h4 className="font-bold text-green-800 mb-3 flex items-center gap-2">
                       <Link className="text-green-600" size={18} />
@@ -2344,7 +2530,417 @@ const App = () => {
               </div>
               
               {/* ==================== */}
-              {/* القسم 3: إعدادات عامة */}
+              {/* القسم 3: إدارة الحملات البريدية الترويجية (جديد كامل) */}
+              {/* ==================== */}
+              <div className="mb-12 bg-gradient-to-r from-pink-50 to-rose-50 border-2 border-pink-200 rounded-[2rem] p-8 shadow-lg">
+                <h3 className="font-black text-pink-900 border-b-2 border-pink-200 pb-4 mb-8 flex items-center gap-3 text-xl">
+                  <Mail className="text-pink-600" size={28} />
+                  📧 إدارة الحملات البريدية الترويجية
+                  <span className="bg-pink-600 text-white text-xs px-3 py-1 rounded-full mr-auto">جديد</span>
+                </h3>
+
+                {/* الإحصائيات السريعة */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                  <div className="bg-white p-5 rounded-xl border-2 border-pink-100 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="flex items-center gap-4">
+                      <div className="bg-pink-100 p-3 rounded-xl">
+                        <Users size={24} className="text-pink-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500 font-bold">إجمالي المشتركين</p>
+                        <p className="text-3xl font-black text-pink-600">{subscribersList.length}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-white p-5 rounded-xl border-2 border-pink-100 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="flex items-center gap-4">
+                      <div className="bg-green-100 p-3 rounded-xl">
+                        <Filter size={24} className="text-green-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500 font-bold">المفلتر حالياً</p>
+                        <p className="text-3xl font-black text-green-600">{filteredSubscribers.length}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-white p-5 rounded-xl border-2 border-pink-100 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="flex items-center gap-4">
+                      <div className="bg-purple-100 p-3 rounded-xl">
+                        <Send size={24} className="text-purple-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500 font-bold">الحملات المرسلة</p>
+                        <p className="text-3xl font-black text-purple-600">
+                          {adminConfig.emailCampaigns?.filter(c => c.status === 'sent').length || 0}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-white p-5 rounded-xl border-2 border-pink-100 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="flex items-center gap-4">
+                      <div className="bg-amber-100 p-3 rounded-xl">
+                        <Play size={24} className="text-amber-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500 font-bold">قيد التشغيل</p>
+                        <p className="text-3xl font-black text-amber-600">
+                          {adminConfig.emailCampaigns?.filter(c => c.status === 'active').length || 0}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* قسم الفلترة والبحث المتقدم */}
+                <div className="bg-white p-6 rounded-2xl border-2 border-pink-200 mb-8">
+                  <h4 className="font-black text-pink-800 mb-4 flex items-center gap-2 text-lg">
+                    <Filter size={20} className="text-pink-600" />
+                    فلترة الجمهور حسب الاهتمامات
+                  </h4>
+                  <div className="grid md:grid-cols-2 gap-8">
+                    {/* الفلترة بالكلمات المفتاحية */}
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 mb-2 block">
+                        اكتب المنتجات/الكلمات للفلترة (مفصولة بمسافة)
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={marketingFilter}
+                          onChange={(e) => setMarketingFilter(e.target.value)}
+                          className="w-full p-4 pr-12 rounded-xl bg-slate-50 border-2 border-pink-200 font-bold text-sm focus:border-pink-400 focus:ring-2 focus:ring-pink-200 transition-all"
+                          placeholder="مثال: آيفون سامسونج ماك بوك ابل"
+                        />
+                        <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-pink-400" />
+                      </div>
+                      
+                      {/* الكلمات الأكثر بحثاً */}
+                      <div className="mt-4">
+                        <p className="text-xs font-bold text-slate-400 mb-2">كلمات مفتاحية مقترحة:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {topSearchTerms.slice(0, 8).map((term, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => setMarketingFilter(term.term)}
+                              className="text-xs bg-pink-50 hover:bg-pink-100 text-pink-700 px-3 py-1.5 rounded-full font-bold transition-colors border border-pink-200"
+                            >
+                              {term.term} ({term.count})
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* إحصائيات الفلترة ومعاينة سريعة */}
+                    <div className="bg-gradient-to-br from-pink-50 to-rose-50 p-5 rounded-xl border-2 border-pink-200">
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="font-bold text-pink-800">نتائج الفلترة:</span>
+                        <span className="bg-pink-600 text-white px-4 py-1.5 rounded-full text-xs font-black shadow-sm">
+                          {filteredSubscribers.length} مشترك
+                        </span>
+                      </div>
+                      
+                      {/* شريط تقدم النسبة */}
+                      <div className="mb-4">
+                        <div className="flex justify-between text-xs mb-1">
+                          <span className="text-slate-500">نسبة التغطية</span>
+                          <span className="font-bold text-pink-600">
+                            {subscribersList.length > 0 
+                              ? ((filteredSubscribers.length / subscribersList.length) * 100).toFixed(1) 
+                              : 0}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-slate-200 rounded-full h-2.5">
+                          <div 
+                            className="bg-pink-600 h-2.5 rounded-full transition-all duration-500"
+                            style={{ 
+                              width: subscribersList.length > 0 
+                                ? `${(filteredSubscribers.length / subscribersList.length) * 100}%` 
+                                : '0%' 
+                            }}
+                          ></div>
+                        </div>
+                      </div>
+                      
+                      {/* معاينة سريعة للمشتركين */}
+                      <div>
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-xs font-bold text-slate-500">معاينة سريعة:</span>
+                          <button 
+                            onClick={handleExportSubscribers}
+                            className="text-xs bg-white text-pink-600 px-3 py-1 rounded-full font-bold border border-pink-200 hover:bg-pink-50 transition-colors flex items-center gap-1"
+                          >
+                            <FileText size={12} />
+                            تصدير CSV
+                          </button>
+                        </div>
+                        <div className="space-y-2 max-h-[160px] overflow-y-auto custom-scrollbar">
+                          {filteredSubscribers.slice(0, 4).map((sub, idx) => (
+                            <div key={idx} className="text-xs bg-white/80 p-2.5 rounded-lg flex items-center gap-2 border border-pink-100">
+                              <Mail size={14} className="text-pink-400" />
+                              <span className="font-bold text-slate-700 flex-1 truncate">{sub.email}</span>
+                              <span className="text-[10px] bg-pink-100 text-pink-700 px-2 py-0.5 rounded-full font-bold">
+                                {sub.interests?.length || 0} اهتمامات
+                              </span>
+                            </div>
+                          ))}
+                          {filteredSubscribers.length > 4 && (
+                            <p className="text-[10px] text-center text-slate-400 pt-1">
+                              + {filteredSubscribers.length - 4} مشترك آخر
+                            </p>
+                          )}
+                          {filteredSubscribers.length === 0 && (
+                            <p className="text-center text-slate-400 text-xs py-4">
+                              لا يوجد مشتركين متطابقين مع الفلترة
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* إضافة حملة جديدة */}
+                <div className="bg-white p-6 rounded-2xl border-2 border-pink-200 mb-8">
+                  <h4 className="font-black text-pink-800 mb-4 flex items-center gap-2 text-lg">
+                    <PlusCircle size={20} className="text-pink-600" />
+                    إنشاء حملة بريدية جديدة
+                  </h4>
+                  
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 mb-1 block">
+                          اسم الحملة <span className="text-red-400">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={newCampaign.name}
+                          onChange={(e) => setNewCampaign({...newCampaign, name: e.target.value})}
+                          className="w-full p-3 rounded-xl bg-slate-50 border-2 border-pink-200 font-bold text-sm"
+                          placeholder="مثال: عروض الجمعة السوداء"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 mb-1 block">
+                          عنوان الإيميل <span className="text-red-400">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={newCampaign.subject}
+                          onChange={(e) => setNewCampaign({...newCampaign, subject: e.target.value})}
+                          className="w-full p-3 rounded-xl bg-slate-50 border-2 border-pink-200 font-bold text-sm"
+                          placeholder="🔥 عرض حصري لمتابعينا!"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 mb-1 block">
+                          كلمات الفلترة (مفصولة بمسافة)
+                        </label>
+                        <input
+                          type="text"
+                          value={newCampaign.filterKeywords}
+                          onChange={(e) => setNewCampaign({...newCampaign, filterKeywords: e.target.value})}
+                          className="w-full p-3 rounded-xl bg-slate-50 border-2 border-pink-200 font-bold text-sm"
+                          placeholder="آيفون ايفون iphone ابل"
+                        />
+                        <p className="text-[10px] text-slate-400 mt-1">
+                          سيتم إرسال الحملة فقط للمشتركين الذين بحثوا عن هذه الكلمات
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 mb-1 block">
+                          محتوى الإيميل <span className="text-red-400">*</span>
+                        </label>
+                        <textarea
+                          value={newCampaign.body}
+                          onChange={(e) => setNewCampaign({...newCampaign, body: e.target.value})}
+                          rows="6"
+                          className="w-full p-3 rounded-xl bg-slate-50 border-2 border-pink-200 font-bold text-sm resize-none"
+                          placeholder="مرحباً {name}،
+
+لاحظنا أنك مهتم بمنتجات آبل. إليك عرض حصري: خصم 50 ريال على جميع أجهزة آيفون!
+
+تسوق الآن: {link}
+
+فريق مقارن"
+                        ></textarea>
+                        <p className="text-[10px] text-slate-400 mt-1">
+                          استخدم {'{name}'} لاسم المشترك، {'{link}'} لرابط العرض
+                        </p>
+                      </div>
+                      
+                      <div className="flex gap-3 pt-2">
+                        <button
+                          onClick={handleAddCampaign}
+                          className="flex-1 bg-pink-600 hover:bg-pink-700 text-white py-3 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 shadow-lg shadow-pink-200"
+                        >
+                          <Plus size={18} />
+                          إنشاء الحملة
+                        </button>
+                        <button
+                          onClick={() => {
+                            setNewCampaign({
+                              name: '',
+                              subject: '',
+                              body: '',
+                              filterKeywords: '',
+                              status: 'draft',
+                              createdAt: '',
+                              sentAt: '',
+                              sentCount: 0
+                            });
+                          }}
+                          className="px-6 bg-slate-100 hover:bg-slate-200 text-slate-600 py-3 rounded-xl font-bold text-sm transition-colors"
+                        >
+                          <X size={18} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* قائمة الحملات الحالية */}
+                <div>
+                  <h4 className="font-black text-pink-800 mb-4 flex items-center gap-2 text-lg">
+                    <List size={20} className="text-pink-600" />
+                    الحملات الحالية ({adminConfig.emailCampaigns?.length || 0})
+                  </h4>
+                  
+                  <div className="space-y-4">
+                    {adminConfig.emailCampaigns && adminConfig.emailCampaigns.length > 0 ? (
+                      adminConfig.emailCampaigns.map((campaign, index) => {
+                        // حساب عدد المشتركين المستهدفين لهذه الحملة
+                        const targetCount = filterSubscribersByKeywords(campaign.filterKeywords).length;
+                        
+                        return (
+                          <div key={campaign.id || index} className="bg-white p-6 rounded-xl border-2 border-pink-100 hover:border-pink-300 transition-colors">
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                              <div className="flex items-start gap-4">
+                                {/* حالة الحملة */}
+                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center
+                                  ${campaign.status === 'active' ? 'bg-green-100 text-green-600' : 
+                                    campaign.status === 'paused' ? 'bg-amber-100 text-amber-600' : 
+                                    campaign.status === 'sent' ? 'bg-blue-100 text-blue-600' : 
+                                    'bg-slate-100 text-slate-600'}`}
+                                >
+                                  {campaign.status === 'active' && <Play size={24} />}
+                                  {campaign.status === 'paused' && <Pause size={24} />}
+                                  {campaign.status === 'sent' && <Send size={24} />}
+                                  {campaign.status === 'draft' && <FileText size={24} />}
+                                </div>
+                                
+                                <div>
+                                  <div className="flex items-center gap-3 mb-1">
+                                    <h5 className="font-black text-lg text-slate-900">{campaign.name}</h5>
+                                    <span className={`text-[10px] px-3 py-1 rounded-full font-bold
+                                      ${campaign.status === 'active' ? 'bg-green-100 text-green-700' : 
+                                        campaign.status === 'paused' ? 'bg-amber-100 text-amber-700' : 
+                                        campaign.status === 'sent' ? 'bg-blue-100 text-blue-700' : 
+                                        'bg-slate-100 text-slate-700'}`}
+                                    >
+                                      {campaign.status === 'active' ? '🟢 نشطة' : 
+                                       campaign.status === 'paused' ? '🟡 متوقفة' : 
+                                       campaign.status === 'sent' ? '✅ مرسلة' : 
+                                       '📝 مسودة'}
+                                    </span>
+                                  </div>
+                                  <p className="text-sm font-bold text-slate-700 mb-2">{campaign.subject}</p>
+                                  <div className="flex items-center gap-4 text-xs">
+                                    <span className="text-slate-500">
+                                      <Users size={14} className="inline ml-1" />
+                                      المستهدفون: <span className="font-black text-pink-600">{targetCount}</span>
+                                    </span>
+                                    <span className="text-slate-500">
+                                      <Send size={14} className="inline ml-1" />
+                                      تم الإرسال: <span className="font-black">{campaign.sentCount || 0}</span>
+                                    </span>
+                                    {campaign.sentAt && (
+                                      <span className="text-slate-400">
+                                        <Calendar size={14} className="inline ml-1" />
+                                        {new Date(campaign.sentAt).toLocaleDateString('ar-SA')}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              {/* أزرار التحكم بالحملة */}
+                              <div className="flex items-center gap-2 mr-auto md:mr-0">
+                                {/* تشغيل/إيقاف */}
+                                {campaign.status !== 'sent' && (
+                                  <>
+                                    {campaign.status === 'active' ? (
+                                      <button
+                                        onClick={() => handleCampaignStatusChange(campaign.id, 'paused')}
+                                        className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-bold text-xs transition-colors flex items-center gap-1"
+                                      >
+                                        <Pause size={14} />
+                                        إيقاف
+                                      </button>
+                                    ) : (
+                                      <button
+                                        onClick={() => handleCampaignStatusChange(campaign.id, 'active')}
+                                        className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold text-xs transition-colors flex items-center gap-1"
+                                      >
+                                        <Play size={14} />
+                                        تشغيل
+                                      </button>
+                                    )}
+                                    
+                                    {/* إرسال الآن */}
+                                    <button
+                                      onClick={() => handleSendCampaign(campaign.id)}
+                                      disabled={campaignSending}
+                                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-xs transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                      <Send size={14} />
+                                      {campaignSending ? 'جاري الإرسال...' : 'إرسال الآن'}
+                                    </button>
+                                  </>
+                                )}
+                                
+                                {/* حذف */}
+                                <button
+                                  onClick={() => handleDeleteCampaign(campaign.id)}
+                                  className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                >
+                                  <Trash2 size={18} />
+                                </button>
+                              </div>
+                            </div>
+                            
+                            {/* معاينة مختصرة للمحتوى */}
+                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                              <p className="text-xs font-bold text-slate-400 mb-1">محتوى الإيميل:</p>
+                              <p className="text-sm text-slate-700 line-clamp-2">{campaign.body}</p>
+                              {campaign.filterKeywords && (
+                                <div className="mt-2 flex items-center gap-2">
+                                  <span className="text-[10px] bg-pink-100 text-pink-700 px-2 py-0.5 rounded-full">
+                                    فلترة: {campaign.filterKeywords}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="bg-slate-50 p-12 rounded-xl text-center border-2 border-dashed border-slate-200">
+                        <Mail size={48} className="mx-auto mb-4 text-slate-300" />
+                        <p className="font-bold text-slate-400">لا توجد حملات بريدية بعد</p>
+                        <p className="text-sm text-slate-400 mt-2">قم بإنشاء حملتك الأولى من الأعلى</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              {/* ==================== */}
+              {/* القسم 4: إعدادات عامة */}
               {/* ==================== */}
               <div className="mb-12 bg-slate-50 border border-slate-100 rounded-[2rem] p-8">
                 <h3 className="font-black text-slate-900 border-b border-slate-200 pb-4 mb-6 flex items-center gap-2">
@@ -2416,15 +3012,18 @@ const App = () => {
               </div>
 
               {/* ==================== */}
-              {/* باقي الإعدادات */}
-              {/* ==================== */}
-              
               {/* إحصائيات البحث المتقدمة */}
+              {/* ==================== */}
               <div className="mb-12 bg-indigo-50 border border-indigo-100 rounded-[2rem] p-8">
-                <h3 className="font-black text-indigo-900 border-b border-indigo-200 pb-4 mb-6 flex items-center gap-2"><BarChart2 className="text-indigo-600" />إحصائيات البحث المتقدمة</h3>
+                <h3 className="font-black text-indigo-900 border-b border-indigo-200 pb-4 mb-6 flex items-center gap-2">
+                  <BarChart2 className="text-indigo-600" />
+                  إحصائيات البحث المتقدمة
+                </h3>
                 
                 <div className="mb-8">
-                  <p className="text-sm font-bold text-indigo-400 mb-4 flex items-center gap-2"><TrendingUp size={16} /> النمو الشهري (Monthly Growth)</p>
+                  <p className="text-sm font-bold text-indigo-400 mb-4 flex items-center gap-2">
+                    <TrendingUp size={16} /> النمو الشهري (Monthly Growth)
+                  </p>
                   <div className="bg-white p-6 rounded-2xl shadow-sm border border-indigo-50 h-64 flex items-end gap-4 overflow-x-auto custom-scrollbar">
                     {monthlyStats.length > 0 ? (
                       (() => {
@@ -2454,7 +3053,7 @@ const App = () => {
                       {topSearchTerms.length > 0 ? (
                         (() => {
                           const maxCount = Math.max(...topSearchTerms.map(t => t.count));
-                          return topSearchTerms.map((item, idx) => {
+                          return topSearchTerms.slice(0, 8).map((item, idx) => {
                             const heightPercent = (item.count / maxCount) * 100;
                             return (
                               <div key={idx} className="flex-1 flex flex-col items-center group relative h-full justify-end">
@@ -2467,11 +3066,17 @@ const App = () => {
                         })()
                       ) : (<div className="w-full h-full flex items-center justify-center text-slate-400 text-xs font-bold">لا توجد بيانات كافية</div>)}
                     </div>
-                    <div className="flex gap-2 mt-2">{topSearchTerms.map((item, idx) => (<span key={idx} className="flex-1 text-[8px] text-center text-slate-500 font-bold truncate block">{item.term}</span>))}</div>
+                    <div className="flex gap-2 mt-2">
+                      {topSearchTerms.slice(0, 8).map((item, idx) => (
+                        <span key={idx} className="flex-1 text-[8px] text-center text-slate-500 font-bold truncate block">{item.term}</span>
+                      ))}
+                    </div>
                   </div>
                   
                   <div className="flex flex-col h-[350px]">
-                    <p className="text-sm font-bold text-indigo-400 mb-4 flex items-center gap-2"><Clock size={16} /> سجل البحث المباشر (Live Feed)</p>
+                    <p className="text-sm font-bold text-indigo-400 mb-4 flex items-center gap-2">
+                      <Clock size={16} /> سجل البحث المباشر (Live Feed)
+                    </p>
                     <div className="bg-white rounded-2xl shadow-sm border border-indigo-50 flex-1 overflow-hidden flex flex-col">
                       <div className="flex bg-indigo-50 p-3 text-[10px] font-black text-indigo-800 uppercase tracking-wider">
                         <div className="w-1/3">الوقت</div>
@@ -2500,26 +3105,177 @@ const App = () => {
               </div>
 
               {/* الرسائل والطلبات الواردة */}
-              <div className="mb-12"><h3 className="font-black text-slate-900 border-b pb-4 mb-6 flex items-center gap-2"><MessageCircle className="text-blue-600" />الرسائل والطلبات الواردة</h3><div className="bg-slate-50 rounded-[2rem] p-6 max-h-[400px] overflow-y-auto custom-scrollbar">{inboxMessages.length === 0 ? (<div className="text-center py-12 text-slate-400 font-bold">لا توجد رسائل جديدة</div>) : (<div className="space-y-4">{inboxMessages.map((msg) => (<div key={msg.id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative group"><button onClick={() => handleDeleteMessage(msg.id)} className="absolute top-4 left-4 text-slate-300 hover:text-red-500 transition-colors"><Trash2 size={18} /></button><div className="flex items-center gap-3 mb-2"><span className={`text-[10px] font-black px-3 py-1 rounded-full ${msg.type === 'partner_request' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'}`}>{msg.type === 'partner_request' ? 'طلب شراكة' : 'رسالة تواصل'}</span><span className="text-xs text-slate-400 font-bold" dir="ltr">{new Date(msg.timestamp).toLocaleDateString('en-GB')}</span></div><h4 className="font-black text-lg text-slate-900 mb-1">{msg.type === 'partner_request' ? msg.store : msg.name}</h4><p className="text-blue-600 font-bold text-sm mb-2" dir="ltr">{msg.email}</p>{msg.message && (<p className="text-slate-600 text-sm leading-relaxed bg-slate-50 p-3 rounded-xl mt-2">"{msg.message}"</p>)}</div>))}</div>)}</div></div>
+              <div className="mb-12">
+                <h3 className="font-black text-slate-900 border-b pb-4 mb-6 flex items-center gap-2">
+                  <MessageCircle className="text-blue-600" />
+                  الرسائل والطلبات الواردة
+                </h3>
+                <div className="bg-slate-50 rounded-[2rem] p-6 max-h-[400px] overflow-y-auto custom-scrollbar">
+                  {inboxMessages.length === 0 ? (
+                    <div className="text-center py-12 text-slate-400 font-bold">لا توجد رسائل جديدة</div>
+                  ) : (
+                    <div className="space-y-4">
+                      {inboxMessages.map((msg) => (
+                        <div key={msg.id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative group">
+                          <button onClick={() => handleDeleteMessage(msg.id)} className="absolute top-4 left-4 text-slate-300 hover:text-red-500 transition-colors">
+                            <Trash2 size={18} />
+                          </button>
+                          <div className="flex items-center gap-3 mb-2">
+                            <span className={`text-[10px] font-black px-3 py-1 rounded-full ${msg.type === 'partner_request' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'}`}>
+                              {msg.type === 'partner_request' ? 'طلب شراكة' : 'رسالة تواصل'}
+                            </span>
+                            <span className="text-xs text-slate-400 font-bold" dir="ltr">
+                              {new Date(msg.timestamp).toLocaleDateString('en-GB')}
+                            </span>
+                          </div>
+                          <h4 className="font-black text-lg text-slate-900 mb-1">
+                            {msg.type === 'partner_request' ? msg.store : msg.name}
+                          </h4>
+                          <p className="text-blue-600 font-bold text-sm mb-2" dir="ltr">{msg.email}</p>
+                          {msg.message && (
+                            <p className="text-slate-600 text-sm leading-relaxed bg-slate-50 p-3 rounded-xl mt-2">"{msg.message}"</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
 
-               {/* إدارة الكلمات الرائجة */}
-               <div className="mb-12 bg-orange-50 border border-orange-100 rounded-[2rem] p-8"><h3 className="font-black text-orange-900 border-b border-orange-200 pb-4 mb-6 flex items-center gap-2"><Flame className="text-orange-600" />إدارة الكلمات الرائجة (تظهر في الرئيسية)</h3><div className="space-y-4"><div className="flex flex-wrap gap-2 mb-4">{adminConfig.trendingKeywords?.map((kw, idx) => (<div key={idx} className="bg-white text-orange-800 px-3 py-2 rounded-xl text-sm font-bold flex items-center gap-2 shadow-sm border border-orange-100">{kw}<button onClick={() => handleDeleteTrendingKeyword(idx)} className="text-orange-300 hover:text-red-500 transition-colors"><X size={14} /></button></div>))}</div><div className="flex gap-2"><input type="text" placeholder="أضف كلمة جديدة" className="flex-1 p-4 rounded-xl text-sm font-bold border-none shadow-sm" value={newTrendingKeyword} onChange={(e) => setNewTrendingKeyword(e.target.value)} /><button onClick={handleAddTrendingKeyword} className="bg-orange-600 text-white px-6 rounded-xl font-bold text-sm hover:bg-orange-700 shadow-lg shadow-orange-200"><Plus size={20} /></button></div></div></div>
+              {/* إدارة الكلمات الرائجة */}
+              <div className="mb-12 bg-orange-50 border border-orange-100 rounded-[2rem] p-8">
+                <h3 className="font-black text-orange-900 border-b border-orange-200 pb-4 mb-6 flex items-center gap-2">
+                  <Flame className="text-orange-600" />
+                  إدارة الكلمات الرائجة (تظهر في الرئيسية)
+                </h3>
+                <div className="space-y-4">
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {adminConfig.trendingKeywords?.map((kw, idx) => (
+                      <div key={idx} className="bg-white text-orange-800 px-3 py-2 rounded-xl text-sm font-bold flex items-center gap-2 shadow-sm border border-orange-100">
+                        {kw}
+                        <button onClick={() => handleDeleteTrendingKeyword(idx)} className="text-orange-300 hover:text-red-500 transition-colors">
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <input 
+                      type="text" 
+                      placeholder="أضف كلمة جديدة" 
+                      className="flex-1 p-4 rounded-xl text-sm font-bold border-none shadow-sm" 
+                      value={newTrendingKeyword} 
+                      onChange={(e) => setNewTrendingKeyword(e.target.value)} 
+                    />
+                    <button 
+                      onClick={handleAddTrendingKeyword} 
+                      className="bg-orange-600 text-white px-6 rounded-xl font-bold text-sm hover:bg-orange-700 shadow-lg shadow-orange-200"
+                    >
+                      <Plus size={20} />
+                    </button>
+                  </div>
+                </div>
+              </div>
 
-               {/* الإعدادات المختلفة */}
-               <div className="grid md:grid-cols-2 gap-10 mb-12">
-                 <div className="space-y-6"><h3 className="font-black text-blue-900 border-b pb-2">بيانات التواصل</h3><div className="space-y-2"><label className="text-xs font-bold text-slate-400">الواتساب</label><input type="text" value={adminConfig.whatsappNumber} onChange={(e) => setAdminConfig({...adminConfig, whatsappNumber: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div><div className="space-y-2"><label className="text-xs font-bold text-slate-400">الإيميل</label><input type="email" value={adminConfig.supportEmail} onChange={(e) => setAdminConfig({...adminConfig, supportEmail: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div><div className="space-y-2"><label className="text-xs font-bold text-slate-400">تويتر</label><input type="text" value={adminConfig.twitterLink} onChange={(e) => setAdminConfig({...adminConfig, twitterLink: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div><div className="space-y-2"><label className="text-xs font-bold text-slate-400">إنستقرام</label><input type="text" value={adminConfig.instagramLink} onChange={(e) => setAdminConfig({...adminConfig, instagramLink: e.target.value})} className="w-full p-4 rounded-xl bg-slate-50 font-bold border" /></div></div>
-                 <div className="space-y-6"><h3 className="font-black text-purple-600 border-b pb-2">العروض الخاصة</h3><div className="max-h-64 overflow-y-auto pr-2 space-y-3 custom-scrollbar">{adminConfig.exclusiveOffers?.map((offer, index) => (<div key={index} className="bg-purple-50 p-3 rounded-xl text-xs relative group"><button onClick={() => handleDeleteOffer(index)} className="absolute top-2 left-2 text-red-400 hover:text-red-600"><X size={14} /></button><p className="font-black text-purple-900">كلمة البحث: {offer.keyword}</p><p className="text-slate-600 truncate">{offer.message}</p></div>))}</div><div className="bg-purple-50 p-4 rounded-2xl border border-purple-100"><h4 className="font-bold text-purple-700 text-sm mb-3">إضافة عرض ذكي</h4><input type="text" placeholder="كلمة البحث" className="w-full p-2 mb-2 rounded-lg border text-xs font-bold" value={newOfferKeyword} onChange={(e) => setNewOfferKeyword(e.target.value)} /><input type="text" placeholder="رسالة العرض" className="w-full p-2 mb-2 rounded-lg border text-xs font-bold" value={newOfferMessage} onChange={(e) => setNewOfferMessage(e.target.value)} /><input type="text" placeholder="رابط العرض" className="w-full p-2 mb-2 rounded-lg border text-xs font-bold text-left" dir="ltr" value={newOfferLink} onChange={(e) => setNewOfferLink(e.target.value)} /><button onClick={handleAddOffer} className="w-full bg-purple-600 text-white py-2 rounded-xl font-bold text-sm hover:bg-purple-700 flex items-center justify-center gap-2"><Plus size={16} /> إضافة عرض</button></div></div>
-               </div>
+              {/* الإعدادات المختلفة */}
+              <div className="grid md:grid-cols-2 gap-10 mb-12">
+                <div className="space-y-6">
+                  <h3 className="font-black text-blue-900 border-b pb-2">بيانات التواصل</h3>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-400">الواتساب</label>
+                    <input 
+                      type="text" 
+                      value={adminConfig.whatsappNumber} 
+                      onChange={(e) => setAdminConfig({...adminConfig, whatsappNumber: e.target.value})} 
+                      className="w-full p-4 rounded-xl bg-slate-50 font-bold border" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-400">الإيميل</label>
+                    <input 
+                      type="email" 
+                      value={adminConfig.supportEmail} 
+                      onChange={(e) => setAdminConfig({...adminConfig, supportEmail: e.target.value})} 
+                      className="w-full p-4 rounded-xl bg-slate-50 font-bold border" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-400">تويتر</label>
+                    <input 
+                      type="text" 
+                      value={adminConfig.twitterLink} 
+                      onChange={(e) => setAdminConfig({...adminConfig, twitterLink: e.target.value})} 
+                      className="w-full p-4 rounded-xl bg-slate-50 font-bold border" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-400">إنستقرام</label>
+                    <input 
+                      type="text" 
+                      value={adminConfig.instagramLink} 
+                      onChange={(e) => setAdminConfig({...adminConfig, instagramLink: e.target.value})} 
+                      className="w-full p-4 rounded-xl bg-slate-50 font-bold border" 
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-6">
+                  <h3 className="font-black text-purple-600 border-b pb-2">العروض الخاصة</h3>
+                  <div className="max-h-64 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
+                    {adminConfig.exclusiveOffers?.map((offer, index) => (
+                      <div key={index} className="bg-purple-50 p-3 rounded-xl text-xs relative group">
+                        <button onClick={() => handleDeleteOffer(index)} className="absolute top-2 left-2 text-red-400 hover:text-red-600">
+                          <X size={14} />
+                        </button>
+                        <p className="font-black text-purple-900">كلمة البحث: {offer.keyword}</p>
+                        <p className="text-slate-600 truncate">{offer.message}</p>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="bg-purple-50 p-4 rounded-2xl border border-purple-100">
+                    <h4 className="font-bold text-purple-700 text-sm mb-3">إضافة عرض ذكي</h4>
+                    <input 
+                      type="text" 
+                      placeholder="كلمة البحث" 
+                      className="w-full p-2 mb-2 rounded-lg border text-xs font-bold" 
+                      value={newOfferKeyword} 
+                      onChange={(e) => setNewOfferKeyword(e.target.value)} 
+                    />
+                    <input 
+                      type="text" 
+                      placeholder="رسالة العرض" 
+                      className="w-full p-2 mb-2 rounded-lg border text-xs font-bold" 
+                      value={newOfferMessage} 
+                      onChange={(e) => setNewOfferMessage(e.target.value)} 
+                    />
+                    <input 
+                      type="text" 
+                      placeholder="رابط العرض" 
+                      className="w-full p-2 mb-2 rounded-lg border text-xs font-bold text-left" 
+                      dir="ltr" 
+                      value={newOfferLink} 
+                      onChange={(e) => setNewOfferLink(e.target.value)} 
+                    />
+                    <button 
+                      onClick={handleAddOffer} 
+                      className="w-full bg-purple-600 text-white py-2 rounded-xl font-bold text-sm hover:bg-purple-700 flex items-center justify-center gap-2"
+                    >
+                      <Plus size={16} /> إضافة عرض
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>
       )}
 
       {/* ============================ */}
-      {/* 19. صفحات أخرى */}
+      {/* 20. صفحات أخرى */}
       {/* ============================ */}
       
-      {/* 19.1 صفحة الشركاء */}
+      {/* 20.1 صفحة الشركاء */}
       {view === 'merchant' && (
         <div className="max-w-4xl mx-auto px-4 py-32 animate-in fade-in">
            <div className="bg-white rounded-[3rem] shadow-2xl p-10 md:p-20 border border-slate-100 text-center">
@@ -2527,21 +3283,39 @@ const App = () => {
              <h1 className="text-3xl font-black text-slate-900 mb-4">شريك أعمال مقارن</h1>
              <p className="text-slate-500 font-bold text-lg mb-10">وصل منتجاتك لآلاف العملاء.</p>
              <form className="space-y-6 text-right max-w-xl mx-auto" onSubmit={handleMerchantSubmit}>
-               <input type="text" className="w-full p-5 rounded-2xl bg-slate-50 font-bold border" placeholder="اسم المتجر" required value={merchantForm.store} onChange={e => setMerchantForm({...merchantForm, store: e.target.value})} />
-               <input type="email" className="w-full p-5 rounded-2xl bg-slate-50 font-bold border" placeholder="إيميل التواصل" required value={merchantForm.email} onChange={e => setMerchantForm({...merchantForm, email: e.target.value})} />
-               <button type="submit" className="w-full bg-blue-600 text-white py-5 rounded-2xl font-black text-xl shadow-xl hover:bg-blue-700 transition-colors">إرسال الطلب</button>
+               <input 
+                 type="text" 
+                 className="w-full p-5 rounded-2xl bg-slate-50 font-bold border" 
+                 placeholder="اسم المتجر" 
+                 required 
+                 value={merchantForm.store} 
+                 onChange={e => setMerchantForm({...merchantForm, store: e.target.value})} 
+               />
+               <input 
+                 type="email" 
+                 className="w-full p-5 rounded-2xl bg-slate-50 font-bold border" 
+                 placeholder="إيميل التواصل" 
+                 required 
+                 value={merchantForm.email} 
+                 onChange={e => setMerchantForm({...merchantForm, email: e.target.value})} 
+               />
+               <button type="submit" className="w-full bg-blue-600 text-white py-5 rounded-2xl font-black text-xl shadow-xl hover:bg-blue-700 transition-colors">
+                 إرسال الطلب
+               </button>
              </form>
              <button onClick={resetToHome} className="mt-8 text-slate-400 font-bold underline">الرجوع</button>
            </div>
         </div>
       )}
 
-      {/* 19.2 صفحة سياسة الخصوصية */}
+      {/* 20.2 صفحة سياسة الخصوصية */}
       {view === 'privacy' && (
         <div className="max-w-4xl mx-auto px-4 py-32 animate-in fade-in">
            <div className="bg-white rounded-[3rem] shadow-2xl p-10 md:p-20 border border-slate-100 relative overflow-hidden">
              <div className="relative z-10">
-                <h1 className="text-3xl font-black text-slate-900 mb-8 flex items-center gap-3"><Lock className="text-blue-600" /> {t.privacy}</h1>
+                <h1 className="text-3xl font-black text-slate-900 mb-8 flex items-center gap-3">
+                  <Lock className="text-blue-600" /> {t.privacy}
+                </h1>
                 <div className="space-y-8 text-slate-600 font-bold leading-loose text-base md:text-lg">
                   <div className="bg-slate-50 p-6 rounded-2xl">
                     <h3 className="text-xl font-black text-slate-900 mb-2">1. مقدمة</h3>
@@ -2567,13 +3341,15 @@ const App = () => {
                     <p>نستخدم بروتوكولات تشفير متقدمة (SSL) لحماية اتصالك بالموقع. لا نقوم ببيع بياناتك لأي طرف ثالث.</p>
                   </div>
                 </div>
-                <button onClick={resetToHome} className="mt-12 bg-slate-900 text-white px-10 py-4 rounded-2xl font-black hover:bg-blue-600 transition-colors">الرجوع للرئيسية</button>
+                <button onClick={resetToHome} className="mt-12 bg-slate-900 text-white px-10 py-4 rounded-2xl font-black hover:bg-blue-600 transition-colors">
+                  الرجوع للرئيسية
+                </button>
              </div>
            </div>
         </div>
       )}
 
-      {/* 19.3 صفحة التواصل */}
+      {/* 20.3 صفحة التواصل */}
       {view === 'contact' && (
         <div className="max-w-6xl mx-auto px-4 py-32 animate-in fade-in">
            <div className="text-center mb-16">
@@ -2584,33 +3360,71 @@ const App = () => {
               <div className="space-y-6">
                  <div className="bg-white p-8 rounded-[2.5rem] shadow-lg border border-slate-50 flex items-center gap-6 hover:-translate-y-1 transition-transform">
                     <div className="bg-blue-100 text-blue-600 p-4 rounded-2xl"><Mail size={28} /></div>
-                    <div><h3 className="font-black text-lg text-slate-800">الإيميل</h3><p className="text-blue-600 font-bold">{adminConfig.supportEmail}</p></div>
+                    <div>
+                      <h3 className="font-black text-lg text-slate-800">الإيميل</h3>
+                      <p className="text-blue-600 font-bold">{adminConfig.supportEmail}</p>
+                    </div>
                  </div>
                  <div className="bg-white p-8 rounded-[2.5rem] shadow-lg border border-slate-50 flex items-center gap-6 hover:-translate-y-1 transition-transform">
                     <div className="bg-green-100 text-green-600 p-4 rounded-2xl"><MessageSquare size={28} /></div>
-                    <div><h3 className="font-black text-lg text-slate-800">واتساب</h3><p className="text-green-600 font-bold" dir="ltr">{adminConfig.whatsappNumber}</p></div>
+                    <div>
+                      <h3 className="font-black text-lg text-slate-800">واتساب</h3>
+                      <p className="text-green-600 font-bold" dir="ltr">{adminConfig.whatsappNumber}</p>
+                    </div>
                  </div>
                  <div className="bg-white p-8 rounded-[2.5rem] shadow-lg border border-slate-50 flex items-center gap-6 hover:-translate-y-1 transition-transform">
                     <div className="bg-purple-100 text-purple-600 p-4 rounded-2xl"><Send size={28} /></div>
-                    <div><h3 className="font-black text-lg text-slate-800">سوشيال ميديا</h3><div className="flex gap-3 mt-1"><a href={adminConfig.twitterLink} className="text-slate-400 hover:text-blue-500 transition-colors"><Twitter size={20} /></a><a href={adminConfig.instagramLink} className="text-slate-400 hover:text-pink-500 transition-colors"><Instagram size={20} /></a></div></div>
+                    <div>
+                      <h3 className="font-black text-lg text-slate-800">سوشيال ميديا</h3>
+                      <div className="flex gap-3 mt-1">
+                        <a href={adminConfig.twitterLink} className="text-slate-400 hover:text-blue-500 transition-colors"><Twitter size={20} /></a>
+                        <a href={adminConfig.instagramLink} className="text-slate-400 hover:text-pink-500 transition-colors"><Instagram size={20} /></a>
+                      </div>
+                    </div>
                  </div>
               </div>
               <div className="bg-white p-10 rounded-[2.5rem] shadow-xl border border-slate-50 h-full">
                  <h3 className="text-2xl font-black mb-6 text-slate-900">أرسل رسالة مباشرة ✉️</h3>
                  <form className="space-y-4" onSubmit={handleContactSubmit}>
-                    <input type="text" className="w-full p-4 rounded-2xl bg-slate-50 border-none font-bold focus:ring-4 focus:ring-blue-100" placeholder="الاسم" required value={contactForm.name} onChange={e => setContactForm({...contactForm, name: e.target.value})} />
-                    <input type="email" className="w-full p-4 rounded-2xl bg-slate-50 border-none font-bold focus:ring-4 focus:ring-blue-100" placeholder="الإيميل" required value={contactForm.email} onChange={e => setContactForm({...contactForm, email: e.target.value})} />
-                    <textarea className="w-full p-4 rounded-2xl bg-slate-50 border-none font-bold focus:ring-4 focus:ring-blue-100 h-32 resize-none" placeholder="اكتب رسالتك هنا..." required value={contactForm.message} onChange={e => setContactForm({...contactForm, message: e.target.value})}></textarea>
-                    <button type="submit" className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-lg shadow-lg hover:bg-slate-800 transition-all">إرسال</button>
+                    <input 
+                      type="text" 
+                      className="w-full p-4 rounded-2xl bg-slate-50 border-none font-bold focus:ring-4 focus:ring-blue-100" 
+                      placeholder="الاسم" 
+                      required 
+                      value={contactForm.name} 
+                      onChange={e => setContactForm({...contactForm, name: e.target.value})} 
+                    />
+                    <input 
+                      type="email" 
+                      className="w-full p-4 rounded-2xl bg-slate-50 border-none font-bold focus:ring-4 focus:ring-blue-100" 
+                      placeholder="الإيميل" 
+                      required 
+                      value={contactForm.email} 
+                      onChange={e => setContactForm({...contactForm, email: e.target.value})} 
+                    />
+                    <textarea 
+                      className="w-full p-4 rounded-2xl bg-slate-50 border-none font-bold focus:ring-4 focus:ring-blue-100 h-32 resize-none" 
+                      placeholder="اكتب رسالتك هنا..." 
+                      required 
+                      value={contactForm.message} 
+                      onChange={e => setContactForm({...contactForm, message: e.target.value})}
+                    ></textarea>
+                    <button type="submit" className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-lg shadow-lg hover:bg-slate-800 transition-all">
+                      إرسال
+                    </button>
                  </form>
               </div>
            </div>
-           <div className="text-center mt-16"><button onClick={resetToHome} className="text-slate-400 font-bold hover:text-blue-600 flex items-center justify-center gap-2 mx-auto"><ArrowLeft size={16} /> الرجوع للرئيسية</button></div>
+           <div className="text-center mt-16">
+             <button onClick={resetToHome} className="text-slate-400 font-bold hover:text-blue-600 flex items-center justify-center gap-2 mx-auto">
+               <ArrowLeft size={16} /> الرجوع للرئيسية
+             </button>
+           </div>
         </div>
       )}
 
       {/* ============================ */}
-      {/* 20. التذييل (Footer) */}
+      {/* 21. التذييل (Footer) */}
       {/* ============================ */}
       <footer className="bg-slate-900 text-slate-400 py-16 mt-32 rounded-t-[3rem] relative overflow-hidden">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none"></div>
@@ -2618,20 +3432,52 @@ const App = () => {
         <div className="max-w-7xl mx-auto px-8 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
             <div className="col-span-1 md:col-span-1">
-              <div className="flex items-center gap-2 text-white mb-6"><div className="bg-blue-600 p-2 rounded-xl"><Brain size={24} /></div><span className="text-3xl font-black tracking-tighter">مقارن</span></div>
+              <div className="flex items-center gap-2 text-white mb-6">
+                <div className="bg-blue-600 p-2 rounded-xl"><Brain size={24} /></div>
+                <span className="text-3xl font-black tracking-tighter">مقارن</span>
+              </div>
               <p className="text-slate-400 text-sm leading-relaxed font-medium mb-6">{t.footerDesc}</p>
-              <div className="flex gap-4"><a href={adminConfig.twitterLink} className="bg-white/5 hover:bg-blue-500 hover:text-white p-3 rounded-full transition-all"><Twitter size={18} /></a><a href={adminConfig.instagramLink} className="bg-white/5 hover:bg-pink-500 hover:text-white p-3 rounded-full transition-all"><Instagram size={18} /></a></div>
+              <div className="flex gap-4">
+                <a href={adminConfig.twitterLink} className="bg-white/5 hover:bg-blue-500 hover:text-white p-3 rounded-full transition-all"><Twitter size={18} /></a>
+                <a href={adminConfig.instagramLink} className="bg-white/5 hover:bg-pink-500 hover:text-white p-3 rounded-full transition-all"><Instagram size={18} /></a>
+              </div>
             </div>
-            <div><h4 className="text-white font-black text-lg mb-6">{t.quickLinks}</h4><ul className="space-y-4 text-sm font-bold"><li><button onClick={resetToHome} className="hover:text-blue-400 transition-colors">{t.home}</button></li><li><button onClick={() => scrollToSection('about')} className="hover:text-blue-400 transition-colors">{t.about}</button></li><li><button onClick={() => scrollToSection('why-trust')} className="hover:text-blue-400 transition-colors">{t.features}</button></li><li><button onClick={() => scrollToSection('how-we-earn')} className="hover:text-blue-400 transition-colors">{t.earn}</button></li><li><button onClick={() => setView('merchant')} className="hover:text-blue-400 transition-colors">{t.merchant}</button></li></ul></div>
-             <div><h4 className="text-white font-black text-lg mb-6">{t.legal}</h4><ul className="space-y-4 text-sm font-bold"><li><button onClick={() => setView('privacy')} className="hover:text-blue-400 transition-colors">{t.privacy}</button></li><li><button onClick={() => setView('contact')} className="hover:text-blue-400 transition-colors">{t.contactTitle}</button></li><li><button className="hover:text-blue-400 transition-colors cursor-not-allowed opacity-50">{t.terms}</button></li></ul></div>
-            <div><h4 className="text-white font-black text-lg mb-6">{t.contact}</h4><ul className="space-y-4 text-sm font-medium"><li className="flex items-center gap-3"><Mail size={18} className="text-blue-500" /><span dir="ltr">{adminConfig.supportEmail}</span></li><li className="flex items-center gap-3"><Phone size={18} className="text-green-500" /><span dir="ltr">{adminConfig.whatsappNumber}</span></li><li className="flex items-start gap-3"><MapPinIcon /><span>الرياض، المملكة العربية السعودية</span></li></ul></div>
+            <div>
+              <h4 className="text-white font-black text-lg mb-6">{t.quickLinks}</h4>
+              <ul className="space-y-4 text-sm font-bold">
+                <li><button onClick={resetToHome} className="hover:text-blue-400 transition-colors">{t.home}</button></li>
+                <li><button onClick={() => scrollToSection('about')} className="hover:text-blue-400 transition-colors">{t.about}</button></li>
+                <li><button onClick={() => scrollToSection('why-trust')} className="hover:text-blue-400 transition-colors">{t.features}</button></li>
+                <li><button onClick={() => scrollToSection('how-we-earn')} className="hover:text-blue-400 transition-colors">{t.earn}</button></li>
+                <li><button onClick={() => setView('merchant')} className="hover:text-blue-400 transition-colors">{t.merchant}</button></li>
+              </ul>
+            </div>
+             <div>
+               <h4 className="text-white font-black text-lg mb-6">{t.legal}</h4>
+               <ul className="space-y-4 text-sm font-bold">
+                 <li><button onClick={() => setView('privacy')} className="hover:text-blue-400 transition-colors">{t.privacy}</button></li>
+                 <li><button onClick={() => setView('contact')} className="hover:text-blue-400 transition-colors">{t.contactTitle}</button></li>
+                 <li><button className="hover:text-blue-400 transition-colors cursor-not-allowed opacity-50">{t.terms}</button></li>
+               </ul>
+             </div>
+            <div>
+              <h4 className="text-white font-black text-lg mb-6">{t.contact}</h4>
+              <ul className="space-y-4 text-sm font-medium">
+                <li className="flex items-center gap-3"><Mail size={18} className="text-blue-500" /><span dir="ltr">{adminConfig.supportEmail}</span></li>
+                <li className="flex items-center gap-3"><Phone size={18} className="text-green-500" /><span dir="ltr">{adminConfig.whatsappNumber}</span></li>
+                <li className="flex items-start gap-3"><MapPinIcon /><span>الرياض، المملكة العربية السعودية</span></li>
+              </ul>
+            </div>
           </div>
-          <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-bold text-slate-500"><p>{t.rights}</p><div className="flex gap-6"><span>{t.madeIn}</span></div></div>
+          <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-bold text-slate-500">
+            <p>{t.rights}</p>
+            <div className="flex gap-6"><span>{t.madeIn}</span></div>
+          </div>
         </div>
       </footer>
 
       {/* ============================ */}
-      {/* 21. الأنماط المخصصة (CSS-in-JS) */}
+      {/* 22. الأنماط المخصصة (CSS-in-JS) */}
       {/* ============================ */}
       <style jsx>{`
         .scrollbar-hide {
@@ -2676,5 +3522,48 @@ const App = () => {
     </div>
   );
 };
+
+// أيقونة PlusCircle للإضافة
+const PlusCircle = (props) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width={props.size || 24} 
+    height={props.size || 24} 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    className={props.className}
+  >
+    <circle cx="12" cy="12" r="10"/>
+    <line x1="12" y1="8" x2="12" y2="16"/>
+    <line x1="8" y1="12" x2="16" y2="12"/>
+  </svg>
+);
+
+// أيقونة List للقوائم
+const List = (props) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width={props.size || 24} 
+    height={props.size || 24} 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    className={props.className}
+  >
+    <line x1="8" y1="6" x2="21" y2="6"/>
+    <line x1="8" y1="12" x2="21" y2="12"/>
+    <line x1="8" y1="18" x2="21" y2="18"/>
+    <line x1="3" y1="6" x2="3.01" y2="6"/>
+    <line x1="3" y1="12" x2="3.01" y2="12"/>
+    <line x1="3" y1="18" x2="3.01" y2="18"/>
+  </svg>
+);
 
 export default App;

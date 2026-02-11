@@ -1381,7 +1381,7 @@ const App = () => {
   const filteredSubscribers = filterSubscribersByKeywords(marketingFilter);
 
   // ============================
-  // 18. الواجهة الرئيسية (Home View) - تم تعديل موقع قسم "كيف يشتغل مقارن"
+  // 18. الواجهة الرئيسية (Home View)
   // ============================
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-blue-200 selection:text-blue-900" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
@@ -1628,30 +1628,6 @@ const App = () => {
           </div>
 
           <main className="max-w-7xl mx-auto px-4 -mt-20 relative z-20">
-            
-            {/* ========== قسم كيف يشتغل مقارن - تم نقله إلى هنا بعد الهيرو ========== */}
-            <section id="how-it-works" className="mb-32 scroll-mt-32 animate-in fade-in slide-in-from-bottom-10 duration-700">
-              <div className="text-center mb-16">
-                <h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-6">{t.howItWorksTitle}</h2>
-                <p className="text-slate-500 font-bold text-xl">ثلاث خطوات بسيطة.. وتوفر فلوسك</p>
-              </div>
-              <div className="grid md:grid-cols-3 gap-8">
-                {[
-                  { icon: MousePointer2, title: t.step1Title, desc: t.step1Desc, color: 'blue' },
-                  { icon: Cpu, title: t.step2Title, desc: t.step2Desc, color: 'indigo' },
-                  { icon: Rocket, title: t.step3Title, desc: t.step3Desc, color: 'green' }
-                ].map((item, i) => (
-                  <div key={i} className="bg-white p-12 rounded-[3rem] shadow-xl border border-slate-100 hover:-translate-y-2 transition-all text-center group">
-                    <div className={`bg-${item.color}-50 text-${item.color}-600 w-24 h-24 rounded-[2rem] flex items-center justify-center mx-auto mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
-                      <item.icon size={48} />
-                    </div>
-                    <h3 className="text-2xl font-black mb-4 text-slate-900">{item.title}</h3>
-                    <p className="text-slate-500 font-bold leading-relaxed">{item.desc}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
-
             {isSearching && (
               <div className="bg-white rounded-[3rem] p-12 md:p-20 shadow-xl border border-slate-100 text-center mb-32">
                 <div className="relative w-24 h-24 mx-auto mb-8">
@@ -1797,7 +1773,10 @@ const App = () => {
 
             {!results && !isSearching && (
               <>
-                {/* تم نقل قسم "كيف يشتغل مقارن" إلى أعلى */}
+                <section id="about" className="mb-32 scroll-mt-32">
+                  <div className="text-center mb-16"><h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-6">{t.howItWorksTitle}</h2><p className="text-slate-500 font-bold text-xl">ثلاث خطوات بسيطة.. وتوفر فلوسك</p></div>
+                  <div className="grid md:grid-cols-3 gap-8">{[{ icon: MousePointer2, title: t.step1Title, desc: t.step1Desc, color: 'blue' }, { icon: Cpu, title: t.step2Title, desc: t.step2Desc, color: 'indigo' }, { icon: Rocket, title: t.step3Title, desc: t.step3Desc, color: 'green' }].map((item, i) => (<div key={i} className="bg-white p-12 rounded-[3rem] shadow-xl border border-slate-100 hover:-translate-y-2 transition-all text-center group"><div className={`bg-${item.color}-50 text-${item.color}-600 w-24 h-24 rounded-[2rem] flex items-center justify-center mx-auto mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}><item.icon size={48} /></div><h3 className="text-2xl font-black mb-4 text-slate-900">{item.title}</h3><p className="text-slate-500 font-bold leading-relaxed">{item.desc}</p></div>))}</div>
+                </section>
                 
                 <section id="how-we-earn" className="bg-slate-900 rounded-[3rem] p-10 md:p-24 text-white text-center shadow-2xl mb-32 scroll-mt-32 relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-600/20 rounded-full blur-[120px]"></div><div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-indigo-600/20 rounded-full blur-[100px]"></div>

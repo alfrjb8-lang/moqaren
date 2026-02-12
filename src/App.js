@@ -112,7 +112,9 @@ const translations = {
     subscribe: 'اشتراك',
     thanksSubscribe: 'شكراً لاشتراكك! بنرسل لك الزين.',
     emailPlaceholder: 'اكتب إيميلك هنا',
-    swipeHint: 'اسحب لليمين ←'
+    swipeHint: 'اسحب لليمين ←',
+    promoPopupOff: '🚫 النافذة مقفلة من قبل الإدارة',
+    promoPopupOn: '✅ النافذة مفعلة'
   },
   en: {
     siteTitle: 'Moqaren | #1 Price Comparison Engine in Saudi Arabia',
@@ -199,7 +201,9 @@ const translations = {
     subscribe: 'Subscribe',
     thanksSubscribe: 'Thanks! We\'ll keep you posted.',
     emailPlaceholder: 'Enter your email',
-    swipeHint: 'Swipe right →'
+    swipeHint: 'Swipe right →',
+    promoPopupOff: '🚫 Popup disabled by admin',
+    promoPopupOn: '✅ Popup enabled'
   }
 };
 
@@ -323,6 +327,7 @@ const App = () => {
   const [promoEmail, setPromoEmail] = useState('');
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [subscriberEmail, setSubscriberEmail] = useState('');
+  const [promoPopupEnabled, setPromoPopupEnabled] = useState(true);
   
   // ===== حالات إدارة المشتركين والفلترة =====
   const [marketingFilter, setMarketingFilter] = useState('');
@@ -332,7 +337,6 @@ const App = () => {
   // 🎯 نظام إدارة الهيدر المتقدم (شعارات + نصوص)
   // ============================
   const [headerElements, setHeaderElements] = useState([
-    // بيانات افتراضية - مزيج من الشعارات والنصوص
     { 
       id: 1, 
       type: 'logo', 
@@ -448,7 +452,7 @@ const App = () => {
   ]);
 
   // ============================
-  // 🆕 حالات إضافة عنصر جديد في صفحة الإدارة
+  // 🆕 حالات إضافة عنصر جديد
   // ============================
   const [newElementType, setNewElementType] = useState('logo');
   const [newElementName, setNewElementName] = useState('');
@@ -569,7 +573,7 @@ const App = () => {
   ];
 
   // ============================
-  // 8.2 الإعدادات الافتراضية للإدارة
+  // 8.2 الإعدادات الافتراضية للإدارة (مع زر التحكم)
   // ============================
   const defaultAdminConfig = {
     supportEmail: "support@moqaren.com",
@@ -622,17 +626,19 @@ const App = () => {
       cacheDuration: 3600,
       maxProducts: 20,
       currency: 'SAR'
-    }
+    },
+    
+    // ✅ زر التحكم بنافذة الاشتراك
+    promoPopupEnabled: true
   };
 
   const [adminConfig, setAdminConfig] = useState(defaultAdminConfig);
   const t = translations[lang];
 
   // ============================
-  // 🎯 دوال إدارة عناصر الهيدر المتقدمة
+  // 🎯 دوال إدارة عناصر الهيدر
   // ============================
   
-  // إضافة عنصر جديد (شعار أو نص)
   const handleAddHeaderElement = () => {
     if (newElementType === 'logo' && !newElementName.trim()) {
       showNotification('الرجاء إدخال اسم الشركة', 'error');
@@ -644,7 +650,6 @@ const App = () => {
       return;
     }
 
-    // اختيار موقع عشوائي
     let position = newElementPosition;
     if (position === 'random') {
       const randomIndex = Math.floor(Math.random() * randomPositions.length);
@@ -661,7 +666,6 @@ const App = () => {
     };
 
     if (newElementType === 'logo') {
-      // استخدام شعار افتراضي إذا لم يتم إدخال رابط
       let logoUrl = newElementLogo.trim();
       if (!logoUrl) {
         logoUrl = `https://logo.clearbit.com/${newElementName.toLowerCase().replace(/\s+/g, '')}.com`;
@@ -676,7 +680,6 @@ const App = () => {
         fontWeight: 'bold'
       };
     } else {
-      // عنصر نصي
       newElement = {
         ...newElement,
         logo: '',
@@ -690,7 +693,6 @@ const App = () => {
 
     setHeaderElements([...headerElements, newElement]);
     
-    // إعادة تعيين الحقول
     setNewElementName('');
     setNewElementLogo('');
     setNewElementText('');
@@ -706,7 +708,6 @@ const App = () => {
     showNotification(`✅ تم إضافة ${newElementType === 'logo' ? 'شعار' : 'نص'} "${newElement.name}" بنجاح`, 'success');
   };
 
-  // حذف عنصر
   const handleDeleteHeaderElement = (elementId) => {
     if (window.confirm('هل أنت متأكد من حذف هذا العنصر من الهيدر؟')) {
       setHeaderElements(headerElements.filter(e => e.id !== elementId));
@@ -714,14 +715,12 @@ const App = () => {
     }
   };
 
-  // تحديث عنصر
   const handleUpdateHeaderElement = (elementId, field, value) => {
     setHeaderElements(headerElements.map(element => 
       element.id === elementId ? { ...element, [field]: value } : element
     ));
   };
 
-  // إعادة ترتيب عشوائي للعناصر
   const handleRandomizePositions = () => {
     setHeaderElements(headerElements.map(element => ({
       ...element,
@@ -731,16 +730,26 @@ const App = () => {
     showNotification('🎲 تم عشوائية مواقع العناصر', 'success');
   };
 
-  // تغيير نوع العنصر في نموذج الإضافة
   const handleElementTypeChange = (type) => {
     setNewElementType(type);
+  };
+
+  // ✅ دالة تشغيل/إيقاف نافذة الاشتراك
+  const togglePromoPopup = () => {
+    setAdminConfig({
+      ...adminConfig,
+      promoPopupEnabled: !adminConfig.promoPopupEnabled
+    });
+    showNotification(
+      adminConfig.promoPopupEnabled ? '❌ تم إيقاف نافذة الاشتراك' : '✅ تم تفعيل نافذة الاشتراك',
+      'success'
+    );
   };
 
   // ============================
   // 9. دوال المشتركين والفلترة
   // ============================
   
-  // 9.1 فلترة المشتركين حسب الكلمات المفتاحية
   const filterSubscribersByKeywords = (keywords) => {
     if (!keywords || keywords.trim() === '') return subscribersList;
     
@@ -755,7 +764,6 @@ const App = () => {
     });
   };
   
-  // 9.2 تصدير المشتركين المفلترين كملف CSV
   const handleExportSubscribers = () => {
     const filtered = filterSubscribersByKeywords(marketingFilter);
     
@@ -764,7 +772,6 @@ const App = () => {
       return;
     }
     
-    // إنشاء محتوى CSV
     let csvContent = "البريد الإلكتروني,تاريخ الاشتراك,الاهتمامات,آخر بحث\n";
     
     filtered.forEach(sub => {
@@ -773,13 +780,11 @@ const App = () => {
       const interests = sub.interests ? sub.interests.join(' | ') : '';
       const lastSearch = sub.last_search ? new Date(sub.last_search).toLocaleDateString('ar-SA') : '';
       
-      // التأكد من عدم وجود فواصل تسبب مشاكل في CSV
       const escapedInterests = interests.replace(/,/g, '،');
       
       csvContent += `${email},${joinedAt},"${escapedInterests}",${lastSearch}\n`;
     });
     
-    // إنشاء رابط التحميل
     const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -793,7 +798,6 @@ const App = () => {
     showNotification(`✅ تم تصدير ${filtered.length} مشترك بنجاح`);
   };
   
-  // 9.3 مسح حقل الفلترة
   const clearFilter = () => {
     setMarketingFilter('');
     showNotification('تم مسح الفلترة');
@@ -931,6 +935,7 @@ const App = () => {
     return () => unsubscribe();
   }, []);
 
+  // ✅ useEffect المعدل لنافذة الاشتراك (مع زر التحكم)
   useEffect(() => {
     const savedEmail = localStorage.getItem('moqaren_user_email');
     if (savedEmail) {
@@ -938,13 +943,14 @@ const App = () => {
         setIsSubscribed(true);
     } else {
         const timer = setTimeout(() => {
-            if (view === 'home' && !isAdminAuthenticated) {
+            // الشرط الجديد: adminConfig.promoPopupEnabled !== false
+            if (view === 'home' && !isAdminAuthenticated && adminConfig.promoPopupEnabled !== false) {
                 setShowPromoPopup(true);
             }
         }, 3500);
         return () => clearTimeout(timer);
     }
-  }, [view, isAdminAuthenticated]);
+  }, [view, isAdminAuthenticated, adminConfig.promoPopupEnabled]);
 
   useEffect(() => {
     if (!user) return;
@@ -974,7 +980,7 @@ const App = () => {
   }, [user]);
 
   // ============================
-  // 12. جلب بيانات المشتركين (الأهم)
+  // 12. جلب بيانات المشتركين
   // ============================
   useEffect(() => {
     if (!isAdminAuthenticated) return;
@@ -1697,7 +1703,71 @@ const App = () => {
   const filteredSubscribers = filterSubscribersByKeywords(marketingFilter);
 
   // ============================
-  // 18. الواجهة الرئيسية (Home View)
+  // 18. نافذة الاشتراك المعدلة (مع زر التحكم)
+  // ============================
+  const PromoPopup = () => {
+    if (!showPromoPopup) return null;
+    
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={() => setShowPromoPopup(false)}></div>
+        <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md p-8 relative z-10 animate-in zoom-in-95 duration-300 border-4 border-white/20">
+          <button onClick={() => setShowPromoPopup(false)} className="absolute top-4 left-4 text-slate-300 hover:text-red-500 transition-colors bg-slate-50 rounded-full p-1">
+            <X size={20} />
+          </button>
+          
+          {adminConfig.promoPopupEnabled ? (
+            // ✅ النافذة مفعلة - تظهر بشكل طبيعي
+            <>
+              <div className="text-center mb-6">
+                <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+                  <Mail size={32} className="text-blue-600" />
+                </div>
+                <h3 className="text-2xl font-black text-slate-900 mb-2">{t.promoTitle}</h3>
+                <p className="text-slate-500 font-bold text-sm leading-relaxed">{t.promoDesc}</p>
+              </div>
+              <form onSubmit={handleSubscribe} className="space-y-3">
+                <input 
+                  type="email" 
+                  required 
+                  className="w-full p-4 rounded-xl bg-slate-50 border-2 border-slate-100 focus:border-blue-500 focus:ring-0 font-bold text-center placeholder:text-slate-300"
+                  placeholder={t.emailPlaceholder}
+                  value={promoEmail}
+                  onChange={(e) => setPromoEmail(e.target.value)}
+                />
+                <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-black shadow-lg shadow-blue-200 transition-all active:scale-95">
+                  {t.subscribe}
+                </button>
+              </form>
+              <p className="text-[10px] text-center text-slate-300 font-bold mt-4">نحترم خصوصيتك، لا رسائل مزعجة.</p>
+            </>
+          ) : (
+            // ❌ النافذة مقفلة - تظهر رسالة أن الإدارة أوقفتها
+            <>
+              <div className="text-center mb-6">
+                <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Bell size={32} className="text-red-600" />
+                </div>
+                <h3 className="text-2xl font-black text-slate-900 mb-2">🚫 النافذة مقفلة</h3>
+                <p className="text-slate-500 font-bold text-sm leading-relaxed">
+                  تم إيقاف نافذة الاشتراك الترويجي من قبل الإدارة.
+                </p>
+              </div>
+              <button 
+                onClick={() => setShowPromoPopup(false)} 
+                className="w-full bg-slate-200 hover:bg-slate-300 text-slate-800 py-4 rounded-xl font-black transition-all"
+              >
+                إغلاق
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // ============================
+  // 19. الواجهة الرئيسية (Home View)
   // ============================
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-blue-200 selection:text-blue-900" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
@@ -1720,36 +1790,8 @@ const App = () => {
         </div>
       )}
 
-      {/* نافذة الاشتراك */}
-      {showPromoPopup && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-              <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={() => setShowPromoPopup(false)}></div>
-              <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md p-8 relative z-10 animate-in zoom-in-95 duration-300 border-4 border-white/20">
-                  <button onClick={() => setShowPromoPopup(false)} className="absolute top-4 left-4 text-slate-300 hover:text-red-500 transition-colors bg-slate-50 rounded-full p-1"><X size={20} /></button>
-                  <div className="text-center mb-6">
-                      <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
-                          <Mail size={32} className="text-blue-600" />
-                      </div>
-                      <h3 className="text-2xl font-black text-slate-900 mb-2">{t.promoTitle}</h3>
-                      <p className="text-slate-500 font-bold text-sm leading-relaxed">{t.promoDesc}</p>
-                  </div>
-                  <form onSubmit={handleSubscribe} className="space-y-3">
-                      <input 
-                          type="email" 
-                          required 
-                          className="w-full p-4 rounded-xl bg-slate-50 border-2 border-slate-100 focus:border-blue-500 focus:ring-0 font-bold text-center placeholder:text-slate-300"
-                          placeholder={t.emailPlaceholder}
-                          value={promoEmail}
-                          onChange={(e) => setPromoEmail(e.target.value)}
-                      />
-                      <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-black shadow-lg shadow-blue-200 transition-all active:scale-95">
-                          {t.subscribe}
-                      </button>
-                  </form>
-                  <p className="text-[10px] text-center text-slate-300 font-bold mt-4">نحترم خصوصيتك، لا رسائل مزعجة.</p>
-              </div>
-          </div>
-      )}
+      {/* نافذة الاشتراك - باستخدام المكون الجديد */}
+      <PromoPopup />
 
       {/* زر فتح لوحة المساحة الشخصية */}
       <button 
@@ -1876,9 +1918,7 @@ const App = () => {
       {/* الواجهة الرئيسية */}
       {view === 'home' && (
         <>
-          {/* ============================ */}
-          {/* 🎯 الهيدر الأزرق مع شعارات ونصوص الشركات - النسخة المتطورة */}
-          {/* ============================ */}
+          {/* الهيدر الأزرق مع شعارات ونصوص الشركات */}
           <div className="bg-gradient-to-b from-slate-950 via-blue-950 to-indigo-900 text-white pt-40 pb-32 px-4 relative overflow-hidden rounded-b-[3rem] md:rounded-b-[5rem] shadow-2xl">
             {/* طبقة الخلفية المتحركة */}
             <div className="absolute top-0 left-0 w-full h-full opacity-30 pointer-events-none">
@@ -1894,22 +1934,7 @@ const App = () => {
               <rect width="100%" height="100%" fill="url(#data-grid)" />
             </svg>
 
-            {/* نمط الدائرة */}
-            <svg className="absolute inset-0 w-full h-full text-indigo-300/10 mix-blend-overlay pointer-events-none animate-pulse" style={{animationDuration: '8s'}} xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                    <pattern id="circuit-pattern" x="0" y="0" width="200" height="200" patternUnits="userSpaceOnUse">
-                        <path d="M0 20 L20 20 L20 0 M20 20 L40 40 M40 40 L60 40 M60 40 L60 60 M100 100 L120 100 L120 80 M150 150 L180 150 L180 180" stroke="currentColor" strokeWidth="0.5" fill="none"/>
-                        <circle cx="20" cy="20" r="2" fill="currentColor"/>
-                        <circle cx="60" cy="40" r="2" fill="currentColor"/>
-                        <circle cx="120" cy="100" r="2" fill="currentColor"/>
-                    </pattern>
-                </defs>
-                <rect width="100%" height="100%" fill="url(#circuit-pattern)" />
-            </svg>
-
-            {/* ============================ */}
-            {/* 🎯 شعارات ونصوص الشركات - هنا الشغل الجاد */}
-            {/* ============================ */}
+            {/* شعارات ونصوص الشركات */}
             <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
               {headerElements.map((element) => (
                 <div 
@@ -1921,7 +1946,6 @@ const App = () => {
                   }}
                 >
                   {element.type === 'logo' ? (
-                    /* عنصر شعار */
                     <div className={`relative ${element.bgColor} rounded-full p-2 shadow-2xl border-2 border-white/30 backdrop-blur-sm`}
                          style={{ width: `${element.size}px`, height: `${element.size}px` }}>
                       <img 
@@ -1933,17 +1957,12 @@ const App = () => {
                           e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(element.name)}&background=random&color=fff&size=64`;
                         }}
                       />
-                      
-                      {/* اسم الشركة عند الهوفر */}
                       <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur-md text-white text-[10px] px-2 py-1 rounded-full whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all duration-300 font-bold border border-white/20">
                         {element.name}
                       </div>
-                      
-                      {/* حلقة متحركة حول الشعار */}
                       <div className="absolute -inset-1 border-2 border-white/30 rounded-full animate-ping opacity-20"></div>
                     </div>
                   ) : (
-                    /* عنصر نصي */
                     <div 
                       className={`relative ${element.bgColor} rounded-full shadow-2xl border-2 border-white/30 backdrop-blur-sm flex items-center justify-center px-4`}
                       style={{ 
@@ -1957,13 +1976,9 @@ const App = () => {
                       >
                         {element.text}
                       </span>
-                      
-                      {/* النص عند الهوفر (تأكيد) */}
                       <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur-md text-white text-[10px] px-2 py-1 rounded-full whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all duration-300 font-bold border border-white/20">
                         {element.text}
                       </div>
-                      
-                      {/* حلقة متحركة حول النص */}
                       <div className="absolute -inset-1 border-2 border-white/30 rounded-full animate-ping opacity-20"></div>
                     </div>
                   )}
@@ -2189,7 +2204,7 @@ const App = () => {
       )}
 
       {/* ============================ */}
-      {/* 19. لوحة الإدارة (Admin View) - مع قسم الهيدر المتطور */}
+      {/* 20. لوحة الإدارة (Admin View) - مع زر التحكم بنافذة الاشتراك */}
       {/* ============================ */}
       {view === 'admin' && (
         <div className="max-w-7xl mx-auto px-4 py-32 animate-in fade-in">
@@ -2221,7 +2236,113 @@ const App = () => {
               </div>
               
               {/* ==================== */}
-              {/* 🎯 قسم إدارة الهيدر المتقدم - شعارات + نصوص */}
+              {/* 🎯 قسم التحكم بنافذة الاشتراك (جديد) */}
+              {/* ==================== */}
+              <div className="mb-12 bg-gradient-to-br from-pink-500 via-red-500 to-yellow-500 rounded-[2rem] p-8 shadow-2xl border-2 border-white/20">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="font-black text-white border-b-2 border-white/30 pb-2 flex items-center gap-3 text-xl">
+                    <Bell className="text-yellow-300" size={28} />
+                    🎯 التحكم بنافذة الاشتراك الترويجي
+                  </h3>
+                  <span className={`${adminConfig.promoPopupEnabled ? 'bg-green-400' : 'bg-red-400'} text-white text-xs px-4 py-2 rounded-full font-black shadow-lg`}>
+                    {adminConfig.promoPopupEnabled ? '🟢 مفعلة' : '🔴 مقفلة'}
+                  </span>
+                </div>
+
+                <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="bg-white/20 p-4 rounded-2xl">
+                        <Mail size={32} className="text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-black text-white text-lg mb-1">نافذة الاشتراك في العروض</h4>
+                        <p className="text-white/80 text-sm font-bold">
+                          {adminConfig.promoPopupEnabled 
+                            ? '🟢 النافذة مفعلة - ستظهر للزوار بعد 3.5 ثواني' 
+                            : '🔴 النافذة مقفلة - لن تظهر للزوار'}
+                        </p>
+                        {!adminConfig.promoPopupEnabled && (
+                          <p className="text-yellow-300 text-xs font-bold mt-2 flex items-center gap-1">
+                            <AlertCircle size={12} />
+                            ملاحظة: المستخدمين اللي اشتركوا قبل ما يلاقوا الإيميل محفوظ وما راح تظهر لهم النافذة
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* زر التفعيل/الإيقاف */}
+                    <button
+                      onClick={togglePromoPopup}
+                      className={`relative w-24 h-12 rounded-full transition-all duration-500 ${
+                        adminConfig.promoPopupEnabled 
+                          ? 'bg-green-400 shadow-lg shadow-green-400/50' 
+                          : 'bg-red-400 shadow-lg shadow-red-400/50'
+                      }`}
+                    >
+                      <span
+                        className={`absolute top-1 w-10 h-10 bg-white rounded-full shadow-xl transition-all duration-500 flex items-center justify-center ${
+                          adminConfig.promoPopupEnabled 
+                            ? 'right-1' 
+                            : 'right-13'
+                        }`}
+                      >
+                        {adminConfig.promoPopupEnabled ? '✅' : '❌'}
+                      </span>
+                    </button>
+                  </div>
+
+                  {/* إحصائيات سريعة عن الاشتراكات */}
+                  <div className="mt-6 pt-6 border-t border-white/20 grid grid-cols-2 gap-4">
+                    <div className="bg-white/10 p-4 rounded-xl text-center">
+                      <p className="text-white/70 text-xs font-bold mb-1">إجمالي المشتركين</p>
+                      <p className="text-white text-2xl font-black">{subscribersList.length}</p>
+                    </div>
+                    <div className="bg-white/10 p-4 rounded-xl text-center">
+                      <p className="text-white/70 text-xs font-bold mb-1">آخر اشتراك</p>
+                      <p className="text-white text-sm font-black">
+                        {subscribersList.length > 0 
+                          ? new Date(subscribersList[0]?.joined_at).toLocaleDateString('ar-SA')
+                          : 'لا يوجد'
+                        }
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* معاينة للنافذة */}
+                <div className="mt-6 bg-slate-900/50 rounded-xl p-4 border border-white/20">
+                  <p className="text-white/80 text-xs font-bold mb-3 flex items-center gap-2">
+                    <Eye size={14} />
+                    معاينة النافذة (كيف راح تظهر للزوار):
+                  </p>
+                  <div className="relative bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl p-6 opacity-75">
+                    <div className="bg-white rounded-2xl p-4 max-w-xs mx-auto">
+                      <div className="text-center">
+                        <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                          <Mail size={20} className="text-blue-600" />
+                        </div>
+                        <h3 className="text-lg font-black text-gray-900 mb-2">
+                          {adminConfig.promoPopupEnabled ? 'لا تفوت عروضنا الحصرية! 🎁' : '🚫 النافذة مقفلة'}
+                        </h3>
+                        <p className="text-gray-500 text-xs font-bold mb-4">
+                          {adminConfig.promoPopupEnabled 
+                            ? 'سجل إيميلك عشان نرسل لك العروض اللي تهمك أول بأول.'
+                            : 'تم إيقاف نافذة الاشتراك من قبل الإدارة'}
+                        </p>
+                        <div className={`h-10 bg-gray-100 rounded-xl ${adminConfig.promoPopupEnabled ? 'opacity-100' : 'opacity-50'}`}>
+                          <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs font-bold">
+                            {adminConfig.promoPopupEnabled ? 'اشتراك' : 'غير متاح'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ==================== */}
+              {/* 🎯 قسم إدارة الهيدر المتقدم */}
               {/* ==================== */}
               <div className="mb-12 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 rounded-[2rem] p-8 shadow-2xl border-2 border-white/20">
                 <div className="flex items-center justify-between mb-6">
@@ -2264,7 +2385,7 @@ const App = () => {
                   </button>
                 </div>
 
-                {/* نموذج إضافة عنصر جديد - حسب النوع */}
+                {/* نموذج إضافة عنصر جديد */}
                 <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 mb-8 border border-white/20">
                   <h4 className="font-black text-white mb-4 flex items-center gap-2">
                     <Plus size={18} className="text-yellow-300" />
@@ -2273,7 +2394,6 @@ const App = () => {
                   
                   <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {newElementType === 'logo' ? (
-                      /* حقول إضافة شعار */
                       <>
                         <div>
                           <label className="text-white/80 text-xs font-bold mb-1 block">اسم الشركة</label>
@@ -2314,7 +2434,6 @@ const App = () => {
                         </div>
                       </>
                     ) : (
-                      /* حقول إضافة نص */
                       <>
                         <div>
                           <label className="text-white/80 text-xs font-bold mb-1 block">النص</label>
@@ -2390,7 +2509,6 @@ const App = () => {
                       </>
                     )}
                     
-                    {/* حقول مشتركة للشعار والنص */}
                     <div>
                       <label className="text-white/80 text-xs font-bold mb-1 block">الموقع</label>
                       <select 
@@ -2414,13 +2532,13 @@ const App = () => {
                         onChange={(e) => setNewElementSize(Number(e.target.value))}
                         className="w-full p-3 rounded-xl bg-white/20 border border-white/30 text-white font-bold text-sm"
                       >
-                        <option value={32} className="bg-slate-800 text-white">صغير (32px)</option>
-                        <option value={40} className="bg-slate-800 text-white">صغير+ (40px)</option>
-                        <option value={48} className="bg-slate-800 text-white">وسط (48px)</option>
-                        <option value={56} className="bg-slate-800 text-white">وسط+ (56px)</option>
-                        <option value={64} className="bg-slate-800 text-white">كبير (64px)</option>
-                        <option value={70} className="bg-slate-800 text-white">كبير+ (70px)</option>
-                        <option value={80} className="bg-slate-800 text-white">كبير جداً (80px)</option>
+                        <option value={32}>صغير (32px)</option>
+                        <option value={40}>صغير+ (40px)</option>
+                        <option value={48}>وسط (48px)</option>
+                        <option value={56}>وسط+ (56px)</option>
+                        <option value={64}>كبير (64px)</option>
+                        <option value={70}>كبير+ (70px)</option>
+                        <option value={80}>كبير جداً (80px)</option>
                       </select>
                     </div>
                     
@@ -2431,14 +2549,14 @@ const App = () => {
                         onChange={(e) => setNewElementDelay(Number(e.target.value))}
                         className="w-full p-3 rounded-xl bg-white/20 border border-white/30 text-white font-bold text-sm"
                       >
-                        <option value={0} className="bg-slate-800 text-white">0</option>
-                        <option value={1} className="bg-slate-800 text-white">1</option>
-                        <option value={2} className="bg-slate-800 text-white">2</option>
-                        <option value={3} className="bg-slate-800 text-white">3</option>
-                        <option value={4} className="bg-slate-800 text-white">4</option>
-                        <option value={5} className="bg-slate-800 text-white">5</option>
-                        <option value={6} className="bg-slate-800 text-white">6</option>
-                        <option value={7} className="bg-slate-800 text-white">7</option>
+                        <option value={0}>0</option>
+                        <option value={1}>1</option>
+                        <option value={2}>2</option>
+                        <option value={3}>3</option>
+                        <option value={4}>4</option>
+                        <option value={5}>5</option>
+                        <option value={6}>6</option>
+                        <option value={7}>7</option>
                       </select>
                     </div>
                     
@@ -2452,17 +2570,6 @@ const App = () => {
                       </button>
                     </div>
                   </div>
-                  
-                  {newElementType === 'logo' && (
-                    <p className="text-white/60 text-xs mt-3">
-                      💡 نصيحة: إذا ما حطيت رابط شعار، بنستخدم اسم الشركة لعمل شعار تلقائي!
-                    </p>
-                  )}
-                  {newElementType === 'text' && (
-                    <p className="text-white/60 text-xs mt-3">
-                      💡 نصيحة: استخدم أسماء متاجر قصيرة وسهلة القراءة مثل: noon, SHEIN, AliExpress
-                    </p>
-                  )}
                 </div>
 
                 {/* عرض العناصر الحالية */}
@@ -2484,7 +2591,6 @@ const App = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto custom-scrollbar p-1">
                     {headerElements.map((element) => (
                       <div key={element.id} className="bg-white/10 backdrop-blur-sm rounded-xl p-4 flex items-center gap-4 border border-white/20 hover:bg-white/20 transition-all">
-                        {/* معاينة مصغرة */}
                         {element.type === 'logo' ? (
                           <div className={`${element.bgColor} w-12 h-12 rounded-full p-1.5 flex-shrink-0 border-2 border-white/50 shadow-lg`}>
                             <img 
@@ -2508,7 +2614,6 @@ const App = () => {
                           </div>
                         )}
                         
-                        {/* معلومات العنصر */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             <span className={`px-2 py-0.5 rounded-full text-[8px] font-black ${
@@ -2528,7 +2633,6 @@ const App = () => {
                           </p>
                         </div>
                         
-                        {/* أزرار التحكم */}
                         <div className="flex gap-1">
                           <button 
                             onClick={() => handleDeleteHeaderElement(element.id)}
@@ -2540,54 +2644,6 @@ const App = () => {
                         </div>
                       </div>
                     ))}
-                  </div>
-                </div>
-                
-                {/* معاينة سريعة للهيدر */}
-                <div className="mt-6 bg-slate-900/50 rounded-xl p-4 border border-white/20">
-                  <p className="text-white/80 text-xs font-bold mb-3 flex items-center gap-2">
-                    <Eye size={14} />
-                    معاينة سريعة للهيدر:
-                  </p>
-                  <div className="bg-gradient-to-r from-blue-900 to-indigo-900 rounded-lg p-6 relative h-40 overflow-hidden">
-                    {headerElements.slice(0, 6).map((element, idx) => (
-                      <div 
-                        key={element.id}
-                        className={`absolute ${
-                          idx === 0 ? 'top-4 left-4' : 
-                          idx === 1 ? 'bottom-4 right-4' : 
-                          idx === 2 ? 'top-12 right-12' : 
-                          idx === 3 ? 'bottom-12 left-12' : 
-                          idx === 4 ? 'top-20 left-20' : 
-                          'bottom-20 right-20'
-                        }`}
-                      >
-                        {element.type === 'logo' ? (
-                          <div className={`${element.bgColor} w-8 h-8 rounded-full p-1 border-2 border-white/30 shadow-lg`}>
-                            <img 
-                              src={element.logo} 
-                              alt={element.name}
-                              className="w-full h-full rounded-full object-cover"
-                              onError={(e) => {
-                                e.target.onerror = null;
-                                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(element.name)}&background=random&color=fff&size=32`;
-                              }}
-                            />
-                          </div>
-                        ) : (
-                          <div className={`${element.bgColor} h-8 rounded-full px-3 border-2 border-white/30 shadow-lg flex items-center justify-center`}>
-                            <span 
-                              className={`${element.textColor} font-${element.fontWeight} text-xs whitespace-nowrap`}
-                            >
-                              {element.text}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-white/30 text-xs">معاينة الهيدر</span>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -3009,7 +3065,7 @@ const App = () => {
               </div>
               
               {/* ==================== */}
-              {/* 🎯 قسم إدارة المشتركين والفلترة */}
+              {/* قسم إدارة المشتركين والفلترة */}
               {/* ==================== */}
               <div className="mb-12 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-[2rem] p-8 shadow-lg">
                 <h3 className="font-black text-blue-900 border-b-2 border-blue-200 pb-4 mb-8 flex items-center gap-3 text-xl">
@@ -3018,7 +3074,6 @@ const App = () => {
                   <span className="bg-blue-600 text-white text-xs px-3 py-1 rounded-full mr-auto">جديد</span>
                 </h3>
 
-                {/* ✅ إحصائيات سريعة للمشتركين */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                   <div className="bg-white p-5 rounded-xl border-2 border-blue-100 shadow-sm hover:shadow-md transition-shadow">
                     <div className="flex items-center gap-4">
@@ -3057,7 +3112,6 @@ const App = () => {
                   </div>
                 </div>
 
-                {/* ✅ قسم الفلترة الذكية */}
                 <div className="bg-white p-6 rounded-2xl border-2 border-blue-200 mb-6">
                   <h4 className="font-black text-blue-800 mb-4 flex items-center gap-2 text-lg">
                     <Filter size={20} className="text-blue-600" />

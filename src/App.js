@@ -9,7 +9,7 @@ import {
   Instagram, Twitter, Send, Settings, Eye, EyeOff, Save, ArrowLeft, Plus, Trash2, X,
   FileText, Activity, Globe, ChevronLeft, Coins, Database, Bell, MessageCircle, BarChart2, Flame, Languages, Link, Server,
   ChevronRight, Clock, XCircle, Share2, Calendar, TrendingUp, Filter, UserCheck, LogOut,
-  Brain, Hexagon, Key, Upload, Image
+  Brain, Hexagon, Key, Upload, Image, Type, AlignLeft, Layers, Grid, Move
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, onSnapshot, collection, increment, updateDoc, addDoc, deleteDoc, getDocs, arrayUnion } from 'firebase/firestore';
@@ -329,28 +329,139 @@ const App = () => {
   const [subscribersList, setSubscribersList] = useState([]);
   
   // ============================
-  // 🎯 شركات الهيدر العشوائية (الشريط الأزرق) - جديد
+  // 🎯 نظام إدارة الهيدر المتقدم (شعارات + نصوص)
   // ============================
-  const [headerCompanies, setHeaderCompanies] = useState([
-    // بيانات افتراضية - شكل جميل للهيدر
-    { id: 1, name: 'أمازون', logo: 'https://logo.clearbit.com/amazon.sa', bgColor: 'bg-orange-500', position: 'top-[10%] left-[5%]', size: 64, delay: 0 },
-    { id: 2, name: 'نون', logo: 'https://logo.clearbit.com/noon.com', bgColor: 'bg-yellow-400', position: 'bottom-[20%] right-[10%]', size: 48, delay: 1 },
-    { id: 3, name: 'جرير', logo: 'https://logo.clearbit.com/jarir.com', bgColor: 'bg-green-500', position: 'top-[30%] right-[25%]', size: 32, delay: 2 },
-    { id: 4, name: 'إكسترا', logo: 'https://logo.clearbit.com/extra.com', bgColor: 'bg-blue-500', position: 'bottom-[10%] left-[20%]', size: 80, delay: 3 },
-    { id: 5, name: 'Apple', logo: 'https://logo.clearbit.com/apple.com', bgColor: 'bg-gray-800', position: 'top-[60%] left-[15%]', size: 56, delay: 4 },
-    { id: 6, name: 'Samsung', logo: 'https://logo.clearbit.com/samsung.com', bgColor: 'bg-blue-800', position: 'bottom-[30%] left-[10%]', size: 40, delay: 5 },
-    { id: 7, name: 'Xcite', logo: 'https://logo.clearbit.com/xcite.com', bgColor: 'bg-red-600', position: 'top-[15%] right-[15%]', size: 36, delay: 6 },
-    { id: 8, name: 'ماي مارت', logo: 'https://logo.clearbit.com/mymart.com', bgColor: 'bg-purple-600', position: 'bottom-[15%] right-[20%]', size: 44, delay: 7 },
+  const [headerElements, setHeaderElements] = useState([
+    // بيانات افتراضية - مزيج من الشعارات والنصوص
+    { 
+      id: 1, 
+      type: 'logo', 
+      name: 'أمازون', 
+      logo: 'https://logo.clearbit.com/amazon.sa', 
+      bgColor: 'bg-orange-500', 
+      position: 'top-[10%] left-[5%]', 
+      size: 64, 
+      delay: 0,
+      text: '',
+      textColor: 'text-white',
+      fontSize: '16',
+      fontWeight: 'bold'
+    },
+    { 
+      id: 2, 
+      type: 'logo', 
+      name: 'نون', 
+      logo: 'https://logo.clearbit.com/noon.com', 
+      bgColor: 'bg-yellow-400', 
+      position: 'bottom-[20%] right-[10%]', 
+      size: 48, 
+      delay: 1,
+      text: '',
+      textColor: 'text-white',
+      fontSize: '16',
+      fontWeight: 'bold'
+    },
+    { 
+      id: 3, 
+      type: 'text',
+      name: 'noon',
+      logo: '',
+      bgColor: 'bg-gradient-to-r from-purple-600 to-pink-600',
+      position: 'top-[30%] right-[25%]',
+      size: 60,
+      delay: 2,
+      text: 'noon',
+      textColor: 'text-white',
+      fontSize: '18',
+      fontWeight: 'black'
+    },
+    { 
+      id: 4, 
+      type: 'logo', 
+      name: 'جرير', 
+      logo: 'https://logo.clearbit.com/jarir.com', 
+      bgColor: 'bg-green-500', 
+      position: 'bottom-[10%] left-[20%]', 
+      size: 80, 
+      delay: 3,
+      text: '',
+      textColor: 'text-white',
+      fontSize: '16',
+      fontWeight: 'bold'
+    },
+    { 
+      id: 5, 
+      type: 'text',
+      name: 'Amazon',
+      logo: '',
+      bgColor: 'bg-gradient-to-r from-blue-600 to-cyan-600',
+      position: 'top-[60%] left-[15%]',
+      size: 70,
+      delay: 4,
+      text: 'Amazon',
+      textColor: 'text-white',
+      fontSize: '20',
+      fontWeight: 'black'
+    },
+    { 
+      id: 6, 
+      type: 'logo', 
+      name: 'إكسترا', 
+      logo: 'https://logo.clearbit.com/extra.com', 
+      bgColor: 'bg-blue-500', 
+      position: 'bottom-[30%] left-[10%]', 
+      size: 40, 
+      delay: 5,
+      text: '',
+      textColor: 'text-white',
+      fontSize: '16',
+      fontWeight: 'bold'
+    },
+    { 
+      id: 7, 
+      type: 'text',
+      name: 'SHEIN',
+      logo: '',
+      bgColor: 'bg-gradient-to-r from-green-500 to-emerald-600',
+      position: 'top-[15%] right-[15%]',
+      size: 65,
+      delay: 6,
+      text: 'SHEIN',
+      textColor: 'text-white',
+      fontSize: '22',
+      fontWeight: 'black'
+    },
+    { 
+      id: 8, 
+      type: 'text',
+      name: 'AliExpress',
+      logo: '',
+      bgColor: 'bg-gradient-to-r from-red-600 to-orange-600',
+      position: 'bottom-[15%] right-[20%]',
+      size: 55,
+      delay: 7,
+      text: 'AliExpress',
+      textColor: 'text-white',
+      fontSize: '16',
+      fontWeight: 'bold'
+    },
   ]);
 
   // ============================
-  // 🆕 حالات إضافة شركة جديدة في صفحة الإدارة
+  // 🆕 حالات إضافة عنصر جديد في صفحة الإدارة
   // ============================
-  const [newCompanyName, setNewCompanyName] = useState('');
-  const [newCompanyLogo, setNewCompanyLogo] = useState('');
-  const [newCompanyColor, setNewCompanyColor] = useState('bg-blue-600');
-  const [newCompanyPosition, setNewCompanyPosition] = useState('random');
-  const [newCompanySize, setNewCompanySize] = useState(48);
+  const [newElementType, setNewElementType] = useState('logo');
+  const [newElementName, setNewElementName] = useState('');
+  const [newElementLogo, setNewElementLogo] = useState('');
+  const [newElementText, setNewElementText] = useState('');
+  const [newElementColor, setNewElementColor] = useState('bg-blue-600');
+  const [newElementGradient, setNewElementGradient] = useState('bg-gradient-to-r from-blue-600 to-indigo-600');
+  const [newElementPosition, setNewElementPosition] = useState('random');
+  const [newElementSize, setNewElementSize] = useState(48);
+  const [newElementTextColor, setNewElementTextColor] = useState('text-white');
+  const [newElementFontSize, setNewElementFontSize] = useState(18);
+  const [newElementFontWeight, setNewElementFontWeight] = useState('bold');
+  const [newElementDelay, setNewElementDelay] = useState(0);
   
   const [lang, setLang] = useState('ar');
   const [notification, setNotification] = useState(null);
@@ -380,7 +491,7 @@ const App = () => {
   const [merchantForm, setMerchantForm] = useState({ store: '', email: '' });
   const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
 
-  // ألوان متاحة للشركات
+  // ألوان متاحة للعناصر
   const availableColors = [
     { value: 'bg-orange-500', label: 'برتقالي' },
     { value: 'bg-yellow-400', label: 'أصفر' },
@@ -394,6 +505,47 @@ const App = () => {
     { value: 'bg-blue-800', label: 'أزرق غامق' },
     { value: 'bg-red-600', label: 'أحمر غامق' },
     { value: 'bg-purple-600', label: 'بنفسجي غامق' },
+  ];
+
+  // تدرجات ألوان متاحة للنصوص
+  const availableGradients = [
+    { value: 'bg-gradient-to-r from-blue-600 to-indigo-600', label: 'أزرق إلى نيلي' },
+    { value: 'bg-gradient-to-r from-purple-600 to-pink-600', label: 'بنفسجي إلى وردي' },
+    { value: 'bg-gradient-to-r from-green-500 to-emerald-600', label: 'أخضر إلى زمردي' },
+    { value: 'bg-gradient-to-r from-red-600 to-orange-600', label: 'أحمر إلى برتقالي' },
+    { value: 'bg-gradient-to-r from-yellow-500 to-amber-600', label: 'أصفر إلى كهرماني' },
+    { value: 'bg-gradient-to-r from-teal-500 to-cyan-600', label: 'شرسوفي إلى سماوي' },
+    { value: 'bg-gradient-to-r from-slate-700 to-slate-900', label: 'رمادي غامق إلى أسود' },
+  ];
+
+  // ألوان النص
+  const textColors = [
+    { value: 'text-white', label: 'أبيض' },
+    { value: 'text-black', label: 'أسود' },
+    { value: 'text-blue-600', label: 'أزرق' },
+    { value: 'text-yellow-400', label: 'أصفر' },
+    { value: 'text-green-600', label: 'أخضر' },
+    { value: 'text-red-600', label: 'أحمر' },
+    { value: 'text-purple-600', label: 'بنفسجي' },
+  ];
+
+  // خيارات حجم الخط
+  const fontSizes = [
+    { value: 14, label: 'صغير (14px)' },
+    { value: 16, label: 'عادي (16px)' },
+    { value: 18, label: 'وسط (18px)' },
+    { value: 20, label: 'كبير (20px)' },
+    { value: 22, label: 'كبير جداً (22px)' },
+    { value: 24, label: 'ضخم (24px)' },
+    { value: 28, label: 'ضخم جداً (28px)' },
+  ];
+
+  // خيارات وزن الخط
+  const fontWeights = [
+    { value: 'normal', label: 'عادي' },
+    { value: 'medium', label: 'متوسط' },
+    { value: 'bold', label: 'غامق' },
+    { value: 'black', label: 'غامق جداً' },
   ];
 
   // المواقع العشوائية
@@ -410,6 +562,10 @@ const App = () => {
     'top-[20%] right-[35%]',
     'bottom-[15%] left-[45%]',
     'bottom-[5%] right-[40%]',
+    'top-[35%] left-[60%]',
+    'top-[55%] right-[45%]',
+    'bottom-[45%] left-[55%]',
+    'bottom-[25%] right-[60%]',
   ];
 
   // ============================
@@ -473,75 +629,111 @@ const App = () => {
   const t = translations[lang];
 
   // ============================
-  // 🎯 دوال إدارة شركات الهيدر - جديد
+  // 🎯 دوال إدارة عناصر الهيدر المتقدمة
   // ============================
   
-  // إضافة شركة جديدة
-  const handleAddHeaderCompany = () => {
-    if (!newCompanyName.trim()) {
+  // إضافة عنصر جديد (شعار أو نص)
+  const handleAddHeaderElement = () => {
+    if (newElementType === 'logo' && !newElementName.trim()) {
       showNotification('الرجاء إدخال اسم الشركة', 'error');
       return;
     }
 
-    // استخدام شعار افتراضي إذا لم يتم إدخال رابط
-    let logoUrl = newCompanyLogo.trim();
-    if (!logoUrl) {
-      // استخدام Clearbit أو Placeholder
-      logoUrl = `https://logo.clearbit.com/${newCompanyName.toLowerCase().replace(/\s+/g, '')}.com`;
+    if (newElementType === 'text' && !newElementText.trim()) {
+      showNotification('الرجاء إدخال النص', 'error');
+      return;
     }
 
     // اختيار موقع عشوائي
-    let position = newCompanyPosition;
+    let position = newElementPosition;
     if (position === 'random') {
       const randomIndex = Math.floor(Math.random() * randomPositions.length);
       position = randomPositions[randomIndex];
     }
 
-    const newCompany = {
+    let newElement = {
       id: Date.now(),
-      name: newCompanyName,
-      logo: logoUrl,
-      bgColor: newCompanyColor,
+      type: newElementType,
+      name: newElementType === 'logo' ? newElementName : newElementText,
       position: position,
-      size: newCompanySize,
-      delay: headerCompanies.length % 8, // توزيع عشوائي للتأخير
+      size: newElementSize,
+      delay: newElementDelay || headerElements.length % 8,
     };
 
-    setHeaderCompanies([...headerCompanies, newCompany]);
+    if (newElementType === 'logo') {
+      // استخدام شعار افتراضي إذا لم يتم إدخال رابط
+      let logoUrl = newElementLogo.trim();
+      if (!logoUrl) {
+        logoUrl = `https://logo.clearbit.com/${newElementName.toLowerCase().replace(/\s+/g, '')}.com`;
+      }
+      newElement = {
+        ...newElement,
+        logo: logoUrl,
+        bgColor: newElementColor,
+        text: '',
+        textColor: 'text-white',
+        fontSize: '16',
+        fontWeight: 'bold'
+      };
+    } else {
+      // عنصر نصي
+      newElement = {
+        ...newElement,
+        logo: '',
+        bgColor: newElementGradient,
+        text: newElementText,
+        textColor: newElementTextColor,
+        fontSize: newElementFontSize.toString(),
+        fontWeight: newElementFontWeight
+      };
+    }
+
+    setHeaderElements([...headerElements, newElement]);
     
     // إعادة تعيين الحقول
-    setNewCompanyName('');
-    setNewCompanyLogo('');
-    setNewCompanyColor('bg-blue-600');
-    setNewCompanyPosition('random');
-    setNewCompanySize(48);
+    setNewElementName('');
+    setNewElementLogo('');
+    setNewElementText('');
+    setNewElementColor('bg-blue-600');
+    setNewElementGradient('bg-gradient-to-r from-blue-600 to-indigo-600');
+    setNewElementPosition('random');
+    setNewElementSize(48);
+    setNewElementTextColor('text-white');
+    setNewElementFontSize(18);
+    setNewElementFontWeight('bold');
+    setNewElementDelay(0);
     
-    showNotification(`✅ تم إضافة شركة ${newCompanyName} بنجاح`, 'success');
+    showNotification(`✅ تم إضافة ${newElementType === 'logo' ? 'شعار' : 'نص'} "${newElement.name}" بنجاح`, 'success');
   };
 
-  // حذف شركة
-  const handleDeleteHeaderCompany = (companyId) => {
-    if (window.confirm('هل أنت متأكد من حذف هذه الشركة من الهيدر؟')) {
-      setHeaderCompanies(headerCompanies.filter(c => c.id !== companyId));
-      showNotification('✅ تم حذف الشركة بنجاح', 'success');
+  // حذف عنصر
+  const handleDeleteHeaderElement = (elementId) => {
+    if (window.confirm('هل أنت متأكد من حذف هذا العنصر من الهيدر؟')) {
+      setHeaderElements(headerElements.filter(e => e.id !== elementId));
+      showNotification('✅ تم حذف العنصر بنجاح', 'success');
     }
   };
 
-  // تحديث شركة
-  const handleUpdateHeaderCompany = (companyId, field, value) => {
-    setHeaderCompanies(headerCompanies.map(company => 
-      company.id === companyId ? { ...company, [field]: value } : company
+  // تحديث عنصر
+  const handleUpdateHeaderElement = (elementId, field, value) => {
+    setHeaderElements(headerElements.map(element => 
+      element.id === elementId ? { ...element, [field]: value } : element
     ));
   };
 
-  // إعادة ترتيب عشوائي للشركات
+  // إعادة ترتيب عشوائي للعناصر
   const handleRandomizePositions = () => {
-    setHeaderCompanies(headerCompanies.map(company => ({
-      ...company,
+    setHeaderElements(headerElements.map(element => ({
+      ...element,
       position: randomPositions[Math.floor(Math.random() * randomPositions.length)],
       delay: Math.floor(Math.random() * 8)
     })));
-    showNotification('🎲 تم عشوائية مواقع الشركات', 'success');
+    showNotification('🎲 تم عشوائية مواقع العناصر', 'success');
+  };
+
+  // تغيير نوع العنصر في نموذج الإضافة
+  const handleElementTypeChange = (type) => {
+    setNewElementType(type);
   };
 
   // ============================
@@ -1685,7 +1877,7 @@ const App = () => {
       {view === 'home' && (
         <>
           {/* ============================ */}
-          {/* 🎯 الهيدر الأزرق مع شعارات الشركات - مطور بالكامل */}
+          {/* 🎯 الهيدر الأزرق مع شعارات ونصوص الشركات - النسخة المتطورة */}
           {/* ============================ */}
           <div className="bg-gradient-to-b from-slate-950 via-blue-950 to-indigo-900 text-white pt-40 pb-32 px-4 relative overflow-hidden rounded-b-[3rem] md:rounded-b-[5rem] shadow-2xl">
             {/* طبقة الخلفية المتحركة */}
@@ -1716,39 +1908,65 @@ const App = () => {
             </svg>
 
             {/* ============================ */}
-            {/* 🎯 شعارات الشركات الدائرية - هنا الشغل الجاد */}
+            {/* 🎯 شعارات ونصوص الشركات - هنا الشغل الجاد */}
             {/* ============================ */}
             <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
-              {headerCompanies.map((company) => (
+              {headerElements.map((element) => (
                 <div 
-                  key={company.id}
-                  className={`absolute ${company.position} group transition-all duration-500 hover:scale-150 hover:z-30`}
+                  key={element.id}
+                  className={`absolute ${element.position} group transition-all duration-500 hover:scale-150 hover:z-30`}
                   style={{ 
-                    animationDelay: `${company.delay * 0.5}s`,
+                    animationDelay: `${element.delay * 0.5}s`,
                     animation: 'float 8s ease-in-out infinite'
                   }}
                 >
-                  {/* الشعار الدائري مع تأثيرات */}
-                  <div className={`relative ${company.bgColor} rounded-full p-2 shadow-2xl border-2 border-white/30 backdrop-blur-sm`}
-                       style={{ width: `${company.size}px`, height: `${company.size}px` }}>
-                    <img 
-                      src={company.logo} 
-                      alt={company.name}
-                      className="w-full h-full rounded-full object-cover"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(company.name)}&background=random&color=fff&size=64`;
-                      }}
-                    />
-                    
-                    {/* اسم الشركة عند الهوفر */}
-                    <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur-md text-white text-[10px] px-2 py-1 rounded-full whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all duration-300 font-bold border border-white/20">
-                      {company.name}
+                  {element.type === 'logo' ? (
+                    /* عنصر شعار */
+                    <div className={`relative ${element.bgColor} rounded-full p-2 shadow-2xl border-2 border-white/30 backdrop-blur-sm`}
+                         style={{ width: `${element.size}px`, height: `${element.size}px` }}>
+                      <img 
+                        src={element.logo} 
+                        alt={element.name}
+                        className="w-full h-full rounded-full object-cover"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(element.name)}&background=random&color=fff&size=64`;
+                        }}
+                      />
+                      
+                      {/* اسم الشركة عند الهوفر */}
+                      <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur-md text-white text-[10px] px-2 py-1 rounded-full whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all duration-300 font-bold border border-white/20">
+                        {element.name}
+                      </div>
+                      
+                      {/* حلقة متحركة حول الشعار */}
+                      <div className="absolute -inset-1 border-2 border-white/30 rounded-full animate-ping opacity-20"></div>
                     </div>
-                    
-                    {/* حلقة متحركة حول الشعار */}
-                    <div className="absolute -inset-1 border-2 border-white/30 rounded-full animate-ping opacity-20"></div>
-                  </div>
+                  ) : (
+                    /* عنصر نصي */
+                    <div 
+                      className={`relative ${element.bgColor} rounded-full shadow-2xl border-2 border-white/30 backdrop-blur-sm flex items-center justify-center px-4`}
+                      style={{ 
+                        height: `${element.size}px`,
+                        minWidth: `${element.size}px`
+                      }}
+                    >
+                      <span 
+                        className={`${element.textColor} font-${element.fontWeight} whitespace-nowrap`}
+                        style={{ fontSize: `${element.fontSize}px` }}
+                      >
+                        {element.text}
+                      </span>
+                      
+                      {/* النص عند الهوفر (تأكيد) */}
+                      <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur-md text-white text-[10px] px-2 py-1 rounded-full whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all duration-300 font-bold border border-white/20">
+                        {element.text}
+                      </div>
+                      
+                      {/* حلقة متحركة حول النص */}
+                      <div className="absolute -inset-1 border-2 border-white/30 rounded-full animate-ping opacity-20"></div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -1971,7 +2189,7 @@ const App = () => {
       )}
 
       {/* ============================ */}
-      {/* 19. لوحة الإدارة (Admin View) - مع قسم الشركات الجديد */}
+      {/* 19. لوحة الإدارة (Admin View) - مع قسم الهيدر المتطور */}
       {/* ============================ */}
       {view === 'admin' && (
         <div className="max-w-7xl mx-auto px-4 py-32 animate-in fade-in">
@@ -2003,74 +2221,181 @@ const App = () => {
               </div>
               
               {/* ==================== */}
-              {/* 🎯 قسم إدارة شركات الهيدر - جديد كلياً */}
+              {/* 🎯 قسم إدارة الهيدر المتقدم - شعارات + نصوص */}
               {/* ==================== */}
               <div className="mb-12 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 rounded-[2rem] p-8 shadow-2xl border-2 border-white/20">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="font-black text-white border-b-2 border-white/30 pb-2 flex items-center gap-3 text-xl">
                     <Award className="text-yellow-300" size={28} />
-                    🎯 إدارة شركاء الهيدر (الشريط الأزرق)
+                    🎯 إدارة الهيدر المتقدم (شعارات + نصوص)
                   </h3>
                   <span className="bg-yellow-400 text-blue-900 text-xs px-4 py-2 rounded-full font-black shadow-lg">
-                    {headerCompanies.length} شركاء
+                    {headerElements.length} عنصر
                   </span>
                 </div>
 
                 <p className="text-white/80 mb-6 text-sm font-bold bg-white/10 p-3 rounded-xl border border-white/20">
-                  ⚡ هذه الشركات تظهر بشكل عشوائي وجميل في الهيدر الأزرق. أضف شركاءك ليظهروا كشعارات دائرية متحركة!
+                  ⚡ أضف شعارات أو نصوص للمتاجر والشركات، وستظهر بشكل عشوائي وجميل في الهيدر الأزرق. تحكم كامل بالألوان والأحجام والمواقع!
                 </p>
 
-                {/* نموذج إضافة شركة جديدة */}
+                {/* اختيار نوع العنصر */}
+                <div className="flex gap-4 mb-6">
+                  <button
+                    onClick={() => handleElementTypeChange('logo')}
+                    className={`flex-1 py-4 rounded-xl font-black text-sm transition-all flex items-center justify-center gap-2 ${
+                      newElementType === 'logo' 
+                        ? 'bg-yellow-400 text-blue-900 shadow-lg' 
+                        : 'bg-white/10 text-white hover:bg-white/20 border border-white/30'
+                    }`}
+                  >
+                    <Image size={20} />
+                    إضافة شعار
+                  </button>
+                  <button
+                    onClick={() => handleElementTypeChange('text')}
+                    className={`flex-1 py-4 rounded-xl font-black text-sm transition-all flex items-center justify-center gap-2 ${
+                      newElementType === 'text' 
+                        ? 'bg-yellow-400 text-blue-900 shadow-lg' 
+                        : 'bg-white/10 text-white hover:bg-white/20 border border-white/30'
+                    }`}
+                  >
+                    <Type size={20} />
+                    إضافة نص
+                  </button>
+                </div>
+
+                {/* نموذج إضافة عنصر جديد - حسب النوع */}
                 <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 mb-8 border border-white/20">
                   <h4 className="font-black text-white mb-4 flex items-center gap-2">
                     <Plus size={18} className="text-yellow-300" />
-                    إضافة شريك جديد
+                    {newElementType === 'logo' ? 'إضافة شعار جديد' : 'إضافة نص جديد'}
                   </h4>
                   
                   <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div>
-                      <label className="text-white/80 text-xs font-bold mb-1 block">اسم الشركة</label>
-                      <input 
-                        type="text"
-                        value={newCompanyName}
-                        onChange={(e) => setNewCompanyName(e.target.value)}
-                        className="w-full p-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder:text-white/50 font-bold text-sm"
-                        placeholder="مثال: أمازون"
-                      />
-                    </div>
+                    {newElementType === 'logo' ? (
+                      /* حقول إضافة شعار */
+                      <>
+                        <div>
+                          <label className="text-white/80 text-xs font-bold mb-1 block">اسم الشركة</label>
+                          <input 
+                            type="text"
+                            value={newElementName}
+                            onChange={(e) => setNewElementName(e.target.value)}
+                            className="w-full p-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder:text-white/50 font-bold text-sm"
+                            placeholder="مثال: أمازون"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="text-white/80 text-xs font-bold mb-1 block">رابط الشعار (اختياري)</label>
+                          <input 
+                            type="text"
+                            value={newElementLogo}
+                            onChange={(e) => setNewElementLogo(e.target.value)}
+                            className="w-full p-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder:text-white/50 font-bold text-sm"
+                            placeholder="https://example.com/logo.png"
+                            dir="ltr"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="text-white/80 text-xs font-bold mb-1 block">اللون</label>
+                          <select 
+                            value={newElementColor}
+                            onChange={(e) => setNewElementColor(e.target.value)}
+                            className="w-full p-3 rounded-xl bg-white/20 border border-white/30 text-white font-bold text-sm"
+                          >
+                            {availableColors.map((color, idx) => (
+                              <option key={idx} value={color.value} className="bg-slate-800 text-white">
+                                {color.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </>
+                    ) : (
+                      /* حقول إضافة نص */
+                      <>
+                        <div>
+                          <label className="text-white/80 text-xs font-bold mb-1 block">النص</label>
+                          <input 
+                            type="text"
+                            value={newElementText}
+                            onChange={(e) => setNewElementText(e.target.value)}
+                            className="w-full p-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder:text-white/50 font-bold text-sm"
+                            placeholder="مثال: noon, Amazon, SHEIN"
+                            dir="ltr"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="text-white/80 text-xs font-bold mb-1 block">التدرج اللوني</label>
+                          <select 
+                            value={newElementGradient}
+                            onChange={(e) => setNewElementGradient(e.target.value)}
+                            className="w-full p-3 rounded-xl bg-white/20 border border-white/30 text-white font-bold text-sm"
+                          >
+                            {availableGradients.map((gradient, idx) => (
+                              <option key={idx} value={gradient.value} className="bg-slate-800 text-white">
+                                {gradient.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        
+                        <div>
+                          <label className="text-white/80 text-xs font-bold mb-1 block">لون النص</label>
+                          <select 
+                            value={newElementTextColor}
+                            onChange={(e) => setNewElementTextColor(e.target.value)}
+                            className="w-full p-3 rounded-xl bg-white/20 border border-white/30 text-white font-bold text-sm"
+                          >
+                            {textColors.map((color, idx) => (
+                              <option key={idx} value={color.value} className="bg-slate-800 text-white">
+                                {color.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        
+                        <div>
+                          <label className="text-white/80 text-xs font-bold mb-1 block">حجم الخط</label>
+                          <select 
+                            value={newElementFontSize}
+                            onChange={(e) => setNewElementFontSize(Number(e.target.value))}
+                            className="w-full p-3 rounded-xl bg-white/20 border border-white/30 text-white font-bold text-sm"
+                          >
+                            {fontSizes.map((size, idx) => (
+                              <option key={idx} value={size.value} className="bg-slate-800 text-white">
+                                {size.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        
+                        <div>
+                          <label className="text-white/80 text-xs font-bold mb-1 block">وزن الخط</label>
+                          <select 
+                            value={newElementFontWeight}
+                            onChange={(e) => setNewElementFontWeight(e.target.value)}
+                            className="w-full p-3 rounded-xl bg-white/20 border border-white/30 text-white font-bold text-sm"
+                          >
+                            {fontWeights.map((weight, idx) => (
+                              <option key={idx} value={weight.value} className="bg-slate-800 text-white">
+                                {weight.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </>
+                    )}
                     
-                    <div>
-                      <label className="text-white/80 text-xs font-bold mb-1 block">رابط الشعار (اختياري)</label>
-                      <input 
-                        type="text"
-                        value={newCompanyLogo}
-                        onChange={(e) => setNewCompanyLogo(e.target.value)}
-                        className="w-full p-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder:text-white/50 font-bold text-sm"
-                        placeholder="https://example.com/logo.png"
-                        dir="ltr"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="text-white/80 text-xs font-bold mb-1 block">اللون</label>
-                      <select 
-                        value={newCompanyColor}
-                        onChange={(e) => setNewCompanyColor(e.target.value)}
-                        className="w-full p-3 rounded-xl bg-white/20 border border-white/30 text-white font-bold text-sm"
-                      >
-                        {availableColors.map((color, idx) => (
-                          <option key={idx} value={color.value} className="bg-slate-800 text-white">
-                            {color.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    
+                    {/* حقول مشتركة للشعار والنص */}
                     <div>
                       <label className="text-white/80 text-xs font-bold mb-1 block">الموقع</label>
                       <select 
-                        value={newCompanyPosition}
-                        onChange={(e) => setNewCompanyPosition(e.target.value)}
+                        value={newElementPosition}
+                        onChange={(e) => setNewElementPosition(e.target.value)}
                         className="w-full p-3 rounded-xl bg-white/20 border border-white/30 text-white font-bold text-sm"
                       >
                         <option value="random" className="bg-slate-800 text-white">📍 عشوائي</option>
@@ -2085,81 +2410,128 @@ const App = () => {
                     <div>
                       <label className="text-white/80 text-xs font-bold mb-1 block">الحجم</label>
                       <select 
-                        value={newCompanySize}
-                        onChange={(e) => setNewCompanySize(Number(e.target.value))}
+                        value={newElementSize}
+                        onChange={(e) => setNewElementSize(Number(e.target.value))}
                         className="w-full p-3 rounded-xl bg-white/20 border border-white/30 text-white font-bold text-sm"
                       >
                         <option value={32} className="bg-slate-800 text-white">صغير (32px)</option>
+                        <option value={40} className="bg-slate-800 text-white">صغير+ (40px)</option>
                         <option value={48} className="bg-slate-800 text-white">وسط (48px)</option>
+                        <option value={56} className="bg-slate-800 text-white">وسط+ (56px)</option>
                         <option value={64} className="bg-slate-800 text-white">كبير (64px)</option>
+                        <option value={70} className="bg-slate-800 text-white">كبير+ (70px)</option>
                         <option value={80} className="bg-slate-800 text-white">كبير جداً (80px)</option>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="text-white/80 text-xs font-bold mb-1 block">تأخير الحركة</label>
+                      <select 
+                        value={newElementDelay}
+                        onChange={(e) => setNewElementDelay(Number(e.target.value))}
+                        className="w-full p-3 rounded-xl bg-white/20 border border-white/30 text-white font-bold text-sm"
+                      >
+                        <option value={0} className="bg-slate-800 text-white">0</option>
+                        <option value={1} className="bg-slate-800 text-white">1</option>
+                        <option value={2} className="bg-slate-800 text-white">2</option>
+                        <option value={3} className="bg-slate-800 text-white">3</option>
+                        <option value={4} className="bg-slate-800 text-white">4</option>
+                        <option value={5} className="bg-slate-800 text-white">5</option>
+                        <option value={6} className="bg-slate-800 text-white">6</option>
+                        <option value={7} className="bg-slate-800 text-white">7</option>
                       </select>
                     </div>
                     
                     <div className="flex items-end">
                       <button 
-                        onClick={handleAddHeaderCompany}
+                        onClick={handleAddHeaderElement}
                         className="w-full bg-yellow-400 hover:bg-yellow-500 text-blue-900 py-3 rounded-xl font-black text-sm transition-all flex items-center justify-center gap-2 shadow-lg"
                       >
                         <Plus size={18} />
-                        إضافة شريك
+                        {newElementType === 'logo' ? 'إضافة شعار' : 'إضافة نص'}
                       </button>
                     </div>
                   </div>
                   
-                  <p className="text-white/60 text-xs mt-3">
-                    💡 نصيحة: إذا ما حطيت رابط شعار، بنستخدم اسم الشركة لعمل شعار تلقائي!
-                  </p>
+                  {newElementType === 'logo' && (
+                    <p className="text-white/60 text-xs mt-3">
+                      💡 نصيحة: إذا ما حطيت رابط شعار، بنستخدم اسم الشركة لعمل شعار تلقائي!
+                    </p>
+                  )}
+                  {newElementType === 'text' && (
+                    <p className="text-white/60 text-xs mt-3">
+                      💡 نصيحة: استخدم أسماء متاجر قصيرة وسهلة القراءة مثل: noon, SHEIN, AliExpress
+                    </p>
+                  )}
                 </div>
 
-                {/* عرض الشركات الحالية */}
+                {/* عرض العناصر الحالية */}
                 <div className="bg-white/5 rounded-xl p-6">
                   <div className="flex justify-between items-center mb-4">
                     <h4 className="font-black text-white flex items-center gap-2">
-                      <Users size={18} />
-                      الشركاء الحاليين ({headerCompanies.length})
+                      <Layers size={18} />
+                      العناصر الحالية ({headerElements.length})
                     </h4>
                     <button 
                       onClick={handleRandomizePositions}
                       className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-bold text-xs transition-all flex items-center gap-2"
                     >
-                      🔄 عشوائية المواقع
+                      <Move size={14} />
+                      عشوائية المواقع
                     </button>
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto custom-scrollbar p-1">
-                    {headerCompanies.map((company) => (
-                      <div key={company.id} className="bg-white/10 backdrop-blur-sm rounded-xl p-4 flex items-center gap-4 border border-white/20 hover:bg-white/20 transition-all">
-                        {/* الشعار المصغر */}
-                        <div className={`${company.bgColor} w-12 h-12 rounded-full p-1.5 flex-shrink-0 border-2 border-white/50 shadow-lg`}>
-                          <img 
-                            src={company.logo} 
-                            alt={company.name}
-                            className="w-full h-full rounded-full object-cover"
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(company.name)}&background=random&color=fff&size=48`;
-                            }}
-                          />
-                        </div>
+                    {headerElements.map((element) => (
+                      <div key={element.id} className="bg-white/10 backdrop-blur-sm rounded-xl p-4 flex items-center gap-4 border border-white/20 hover:bg-white/20 transition-all">
+                        {/* معاينة مصغرة */}
+                        {element.type === 'logo' ? (
+                          <div className={`${element.bgColor} w-12 h-12 rounded-full p-1.5 flex-shrink-0 border-2 border-white/50 shadow-lg`}>
+                            <img 
+                              src={element.logo} 
+                              alt={element.name}
+                              className="w-full h-full rounded-full object-cover"
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(element.name)}&background=random&color=fff&size=48`;
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <div className={`${element.bgColor} h-12 rounded-full px-4 flex-shrink-0 border-2 border-white/50 shadow-lg flex items-center justify-center`}>
+                            <span 
+                              className={`${element.textColor} font-${element.fontWeight} whitespace-nowrap`}
+                              style={{ fontSize: `${element.fontSize}px` }}
+                            >
+                              {element.text}
+                            </span>
+                          </div>
+                        )}
                         
-                        {/* معلومات الشركة */}
+                        {/* معلومات العنصر */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <h5 className="font-black text-white truncate">{company.name}</h5>
+                            <span className={`px-2 py-0.5 rounded-full text-[8px] font-black ${
+                              element.type === 'logo' ? 'bg-blue-500/30 text-blue-200' : 'bg-purple-500/30 text-purple-200'
+                            }`}>
+                              {element.type === 'logo' ? 'شعار' : 'نص'}
+                            </span>
+                            <h5 className="font-black text-white truncate">
+                              {element.type === 'logo' ? element.name : element.text}
+                            </h5>
                             <span className="text-[8px] bg-white/20 text-white px-2 py-0.5 rounded-full">
-                              {company.size}px
+                              {element.size}px
                             </span>
                           </div>
                           <p className="text-white/60 text-[10px] font-bold truncate">
-                            {company.position}
+                            {element.position}
                           </p>
                         </div>
                         
                         {/* أزرار التحكم */}
                         <div className="flex gap-1">
                           <button 
-                            onClick={() => handleDeleteHeaderCompany(company.id)}
+                            onClick={() => handleDeleteHeaderElement(element.id)}
                             className="p-2 bg-red-500/20 hover:bg-red-500/40 rounded-lg text-white transition-colors"
                             title="حذف"
                           >
@@ -2178,20 +2550,39 @@ const App = () => {
                     معاينة سريعة للهيدر:
                   </p>
                   <div className="bg-gradient-to-r from-blue-900 to-indigo-900 rounded-lg p-6 relative h-40 overflow-hidden">
-                    {headerCompanies.slice(0, 5).map((company, idx) => (
+                    {headerElements.slice(0, 6).map((element, idx) => (
                       <div 
-                        key={company.id}
-                        className={`absolute ${idx === 0 ? 'top-4 left-4' : idx === 1 ? 'bottom-4 right-4' : idx === 2 ? 'top-12 right-12' : 'bottom-12 left-12'} ${company.bgColor} w-8 h-8 rounded-full p-1 border-2 border-white/30 shadow-lg`}
+                        key={element.id}
+                        className={`absolute ${
+                          idx === 0 ? 'top-4 left-4' : 
+                          idx === 1 ? 'bottom-4 right-4' : 
+                          idx === 2 ? 'top-12 right-12' : 
+                          idx === 3 ? 'bottom-12 left-12' : 
+                          idx === 4 ? 'top-20 left-20' : 
+                          'bottom-20 right-20'
+                        }`}
                       >
-                        <img 
-                          src={company.logo} 
-                          alt={company.name}
-                          className="w-full h-full rounded-full object-cover"
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(company.name)}&background=random&color=fff&size=32`;
-                          }}
-                        />
+                        {element.type === 'logo' ? (
+                          <div className={`${element.bgColor} w-8 h-8 rounded-full p-1 border-2 border-white/30 shadow-lg`}>
+                            <img 
+                              src={element.logo} 
+                              alt={element.name}
+                              className="w-full h-full rounded-full object-cover"
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(element.name)}&background=random&color=fff&size=32`;
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <div className={`${element.bgColor} h-8 rounded-full px-3 border-2 border-white/30 shadow-lg flex items-center justify-center`}>
+                            <span 
+                              className={`${element.textColor} font-${element.fontWeight} text-xs whitespace-nowrap`}
+                            >
+                              {element.text}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     ))}
                     <div className="absolute inset-0 flex items-center justify-center">

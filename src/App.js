@@ -9,7 +9,7 @@ import {
   Instagram, Twitter, Send, Settings, Eye, EyeOff, Save, ArrowLeft, Plus, Trash2, X,
   FileText, Activity, Globe, ChevronLeft, Coins, Database, Bell, MessageCircle, BarChart2, Flame, Languages, Link, Server,
   ChevronRight, Clock, XCircle, Share2, Calendar, TrendingUp, Filter, UserCheck, LogOut,
-  Brain, Hexagon, Key
+  Brain, Hexagon, Key, Upload, Image
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, onSnapshot, collection, increment, updateDoc, addDoc, deleteDoc, getDocs, arrayUnion } from 'firebase/firestore';
@@ -328,6 +328,30 @@ const App = () => {
   const [marketingFilter, setMarketingFilter] = useState('');
   const [subscribersList, setSubscribersList] = useState([]);
   
+  // ============================
+  // 🎯 شركات الهيدر العشوائية (الشريط الأزرق) - جديد
+  // ============================
+  const [headerCompanies, setHeaderCompanies] = useState([
+    // بيانات افتراضية - شكل جميل للهيدر
+    { id: 1, name: 'أمازون', logo: 'https://logo.clearbit.com/amazon.sa', bgColor: 'bg-orange-500', position: 'top-[10%] left-[5%]', size: 64, delay: 0 },
+    { id: 2, name: 'نون', logo: 'https://logo.clearbit.com/noon.com', bgColor: 'bg-yellow-400', position: 'bottom-[20%] right-[10%]', size: 48, delay: 1 },
+    { id: 3, name: 'جرير', logo: 'https://logo.clearbit.com/jarir.com', bgColor: 'bg-green-500', position: 'top-[30%] right-[25%]', size: 32, delay: 2 },
+    { id: 4, name: 'إكسترا', logo: 'https://logo.clearbit.com/extra.com', bgColor: 'bg-blue-500', position: 'bottom-[10%] left-[20%]', size: 80, delay: 3 },
+    { id: 5, name: 'Apple', logo: 'https://logo.clearbit.com/apple.com', bgColor: 'bg-gray-800', position: 'top-[60%] left-[15%]', size: 56, delay: 4 },
+    { id: 6, name: 'Samsung', logo: 'https://logo.clearbit.com/samsung.com', bgColor: 'bg-blue-800', position: 'bottom-[30%] left-[10%]', size: 40, delay: 5 },
+    { id: 7, name: 'Xcite', logo: 'https://logo.clearbit.com/xcite.com', bgColor: 'bg-red-600', position: 'top-[15%] right-[15%]', size: 36, delay: 6 },
+    { id: 8, name: 'ماي مارت', logo: 'https://logo.clearbit.com/mymart.com', bgColor: 'bg-purple-600', position: 'bottom-[15%] right-[20%]', size: 44, delay: 7 },
+  ]);
+
+  // ============================
+  // 🆕 حالات إضافة شركة جديدة في صفحة الإدارة
+  // ============================
+  const [newCompanyName, setNewCompanyName] = useState('');
+  const [newCompanyLogo, setNewCompanyLogo] = useState('');
+  const [newCompanyColor, setNewCompanyColor] = useState('bg-blue-600');
+  const [newCompanyPosition, setNewCompanyPosition] = useState('random');
+  const [newCompanySize, setNewCompanySize] = useState(48);
+  
   const [lang, setLang] = useState('ar');
   const [notification, setNotification] = useState(null);
   const [realSearchCount, setRealSearchCount] = useState(0);
@@ -355,6 +379,38 @@ const App = () => {
 
   const [merchantForm, setMerchantForm] = useState({ store: '', email: '' });
   const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
+
+  // ألوان متاحة للشركات
+  const availableColors = [
+    { value: 'bg-orange-500', label: 'برتقالي' },
+    { value: 'bg-yellow-400', label: 'أصفر' },
+    { value: 'bg-green-500', label: 'أخضر' },
+    { value: 'bg-blue-500', label: 'أزرق' },
+    { value: 'bg-red-500', label: 'أحمر' },
+    { value: 'bg-purple-500', label: 'بنفسجي' },
+    { value: 'bg-pink-500', label: 'وردي' },
+    { value: 'bg-indigo-500', label: 'نيلي' },
+    { value: 'bg-gray-800', label: 'رمادي غامق' },
+    { value: 'bg-blue-800', label: 'أزرق غامق' },
+    { value: 'bg-red-600', label: 'أحمر غامق' },
+    { value: 'bg-purple-600', label: 'بنفسجي غامق' },
+  ];
+
+  // المواقع العشوائية
+  const randomPositions = [
+    'top-[5%] left-[3%]',
+    'top-[15%] right-[8%]',
+    'bottom-[25%] left-[12%]',
+    'bottom-[10%] right-[15%]',
+    'top-[45%] left-[20%]',
+    'top-[70%] right-[25%]',
+    'bottom-[40%] left-[30%]',
+    'bottom-[60%] right-[5%]',
+    'top-[80%] left-[40%]',
+    'top-[20%] right-[35%]',
+    'bottom-[15%] left-[45%]',
+    'bottom-[5%] right-[40%]',
+  ];
 
   // ============================
   // 8.2 الإعدادات الافتراضية للإدارة
@@ -417,7 +473,79 @@ const App = () => {
   const t = translations[lang];
 
   // ============================
-  // 9. دوال المشتركين والفلترة (الجزء المهم)
+  // 🎯 دوال إدارة شركات الهيدر - جديد
+  // ============================
+  
+  // إضافة شركة جديدة
+  const handleAddHeaderCompany = () => {
+    if (!newCompanyName.trim()) {
+      showNotification('الرجاء إدخال اسم الشركة', 'error');
+      return;
+    }
+
+    // استخدام شعار افتراضي إذا لم يتم إدخال رابط
+    let logoUrl = newCompanyLogo.trim();
+    if (!logoUrl) {
+      // استخدام Clearbit أو Placeholder
+      logoUrl = `https://logo.clearbit.com/${newCompanyName.toLowerCase().replace(/\s+/g, '')}.com`;
+    }
+
+    // اختيار موقع عشوائي
+    let position = newCompanyPosition;
+    if (position === 'random') {
+      const randomIndex = Math.floor(Math.random() * randomPositions.length);
+      position = randomPositions[randomIndex];
+    }
+
+    const newCompany = {
+      id: Date.now(),
+      name: newCompanyName,
+      logo: logoUrl,
+      bgColor: newCompanyColor,
+      position: position,
+      size: newCompanySize,
+      delay: headerCompanies.length % 8, // توزيع عشوائي للتأخير
+    };
+
+    setHeaderCompanies([...headerCompanies, newCompany]);
+    
+    // إعادة تعيين الحقول
+    setNewCompanyName('');
+    setNewCompanyLogo('');
+    setNewCompanyColor('bg-blue-600');
+    setNewCompanyPosition('random');
+    setNewCompanySize(48);
+    
+    showNotification(`✅ تم إضافة شركة ${newCompanyName} بنجاح`, 'success');
+  };
+
+  // حذف شركة
+  const handleDeleteHeaderCompany = (companyId) => {
+    if (window.confirm('هل أنت متأكد من حذف هذه الشركة من الهيدر؟')) {
+      setHeaderCompanies(headerCompanies.filter(c => c.id !== companyId));
+      showNotification('✅ تم حذف الشركة بنجاح', 'success');
+    }
+  };
+
+  // تحديث شركة
+  const handleUpdateHeaderCompany = (companyId, field, value) => {
+    setHeaderCompanies(headerCompanies.map(company => 
+      company.id === companyId ? { ...company, [field]: value } : company
+    ));
+  };
+
+  // إعادة ترتيب عشوائي للشركات
+  const handleRandomizePositions = () => {
+    setHeaderCompanies(headerCompanies.map(company => ({
+      ...company,
+      position: randomPositions[Math.floor(Math.random() * randomPositions.length)],
+      delay: Math.floor(Math.random() * 8)
+    })));
+    showNotification('🎲 تم عشوائية مواقع الشركات', 'success');
+  };
+
+  // ============================
+  // 9. دوال المشتركين والفلترة
   // ============================
   
   // 9.1 فلترة المشتركين حسب الكلمات المفتاحية
@@ -460,7 +588,7 @@ const App = () => {
     });
     
     // إنشاء رابط التحميل
-    const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' }); // \uFEFF للعربية
+    const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
@@ -659,16 +787,13 @@ const App = () => {
   useEffect(() => {
     if (!isAdminAuthenticated) return;
     
-    // جلب المشتركين من Firebase
     const subRef = collection(db, 'artifacts', appId, 'public', 'data', 'newsletter_subscribers');
     const unsubSubscribers = onSnapshot(subRef, (snapshot) => {
         const subs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        // ترتيب من الأحدث للأقدم
         subs.sort((a, b) => new Date(b.joined_at) - new Date(a.joined_at));
         setSubscribersList(subs);
     }, (error) => console.log('Subscribers error', error));
     
-    // جلب كلمات البحث الأكثر شيوعًا (للفلترة المقترحة)
     const fetchStats = async () => {
         try {
             const statsRef = collection(db, 'artifacts', appId, 'public', 'data', 'search_analytics');
@@ -680,7 +805,6 @@ const App = () => {
     };
     fetchStats();
 
-    // باقي الاستماعات للإحصائيات والرسائل
     const inboxRef = collection(db, 'artifacts', appId, 'public', 'data', 'inbox');
     const unsubInbox = onSnapshot(inboxRef, (snapshot) => {
       const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -1560,12 +1684,17 @@ const App = () => {
       {/* الواجهة الرئيسية */}
       {view === 'home' && (
         <>
+          {/* ============================ */}
+          {/* 🎯 الهيدر الأزرق مع شعارات الشركات - مطور بالكامل */}
+          {/* ============================ */}
           <div className="bg-gradient-to-b from-slate-950 via-blue-950 to-indigo-900 text-white pt-40 pb-32 px-4 relative overflow-hidden rounded-b-[3rem] md:rounded-b-[5rem] shadow-2xl">
+            {/* طبقة الخلفية المتحركة */}
             <div className="absolute top-0 left-0 w-full h-full opacity-30 pointer-events-none">
                 <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-blue-500 rounded-full blur-[120px] animate-pulse"></div>
                 <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-indigo-500 rounded-full blur-[120px] animate-pulse" style={{animationDelay: '1s'}}></div>
             </div>
 
+            {/* نمط الشبكة */}
             <svg className="absolute inset-0 w-full h-full text-white/5 mix-blend-overlay pointer-events-none" xmlns="http://www.w3.org/2000/svg">
               <pattern id="data-grid" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
                 <circle cx="1" cy="1" r="1" fill="currentColor" />
@@ -1573,6 +1702,7 @@ const App = () => {
               <rect width="100%" height="100%" fill="url(#data-grid)" />
             </svg>
 
+            {/* نمط الدائرة */}
             <svg className="absolute inset-0 w-full h-full text-indigo-300/10 mix-blend-overlay pointer-events-none animate-pulse" style={{animationDuration: '8s'}} xmlns="http://www.w3.org/2000/svg">
                 <defs>
                     <pattern id="circuit-pattern" x="0" y="0" width="200" height="200" patternUnits="userSpaceOnUse">
@@ -1585,13 +1715,45 @@ const App = () => {
                 <rect width="100%" height="100%" fill="url(#circuit-pattern)" />
             </svg>
 
+            {/* ============================ */}
+            {/* 🎯 شعارات الشركات الدائرية - هنا الشغل الجاد */}
+            {/* ============================ */}
             <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
-                <Hexagon size={64} className="text-blue-300/10 absolute top-[10%] left-[5%] animate-spin-slow blur-sm" />
-                <Cpu size={48} className="text-indigo-300/10 absolute bottom-[20%] right-[10%] animate-bounce-slow blur-sm" />
-                <Database size={32} className="text-blue-400/10 absolute top-[30%] right-[25%] animate-pulse blur-sm" />
-                <Brain size={80} className="text-indigo-500/5 absolute bottom-[10%] left-[20%] animate-pulse blur-xl rotate-12" />
+              {headerCompanies.map((company) => (
+                <div 
+                  key={company.id}
+                  className={`absolute ${company.position} group transition-all duration-500 hover:scale-150 hover:z-30`}
+                  style={{ 
+                    animationDelay: `${company.delay * 0.5}s`,
+                    animation: 'float 8s ease-in-out infinite'
+                  }}
+                >
+                  {/* الشعار الدائري مع تأثيرات */}
+                  <div className={`relative ${company.bgColor} rounded-full p-2 shadow-2xl border-2 border-white/30 backdrop-blur-sm`}
+                       style={{ width: `${company.size}px`, height: `${company.size}px` }}>
+                    <img 
+                      src={company.logo} 
+                      alt={company.name}
+                      className="w-full h-full rounded-full object-cover"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(company.name)}&background=random&color=fff&size=64`;
+                      }}
+                    />
+                    
+                    {/* اسم الشركة عند الهوفر */}
+                    <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur-md text-white text-[10px] px-2 py-1 rounded-full whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all duration-300 font-bold border border-white/20">
+                      {company.name}
+                    </div>
+                    
+                    {/* حلقة متحركة حول الشعار */}
+                    <div className="absolute -inset-1 border-2 border-white/30 rounded-full animate-ping opacity-20"></div>
+                  </div>
+                </div>
+              ))}
             </div>
 
+            {/* المحتوى الرئيسي للهيدر */}
             <div className="max-w-4xl mx-auto text-center relative z-10">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/10 text-blue-200 text-xs font-black mb-8 backdrop-blur-md shadow-lg animate-in fade-in slide-in-from-top-4 duration-700">
                 <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span></span>
@@ -1602,9 +1764,19 @@ const App = () => {
               
               <form onSubmit={handleSearch} className="relative max-w-3xl mx-auto group animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
                 <div className="absolute inset-0 bg-blue-400/20 blur-2xl rounded-[2.5rem] group-hover:bg-blue-400/30 transition-all duration-500"></div>
-                <input type="text" placeholder={t.searchPlaceholder} className="w-full py-6 md:py-8 px-16 rounded-[2.5rem] text-slate-900 shadow-2xl text-lg md:text-xl focus:outline-none focus:ring-4 focus:ring-blue-400/50 transition-all font-bold border-none relative z-10 placeholder:text-slate-400" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                <input 
+                  type="text" 
+                  placeholder={t.searchPlaceholder} 
+                  className="w-full py-6 md:py-8 px-16 rounded-[2.5rem] text-slate-900 shadow-2xl text-lg md:text-xl focus:outline-none focus:ring-4 focus:ring-blue-400/50 transition-all font-bold border-none relative z-10 placeholder:text-slate-400" 
+                  value={searchQuery} 
+                  onChange={(e) => setSearchQuery(e.target.value)} 
+                />
                 <Search className={`absolute ${lang === 'ar' ? 'right-8' : 'left-8'} top-1/2 -translate-y-1/2 text-slate-400 z-20`} size={28} />
-                <button type="submit" disabled={isSearching} className={`absolute ${lang === 'ar' ? 'left-3' : 'right-3'} top-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-[2rem] font-black transition-all flex items-center gap-2 disabled:bg-slate-400 shadow-xl active:scale-95 z-20 text-sm md:text-base group-hover:shadow-blue-500/50`}>
+                <button 
+                  type="submit" 
+                  disabled={isSearching} 
+                  className={`absolute ${lang === 'ar' ? 'left-3' : 'right-3'} top-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-[2rem] font-black transition-all flex items-center gap-2 disabled:bg-slate-400 shadow-xl active:scale-95 z-20 text-sm md:text-base group-hover:shadow-blue-500/50`}
+                >
                   {isSearching ? <span className="animate-pulse">{t.analyzing}</span> : <>{t.searchBtn} <Rocket size={18} /></>}
                 </button>
               </form>
@@ -1613,7 +1785,11 @@ const App = () => {
                 <span>{t.trendingLabel}</span>
                 {adminConfig.trendingKeywords && adminConfig.trendingKeywords.length > 0 ? (
                   adminConfig.trendingKeywords.map((keyword, index) => (
-                    <button key={index} onClick={() => setSearchQuery(keyword)} className="hover:text-white transition-all bg-white/5 px-3 py-1 rounded-full border border-white/5 hover:bg-white/10 hover:border-white/20 active:scale-95">
+                    <button 
+                      key={index} 
+                      onClick={() => setSearchQuery(keyword)} 
+                      className="hover:text-white transition-all bg-white/5 px-3 py-1 rounded-full border border-white/5 hover:bg-white/10 hover:border-white/20 active:scale-95"
+                    >
                       {keyword}
                     </button>
                   ))
@@ -1795,7 +1971,7 @@ const App = () => {
       )}
 
       {/* ============================ */}
-      {/* 19. لوحة الإدارة (Admin View) - مع قسم المشتركين فقط */}
+      {/* 19. لوحة الإدارة (Admin View) - مع قسم الشركات الجديد */}
       {/* ============================ */}
       {view === 'admin' && (
         <div className="max-w-7xl mx-auto px-4 py-32 animate-in fade-in">
@@ -1826,6 +2002,205 @@ const App = () => {
                 </div>
               </div>
               
+              {/* ==================== */}
+              {/* 🎯 قسم إدارة شركات الهيدر - جديد كلياً */}
+              {/* ==================== */}
+              <div className="mb-12 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 rounded-[2rem] p-8 shadow-2xl border-2 border-white/20">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="font-black text-white border-b-2 border-white/30 pb-2 flex items-center gap-3 text-xl">
+                    <Award className="text-yellow-300" size={28} />
+                    🎯 إدارة شركاء الهيدر (الشريط الأزرق)
+                  </h3>
+                  <span className="bg-yellow-400 text-blue-900 text-xs px-4 py-2 rounded-full font-black shadow-lg">
+                    {headerCompanies.length} شركاء
+                  </span>
+                </div>
+
+                <p className="text-white/80 mb-6 text-sm font-bold bg-white/10 p-3 rounded-xl border border-white/20">
+                  ⚡ هذه الشركات تظهر بشكل عشوائي وجميل في الهيدر الأزرق. أضف شركاءك ليظهروا كشعارات دائرية متحركة!
+                </p>
+
+                {/* نموذج إضافة شركة جديدة */}
+                <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 mb-8 border border-white/20">
+                  <h4 className="font-black text-white mb-4 flex items-center gap-2">
+                    <Plus size={18} className="text-yellow-300" />
+                    إضافة شريك جديد
+                  </h4>
+                  
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                      <label className="text-white/80 text-xs font-bold mb-1 block">اسم الشركة</label>
+                      <input 
+                        type="text"
+                        value={newCompanyName}
+                        onChange={(e) => setNewCompanyName(e.target.value)}
+                        className="w-full p-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder:text-white/50 font-bold text-sm"
+                        placeholder="مثال: أمازون"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="text-white/80 text-xs font-bold mb-1 block">رابط الشعار (اختياري)</label>
+                      <input 
+                        type="text"
+                        value={newCompanyLogo}
+                        onChange={(e) => setNewCompanyLogo(e.target.value)}
+                        className="w-full p-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder:text-white/50 font-bold text-sm"
+                        placeholder="https://example.com/logo.png"
+                        dir="ltr"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="text-white/80 text-xs font-bold mb-1 block">اللون</label>
+                      <select 
+                        value={newCompanyColor}
+                        onChange={(e) => setNewCompanyColor(e.target.value)}
+                        className="w-full p-3 rounded-xl bg-white/20 border border-white/30 text-white font-bold text-sm"
+                      >
+                        {availableColors.map((color, idx) => (
+                          <option key={idx} value={color.value} className="bg-slate-800 text-white">
+                            {color.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="text-white/80 text-xs font-bold mb-1 block">الموقع</label>
+                      <select 
+                        value={newCompanyPosition}
+                        onChange={(e) => setNewCompanyPosition(e.target.value)}
+                        className="w-full p-3 rounded-xl bg-white/20 border border-white/30 text-white font-bold text-sm"
+                      >
+                        <option value="random" className="bg-slate-800 text-white">📍 عشوائي</option>
+                        {randomPositions.map((pos, idx) => (
+                          <option key={idx} value={pos} className="bg-slate-800 text-white">
+                            موقع {idx + 1}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="text-white/80 text-xs font-bold mb-1 block">الحجم</label>
+                      <select 
+                        value={newCompanySize}
+                        onChange={(e) => setNewCompanySize(Number(e.target.value))}
+                        className="w-full p-3 rounded-xl bg-white/20 border border-white/30 text-white font-bold text-sm"
+                      >
+                        <option value={32} className="bg-slate-800 text-white">صغير (32px)</option>
+                        <option value={48} className="bg-slate-800 text-white">وسط (48px)</option>
+                        <option value={64} className="bg-slate-800 text-white">كبير (64px)</option>
+                        <option value={80} className="bg-slate-800 text-white">كبير جداً (80px)</option>
+                      </select>
+                    </div>
+                    
+                    <div className="flex items-end">
+                      <button 
+                        onClick={handleAddHeaderCompany}
+                        className="w-full bg-yellow-400 hover:bg-yellow-500 text-blue-900 py-3 rounded-xl font-black text-sm transition-all flex items-center justify-center gap-2 shadow-lg"
+                      >
+                        <Plus size={18} />
+                        إضافة شريك
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <p className="text-white/60 text-xs mt-3">
+                    💡 نصيحة: إذا ما حطيت رابط شعار، بنستخدم اسم الشركة لعمل شعار تلقائي!
+                  </p>
+                </div>
+
+                {/* عرض الشركات الحالية */}
+                <div className="bg-white/5 rounded-xl p-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h4 className="font-black text-white flex items-center gap-2">
+                      <Users size={18} />
+                      الشركاء الحاليين ({headerCompanies.length})
+                    </h4>
+                    <button 
+                      onClick={handleRandomizePositions}
+                      className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-bold text-xs transition-all flex items-center gap-2"
+                    >
+                      🔄 عشوائية المواقع
+                    </button>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto custom-scrollbar p-1">
+                    {headerCompanies.map((company) => (
+                      <div key={company.id} className="bg-white/10 backdrop-blur-sm rounded-xl p-4 flex items-center gap-4 border border-white/20 hover:bg-white/20 transition-all">
+                        {/* الشعار المصغر */}
+                        <div className={`${company.bgColor} w-12 h-12 rounded-full p-1.5 flex-shrink-0 border-2 border-white/50 shadow-lg`}>
+                          <img 
+                            src={company.logo} 
+                            alt={company.name}
+                            className="w-full h-full rounded-full object-cover"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(company.name)}&background=random&color=fff&size=48`;
+                            }}
+                          />
+                        </div>
+                        
+                        {/* معلومات الشركة */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h5 className="font-black text-white truncate">{company.name}</h5>
+                            <span className="text-[8px] bg-white/20 text-white px-2 py-0.5 rounded-full">
+                              {company.size}px
+                            </span>
+                          </div>
+                          <p className="text-white/60 text-[10px] font-bold truncate">
+                            {company.position}
+                          </p>
+                        </div>
+                        
+                        {/* أزرار التحكم */}
+                        <div className="flex gap-1">
+                          <button 
+                            onClick={() => handleDeleteHeaderCompany(company.id)}
+                            className="p-2 bg-red-500/20 hover:bg-red-500/40 rounded-lg text-white transition-colors"
+                            title="حذف"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* معاينة سريعة للهيدر */}
+                <div className="mt-6 bg-slate-900/50 rounded-xl p-4 border border-white/20">
+                  <p className="text-white/80 text-xs font-bold mb-3 flex items-center gap-2">
+                    <Eye size={14} />
+                    معاينة سريعة للهيدر:
+                  </p>
+                  <div className="bg-gradient-to-r from-blue-900 to-indigo-900 rounded-lg p-6 relative h-40 overflow-hidden">
+                    {headerCompanies.slice(0, 5).map((company, idx) => (
+                      <div 
+                        key={company.id}
+                        className={`absolute ${idx === 0 ? 'top-4 left-4' : idx === 1 ? 'bottom-4 right-4' : idx === 2 ? 'top-12 right-12' : 'bottom-12 left-12'} ${company.bgColor} w-8 h-8 rounded-full p-1 border-2 border-white/30 shadow-lg`}
+                      >
+                        <img 
+                          src={company.logo} 
+                          alt={company.name}
+                          className="w-full h-full rounded-full object-cover"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(company.name)}&background=random&color=fff&size=32`;
+                          }}
+                        />
+                      </div>
+                    ))}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-white/30 text-xs">معاينة الهيدر</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* ==================== */}
               {/* قسم الذكاء الاصطناعي */}
               {/* ==================== */}
@@ -2243,7 +2618,7 @@ const App = () => {
               </div>
               
               {/* ==================== */}
-              {/* 🎯 القسم الوحيد المهم: إدارة المشتركين والفلترة */}
+              {/* 🎯 قسم إدارة المشتركين والفلترة */}
               {/* ==================== */}
               <div className="mb-12 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-[2rem] p-8 shadow-lg">
                 <h3 className="font-black text-blue-900 border-b-2 border-blue-200 pb-4 mb-8 flex items-center gap-3 text-xl">
@@ -2299,7 +2674,6 @@ const App = () => {
                   </h4>
                   
                   <div className="grid md:grid-cols-2 gap-8">
-                    {/* جهة اليمين: حقل الفلترة */}
                     <div>
                       <label className="text-xs font-bold text-slate-500 mb-2 block">
                         اكتب المنتجات اللي تبغى تفلتر عليها (مفصولة بمسافة)
@@ -2315,7 +2689,6 @@ const App = () => {
                         <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-400" />
                       </div>
                       
-                      {/* زر مسح الفلترة */}
                       {marketingFilter && (
                         <button 
                           onClick={clearFilter}
@@ -2325,7 +2698,6 @@ const App = () => {
                         </button>
                       )}
                       
-                      {/* الكلمات المقترحة من أشهر المنتجات */}
                       <div className="mt-4">
                         <p className="text-xs font-bold text-slate-400 mb-2">منتجات مقترحة للفلترة:</p>
                         <div className="flex flex-wrap gap-2">
@@ -2345,7 +2717,6 @@ const App = () => {
                       </div>
                     </div>
                     
-                    {/* جهة اليسار: معاينة سريعة + نسبة التغطية */}
                     <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-5 rounded-xl border-2 border-blue-200">
                       <div className="flex items-center justify-between mb-4">
                         <span className="font-bold text-blue-800">نتائج الفلترة:</span>
@@ -2354,7 +2725,6 @@ const App = () => {
                         </span>
                       </div>
                       
-                      {/* شريط تقدم النسبة */}
                       <div className="mb-4">
                         <div className="flex justify-between text-xs mb-1">
                           <span className="text-slate-500">نسبة التغطية</span>
@@ -2376,7 +2746,6 @@ const App = () => {
                         </div>
                       </div>
                       
-                      {/* معاينة سريعة للمشتركين */}
                       <div>
                         <div className="flex justify-between items-center mb-2">
                           <span className="text-xs font-bold text-slate-500">معاينة سريعة:</span>
@@ -2420,7 +2789,6 @@ const App = () => {
                   </div>
                 </div>
 
-                {/* ✅ قائمة جميع المشتركين (اختياري) */}
                 <div className="mt-6">
                   <div className="flex justify-between items-center mb-3">
                     <h4 className="font-bold text-blue-800">جميع المشتركين ({subscribersList.length})</h4>
@@ -2978,7 +3346,7 @@ const App = () => {
                </ul>
              </div>
             <div>
-              <h4 className="text-white font-black text-lg mb-6">{t.contact}</h4>
+              <h4 className="text-white font-black text-lg mb-6">{t.contactTitle}</h4>
               <ul className="space-y-4 text-sm font-medium">
                 <li className="flex items-center gap-3"><Mail size={18} className="text-blue-500" /><span dir="ltr">{adminConfig.supportEmail}</span></li>
                 <li className="flex items-center gap-3"><Phone size={18} className="text-green-500" /><span dir="ltr">{adminConfig.whatsappNumber}</span></li>
@@ -3030,6 +3398,13 @@ const App = () => {
         .animate-spin-slow {
           animation: spin-slow 20s linear infinite;
         }
+        @keyframes float {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-15px) rotate(5deg); }
+        }
+        .animate-float {
+          animation: float 8s ease-in-out infinite;
+        }
         .touch-pan-x {
           touch-action: pan-x;
         }
@@ -3039,8 +3414,3 @@ const App = () => {
 };
 
 export default App;
-
-
-
-
-

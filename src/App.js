@@ -9,10 +9,10 @@ import {
   Instagram, Twitter, Send, Settings, Eye, EyeOff, Save, ArrowLeft, Plus, Trash2, X,
   FileText, Activity, Globe, ChevronLeft, Coins, Database, Bell, MessageCircle, BarChart2, Flame, Languages, Link, Server,
   ChevronRight, Clock, XCircle, Share2, Calendar, TrendingUp, Filter, UserCheck, LogOut,
-  Brain, Hexagon, Key, Upload, Image, Type, AlignLeft, Layers, Grid, Move
+  Brain, Hexagon, Key, Upload, Image, Type, AlignLeft, Layers, Grid, Move, Camera, Loader2, Sparkles
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
-import { getFirestore, doc, setDoc, onSnapshot, collection, increment, updateDoc, addDoc, deleteDoc, getDocs, arrayUnion } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, onSnapshot, collection, increment, updateDoc, addDoc, deleteDoc, getDocs, arrayUnion, serverTimestamp, query, orderBy, limit } from 'firebase/firestore';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 
 // ============================
@@ -114,7 +114,27 @@ const translations = {
     emailPlaceholder: 'اكتب إيميلك هنا',
     swipeHint: 'اسحب لليمين ←',
     promoPopupOff: '🚫 النافذة مقفلة من قبل الإدارة',
-    promoPopupOn: '✅ النافذة مفعلة'
+    promoPopupOn: '✅ النافذة مفعلة',
+
+    visualSearch: 'بحث بالصورة',
+    visualSearchHint: 'ارفع صورة المنتج وخلّنا نعرفه',
+    visualSearching: 'جاري التعرف على الصورة...',
+    analyzeButter: 'تحليل الزبدة من التعليقات',
+    analyzingComments: 'جاري تحليل التعليقات...',
+    noCommentsYet: 'ما لقينا تعليقات كافية لهذا المنتج.',
+
+    customerFeedbackTitle: 'آراء العملاء',
+    customerFeedbackDesc: 'شاركنا رأيك… يهمّنا ونرد عليك.',
+    yourName: 'اسمك',
+    yourComment: 'تعليقك',
+    sendComment: 'إرسال التعليق',
+    sending: 'جاري الإرسال...',
+
+    adminFeedback: 'تعليقات العملاء',
+    reply: 'رد',
+    delete: 'حذف',
+    saveReply: 'حفظ الرد',
+    noFeedback: 'لا توجد تعليقات حالياً'
   },
   en: {
     siteTitle: 'Moqaren | #1 Price Comparison Engine in Saudi Arabia',
@@ -203,7 +223,27 @@ const translations = {
     emailPlaceholder: 'Enter your email',
     swipeHint: 'Swipe right →',
     promoPopupOff: '🚫 Popup disabled by admin',
-    promoPopupOn: '✅ Popup enabled'
+    promoPopupOn: '✅ Popup enabled',
+
+    visualSearch: 'Visual search',
+    visualSearchHint: 'Upload a product image and we’ll recognize it',
+    visualSearching: 'Recognizing image...',
+    analyzeButter: 'Analyze review gist',
+    analyzingComments: 'Analyzing comments...',
+    noCommentsYet: 'Not enough comments found for this product.',
+
+    customerFeedbackTitle: 'Customer feedback',
+    customerFeedbackDesc: 'Share your thoughts — we read and reply.',
+    yourName: 'Your name',
+    yourComment: 'Your comment',
+    sendComment: 'Send',
+    sending: 'Sending...',
+
+    adminFeedback: 'Customer feedback',
+    reply: 'Reply',
+    delete: 'Delete',
+    saveReply: 'Save reply',
+    noFeedback: 'No feedback yet'
   }
 };
 
@@ -301,6 +341,105 @@ const SchemaMarkup = () => {
 };
 
 // ============================
+// 7.1 PromoPopup (خارج App لتثبيت التركيز)
+// ============================
+const PromoPopup = React.memo(function PromoPopup({
+  isOpen,
+  onClose,
+  enabled,
+  promoEmail,
+  setPromoEmail,
+  onSubmit,
+  t
+}) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
+      <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md p-8 relative z-10 animate-in zoom-in-95 duration-300 border-4 border-white/20">
+        <button onClick={onClose} className="absolute top-4 left-4 text-slate-300 hover:text-red-500 transition-colors bg-slate-50 rounded-full p-1">
+          <X size={20} />
+        </button>
+
+        {enabled ? (
+          <>
+            <div className="text-center mb-6">
+              <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+                <Mail size={32} className="text-blue-600" />
+              </div>
+              <h3 className="text-2xl font-black text-slate-900 mb-2">{t.promoTitle}</h3>
+              <p className="text-slate-500 font-bold text-sm leading-relaxed">{t.promoDesc}</p>
+            </div>
+            <form onSubmit={onSubmit} className="space-y-3">
+              <input
+                type="email"
+                required
+                className="w-full p-4 rounded-xl bg-slate-50 border-2 border-slate-100 focus:border-blue-500 focus:ring-0 font-bold text-center placeholder:text-slate-300"
+                placeholder={t.emailPlaceholder}
+                value={promoEmail}
+                onChange={(e) => setPromoEmail(e.target.value)}
+              />
+              <button
+                type="submit"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-black shadow-lg shadow-blue-200 transition-all active:scale-95"
+              >
+                {t.subscribe}
+              </button>
+            </form>
+            <p className="text-[10px] text-center text-slate-300 font-bold mt-4">نحترم خصوصيتك، لا رسائل مزعجة.</p>
+          </>
+        ) : (
+          <>
+            <div className="text-center mb-6">
+              <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Bell size={32} className="text-red-600" />
+              </div>
+              <h3 className="text-2xl font-black text-slate-900 mb-2">🚫 النافذة مقفلة</h3>
+              <p className="text-slate-500 font-bold text-sm leading-relaxed">
+                تم إيقاف نافذة الاشتراك الترويجي من قبل الإدارة.
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-full bg-slate-200 hover:bg-slate-300 text-slate-800 py-4 rounded-xl font-black transition-all"
+            >
+              إغلاق
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+});
+
+// ============================
+// 7.2 أدوات مساعدة (صور/مفاتيح/ملفات)
+// ============================
+const toSafeDocId = (value) => {
+  const v = String(value || '').trim().toLowerCase().slice(0, 160);
+  return encodeURIComponent(v).replace(/%2F/gi, '_');
+};
+
+const getProductImageUrl = (productName) => {
+  const q = String(productName || '').trim();
+  if (!q) return `https://ui-avatars.com/api/?name=${encodeURIComponent('Moqaren')}&background=0ea5e9&color=fff&size=512&format=png`;
+  return `https://source.unsplash.com/featured/800x600?${encodeURIComponent(q)}`;
+};
+
+const readFileAsBase64 = (file) => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.onerror = () => reject(new Error('File read error'));
+  reader.onload = () => {
+    const result = reader.result || '';
+    const commaIdx = String(result).indexOf(',');
+    const base64 = commaIdx >= 0 ? String(result).slice(commaIdx + 1) : String(result);
+    resolve({ base64, mimeType: file?.type || 'image/jpeg' });
+  };
+  reader.readAsDataURL(file);
+});
+
+// ============================
 // 8. المكون الرئيسي App
 // ============================
 const App = () => {
@@ -314,6 +453,7 @@ const App = () => {
   const [loginError, setLoginError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const [isVisualSearching, setIsVisualSearching] = useState(false);
   const [results, setResults] = useState(null);
   const [aiSummary, setAiSummary] = useState(null);
   const [view, setView] = useState('home'); 
@@ -325,6 +465,7 @@ const App = () => {
   const [mySearchHistory, setMySearchHistory] = useState([]);
   const [showPromoPopup, setShowPromoPopup] = useState(false);
   const [promoEmail, setPromoEmail] = useState('');
+  const [isSubscribing, setIsSubscribing] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [subscriberEmail, setSubscriberEmail] = useState('');
   const [promoPopupEnabled, setPromoPopupEnabled] = useState(true);
@@ -332,6 +473,19 @@ const App = () => {
   // ===== حالات إدارة المشتركين والفلترة =====
   const [marketingFilter, setMarketingFilter] = useState('');
   const [subscribersList, setSubscribersList] = useState([]);
+
+  // ===== حالات ميزات جديدة (AI/تعليقات/بحث بالصورة) =====
+  const visualFileInputRef = useRef(null);
+  const [reviewButterByProductKey, setReviewButterByProductKey] = useState({});
+  const [reviewButterLoadingByProductKey, setReviewButterLoadingByProductKey] = useState({});
+
+  // ===== تعليقات العملاء (الصفحة الرئيسية + لوحة الإدارة) =====
+  const [feedbackName, setFeedbackName] = useState('');
+  const [feedbackMessage, setFeedbackMessage] = useState('');
+  const [isSendingFeedback, setIsSendingFeedback] = useState(false);
+  const [publicFeedbackList, setPublicFeedbackList] = useState([]);
+  const [adminFeedbackList, setAdminFeedbackList] = useState([]);
+  const [feedbackReplyDrafts, setFeedbackReplyDrafts] = useState({});
   
   // ============================
   // 🎯 نظام إدارة الهيدر المتقدم (شعارات + نصوص)
@@ -594,7 +748,11 @@ const App = () => {
     
     aiSettings: {
       geminiApiKey: '',
+      reviewButterApiKey: '',
+      geminiVisionApiKey: '',
       geminiModel: 'gemini-2.0-flash-exp',
+      reviewButterModel: 'gemini-2.0-flash-exp',
+      geminiVisionModel: 'gemini-2.0-flash-exp',
       geminiFeatures: {
         priceComparison: true,
         reviewAnalysis: true,
@@ -980,6 +1138,22 @@ const App = () => {
   }, [user]);
 
   // ============================
+  // 🆕 جلب تعليقات العملاء (Public) لأسفل الرئيسية
+  // ============================
+  useEffect(() => {
+    if (!user) return;
+    const feedbackRef = collection(db, 'artifacts', appId, 'public', 'data', 'site_feedback');
+
+    const unsub = onSnapshot(feedbackRef, (snapshot) => {
+      const items = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      items.sort((a, b) => new Date(b.createdAtIso || 0) - new Date(a.createdAtIso || 0));
+      setPublicFeedbackList(items.slice(0, 12));
+    }, (error) => console.log('Feedback error', error));
+
+    return () => unsub();
+  }, [user]);
+
+  // ============================
   // 12. جلب بيانات المشتركين
   // ============================
   useEffect(() => {
@@ -1024,11 +1198,19 @@ const App = () => {
         setMonthlyStats(stats);
     }, (error) => console.log('Monthly stats error', error));
 
+    const feedbackRef = collection(db, 'artifacts', appId, 'public', 'data', 'site_feedback');
+    const unsubFeedback = onSnapshot(feedbackRef, (snapshot) => {
+      const items = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      items.sort((a, b) => new Date(b.createdAtIso || 0) - new Date(a.createdAtIso || 0));
+      setAdminFeedbackList(items.slice(0, 200));
+    }, (error) => console.log('Admin feedback error', error));
+
     return () => { 
       unsubSubscribers();
       unsubInbox(); 
       unsubLogs(); 
-      unsubMonthly(); 
+      unsubMonthly();
+      unsubFeedback();
     };
   }, [isAdminAuthenticated]);
 
@@ -1038,16 +1220,33 @@ const App = () => {
   
   const handleSubscribe = async (e) => {
       e.preventDefault();
-      if (!promoEmail || !user) return;
-      
-      const email = promoEmail.toLowerCase();
+      if (!promoEmail || !user || isSubscribing) return;
+
+      const email = promoEmail.trim().toLowerCase();
+      const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(email);
+      if (!isValidEmail) {
+        showNotification(lang === 'ar' ? 'اكتب إيميل صحيح' : 'Please enter a valid email', 'error');
+        return;
+      }
+
+      setIsSubscribing(true);
       try {
           const subDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'newsletter_subscribers', email);
-          await setDoc(subDocRef, {
-              email: email,
-              joined_at: new Date().toISOString(),
-              interests: searchQuery ? [searchQuery.toLowerCase()] : [] 
-          }, { merge: true });
+          const cleanTerm = (searchQuery || '').trim().toLowerCase();
+          const payload = {
+            email,
+            uid: user.uid,
+            joined_at: new Date().toISOString(),
+            joined_at_ts: serverTimestamp(),
+            updated_at_ts: serverTimestamp()
+          };
+
+          if (cleanTerm) {
+            payload.interests = arrayUnion(cleanTerm);
+            payload.last_search = new Date().toISOString();
+          }
+
+          await setDoc(subDocRef, payload, { merge: true });
 
           localStorage.setItem('moqaren_user_email', email);
           setSubscriberEmail(email);
@@ -1056,7 +1255,76 @@ const App = () => {
           showNotification(t.thanksSubscribe);
       } catch (error) {
           console.error("Subscription error", error);
+          showNotification(lang === 'ar' ? 'تعذر حفظ الاشتراك، حاول لاحقاً' : 'Failed to save subscription', 'error');
+      } finally {
+          setIsSubscribing(false);
       }
+  };
+
+  // ============================
+  // 🆕 تعليقات العملاء (Public + Admin)
+  // ============================
+  const handleSubmitCustomerFeedback = async (e) => {
+    e.preventDefault();
+    if (!user || isSendingFeedback) return;
+
+    const name = String(feedbackName || '').trim().slice(0, 60);
+    const message = String(feedbackMessage || '').trim().slice(0, 800);
+    if (!name || !message) return;
+
+    setIsSendingFeedback(true);
+    try {
+      await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'site_feedback'), {
+        name,
+        message,
+        lang,
+        uid: user.uid,
+        createdAt: serverTimestamp(),
+        createdAtIso: new Date().toISOString(),
+        reply: '',
+        repliedAt: null
+      });
+
+      setFeedbackName('');
+      setFeedbackMessage('');
+      showNotification(lang === 'ar' ? 'وصلنا تعليقك، شكراً لك' : 'Thanks! We received your feedback', 'success');
+    } catch (err) {
+      console.error('Feedback submit error', err);
+      showNotification(lang === 'ar' ? 'تعذر إرسال التعليق' : 'Failed to send feedback', 'error');
+    } finally {
+      setIsSendingFeedback(false);
+    }
+  };
+
+  const handleAdminSaveFeedbackReply = async (feedbackId) => {
+    if (!isAdminAuthenticated) return;
+    const reply = String(feedbackReplyDrafts?.[feedbackId] || '').trim().slice(0, 1200);
+
+    try {
+      const ref = doc(db, 'artifacts', appId, 'public', 'data', 'site_feedback', feedbackId);
+      await updateDoc(ref, {
+        reply,
+        repliedAt: serverTimestamp(),
+        repliedAtIso: new Date().toISOString()
+      });
+      showNotification(lang === 'ar' ? 'تم حفظ الرد' : 'Reply saved', 'success');
+    } catch (err) {
+      console.error('Save reply error', err);
+      showNotification(lang === 'ar' ? 'تعذر حفظ الرد' : 'Failed to save reply', 'error');
+    }
+  };
+
+  const handleAdminDeleteFeedback = async (feedbackId) => {
+    if (!isAdminAuthenticated) return;
+    if (!window.confirm(lang === 'ar' ? 'متأكد تحذف التعليق؟' : 'Delete this feedback?')) return;
+
+    try {
+      await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'site_feedback', feedbackId));
+      showNotification(lang === 'ar' ? 'تم حذف التعليق' : 'Deleted', 'success');
+    } catch (err) {
+      console.error('Delete feedback error', err);
+      showNotification(lang === 'ar' ? 'تعذر حذف التعليق' : 'Failed to delete', 'error');
+    }
   };
 
   const trackSearchTerm = async (term) => {
@@ -1456,74 +1724,236 @@ const App = () => {
   };
 
   // ============================
+  // 15.1 أدوات Gemini عامة + تحليل "زبدة" التعليقات
+  // ============================
+  const callGeminiText = async ({ prompt, apiKey, model, temperature = 0.5, maxOutputTokens = 700 }) => {
+    if (!apiKey) throw new Error('Missing API key');
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    const payload = {
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { temperature, maxOutputTokens }
+    };
+
+    const response = await fetch(geminiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) throw new Error('Gemini API Failed');
+    const data = await response.json();
+    const text = data?.candidates?.[0]?.content?.parts?.map(p => p.text).filter(Boolean).join('\n') || '';
+    return String(text).trim();
+  };
+
+  const handleAnalyzeReviewButter = async (productName) => {
+    const name = String(productName || searchQuery || '').trim();
+    if (!name) return;
+
+    const productKey = toSafeDocId(name);
+    if (reviewButterLoadingByProductKey[productKey]) return;
+
+    setReviewButterLoadingByProductKey(prev => ({ ...prev, [productKey]: true }));
+    try {
+      const commentsRef = collection(db, 'artifacts', appId, 'public', 'data', 'products', productKey, 'comments');
+
+      let comments = [];
+      try {
+        const snap = await getDocs(query(commentsRef, orderBy('createdAt', 'desc'), limit(100)));
+        comments = snap.docs.map(d => d.data()?.text || d.data()?.comment || '').filter(Boolean);
+      } catch (e) {
+        const snap = await getDocs(commentsRef);
+        comments = snap.docs.map(d => d.data()?.text || d.data()?.comment || '').filter(Boolean).slice(0, 100);
+      }
+
+      if (comments.length === 0) {
+        showNotification(t.noCommentsYet, 'error');
+        setReviewButterByProductKey(prev => ({ ...prev, [productKey]: { productName: name, text: t.noCommentsYet } }));
+        return;
+      }
+
+      const apiKey = adminConfig.aiSettings?.reviewButterApiKey || adminConfig.aiSettings?.geminiApiKey;
+      if (!apiKey) {
+        showNotification(lang === 'ar' ? 'أضف API Key (تحليل التعليقات) من لوحة الإدارة' : 'Add Review Analysis API key in Admin', 'error');
+        return;
+      }
+
+      const model = adminConfig.aiSettings?.reviewButterModel || adminConfig.aiSettings?.geminiModel || 'gemini-2.0-flash-exp';
+      const languageInstruction = lang === 'en' ? 'Respond in English.' : 'الرد باللهجة السعودية الطبيعية.';
+
+      const prompt = `حلّل آخر ${comments.length} تعليق للمنتج "${name}".
+أعطني "الزبدة" بشكل واضح ومختصر:
+- الخلاصة (سطرين)
+- أهم الإيجابيات (3 نقاط)
+- أهم السلبيات (3 نقاط)
+- هل تنصح به؟ ولماذا؟
+
+التعليقات:
+${comments.map((c, i) => `${i + 1}) ${String(c).slice(0, 500)}`).join('\n')}
+
+${languageInstruction}`;
+
+      const text = await callGeminiText({ prompt, apiKey, model, temperature: 0.4, maxOutputTokens: 700 });
+      setReviewButterByProductKey(prev => ({ ...prev, [productKey]: { productName: name, text } }));
+    } catch (err) {
+      console.error('Review butter error', err);
+      showNotification(lang === 'ar' ? 'صار خطأ في تحليل التعليقات' : 'Failed to analyze comments', 'error');
+    } finally {
+      setReviewButterLoadingByProductKey(prev => ({ ...prev, [productKey]: false }));
+    }
+  };
+
+  // ============================
   // 16. وظيفة البحث الرئيسية
   // ============================
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!searchQuery) return;
-    
+  const performSearch = async (queryText) => {
+    const q = String(queryText || '').trim();
+    if (!q) return;
+
     setIsSearching(true);
     setResults(null);
     setAiSummary(null);
     setShowExclusiveToast(false);
     setCurrentOffer(null);
-    
+
     incrementGlobalCounter();
-    trackSearchTerm(searchQuery);
-    addToHistory(searchQuery);
+    trackSearchTerm(q);
+    addToHistory(q);
 
     const useRealData = adminConfig.apiSettings?.useRealData !== false;
     const fallbackToMock = adminConfig.apiSettings?.fallbackToMock !== false;
-    
+
     try {
       let searchResults = [];
       let isRealData = false;
-      
+
       if (useRealData) {
-        searchResults = await searchWithRealAPIs(searchQuery);
+        searchResults = await searchWithRealAPIs(q);
         if (searchResults.length > 0) {
           isRealData = true;
         }
       }
-      
+
       if (searchResults.length === 0 && fallbackToMock) {
-        searchResults = getMockResults(searchQuery);
+        searchResults = getMockResults(q);
         isRealData = false;
       }
-      
+
       searchResults = searchResults.map(item => ({
         ...item,
-        isRealData: isRealData
+        isRealData: isRealData,
+        imageUrl: item.imageUrl || getProductImageUrl(item.productName || q)
       }));
-      
-      const aiResponse = await callGeminiAI(searchQuery, searchResults);
+
+      const aiResponse = await callGeminiAI(q, searchResults);
       setResults(searchResults);
       setAiSummary(aiResponse);
-      
-      const matchedOffer = adminConfig.exclusiveOffers?.find(offer => 
-        searchQuery.toLowerCase().includes(offer.keyword.toLowerCase())
+
+      const matchedOffer = adminConfig.exclusiveOffers?.find(offer =>
+        q.toLowerCase().includes(offer.keyword.toLowerCase())
       );
-      if (matchedOffer) { 
-        setCurrentOffer(matchedOffer); 
-        setTimeout(() => setShowExclusiveToast(true), 1500); 
+      if (matchedOffer) {
+        setCurrentOffer(matchedOffer);
+        setTimeout(() => setShowExclusiveToast(true), 1500);
       }
-      
-    } catch (err) { 
+
+    } catch (err) {
       console.error("خطأ في البحث:", err);
-      showNotification("جارٍ استخدام البيانات التجريبية", "info");
-      
-      const mockResults = getMockResults(searchQuery).map(item => ({
+      showNotification(lang === 'ar' ? "جارٍ استخدام البيانات التجريبية" : "Using demo data", "info");
+
+      const mockResults = getMockResults(q).map(item => ({
         ...item,
-        isRealData: false
+        isRealData: false,
+        imageUrl: item.imageUrl || getProductImageUrl(item.productName || q)
       }));
       setResults(mockResults);
       setAiSummary({
-        summary: "جارٍ تحسين النظام، هذه نتائج تجريبية",
-        verdict: "تجريبي",
-        advice: "ستتوفر البيانات الحقيقية قريباً"
+        summary: lang === 'ar' ? "جارٍ تحسين النظام، هذه نتائج تجريبية" : "System is improving — demo results for now",
+        verdict: lang === 'ar' ? "تجريبي" : "Demo",
+        advice: lang === 'ar' ? "ستتوفر البيانات الحقيقية قريباً" : "Real data will be available soon"
       });
-    } finally { 
-      setIsSearching(false); 
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    await performSearch(searchQuery);
+  };
+
+  // ============================
+  // 16.1 البحث بالصورة (Gemini Vision)
+  // ============================
+  const identifyProductFromImage = async ({ base64, mimeType }) => {
+    const apiKey = adminConfig.aiSettings?.geminiVisionApiKey || adminConfig.aiSettings?.geminiApiKey;
+    if (!apiKey) {
+      showNotification(lang === 'ar' ? 'أضف Gemini Vision API Key من لوحة الإدارة' : 'Add Gemini Vision API key in Admin', 'error');
+      return null;
+    }
+
+    const model = adminConfig.aiSettings?.geminiVisionModel || 'gemini-2.0-flash-exp';
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+    const prompt = lang === 'ar'
+      ? "حلّل الصورة وحدد اسم المنتج. أرجع اسم المنتج فقط بدون شرح."
+      : "Identify the product in the image. Return ONLY the product name, no extra text.";
+
+    const payload = {
+      contents: [{
+        role: "user",
+        parts: [
+          { text: prompt },
+          { inlineData: { mimeType: mimeType || 'image/jpeg', data: base64 } }
+        ]
+      }],
+      generationConfig: {
+        temperature: 0.2,
+        maxOutputTokens: 64
+      }
+    };
+
+    try {
+      const response = await fetch(geminiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) throw new Error('Gemini Vision failed');
+      const data = await response.json();
+      const text = data?.candidates?.[0]?.content?.parts?.map(p => p.text).filter(Boolean).join('\n') || '';
+      const cleaned = String(text).trim().replace(/^"+|"+$/g, '').replace(/\s+/g, ' ');
+      return cleaned || null;
+    } catch (err) {
+      console.error('Gemini Vision error', err);
+      return null;
+    }
+  };
+
+  const handleOpenVisualSearch = () => {
+    if (isSearching || isVisualSearching) return;
+    if (visualFileInputRef.current) visualFileInputRef.current.click();
+  };
+
+  const handleVisualFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    setIsVisualSearching(true);
+    try {
+      const { base64, mimeType } = await readFileAsBase64(file);
+      const productName = await identifyProductFromImage({ base64, mimeType });
+      if (!productName) {
+        showNotification(lang === 'ar' ? 'ما قدرنا نتعرف على المنتج من الصورة' : 'Could not recognize product', 'error');
+        return;
+      }
+
+      setSearchQuery(productName);
+      await performSearch(productName);
+    } finally {
+      setIsVisualSearching(false);
     }
   };
 
@@ -1705,66 +2135,7 @@ const App = () => {
   // ============================
   // 18. نافذة الاشتراك المعدلة (مع زر التحكم)
   // ============================
-  const PromoPopup = () => {
-    if (!showPromoPopup) return null;
-    
-    return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-        <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={() => setShowPromoPopup(false)}></div>
-        <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md p-8 relative z-10 animate-in zoom-in-95 duration-300 border-4 border-white/20">
-          <button onClick={() => setShowPromoPopup(false)} className="absolute top-4 left-4 text-slate-300 hover:text-red-500 transition-colors bg-slate-50 rounded-full p-1">
-            <X size={20} />
-          </button>
-          
-          {adminConfig.promoPopupEnabled ? (
-            // ✅ النافذة مفعلة - تظهر بشكل طبيعي
-            <>
-              <div className="text-center mb-6">
-                <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
-                  <Mail size={32} className="text-blue-600" />
-                </div>
-                <h3 className="text-2xl font-black text-slate-900 mb-2">{t.promoTitle}</h3>
-                <p className="text-slate-500 font-bold text-sm leading-relaxed">{t.promoDesc}</p>
-              </div>
-              <form onSubmit={handleSubscribe} className="space-y-3">
-                <input 
-                  type="email" 
-                  required 
-                  className="w-full p-4 rounded-xl bg-slate-50 border-2 border-slate-100 focus:border-blue-500 focus:ring-0 font-bold text-center placeholder:text-slate-300"
-                  placeholder={t.emailPlaceholder}
-                  value={promoEmail}
-                  onChange={(e) => setPromoEmail(e.target.value)}
-                />
-                <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-black shadow-lg shadow-blue-200 transition-all active:scale-95">
-                  {t.subscribe}
-                </button>
-              </form>
-              <p className="text-[10px] text-center text-slate-300 font-bold mt-4">نحترم خصوصيتك، لا رسائل مزعجة.</p>
-            </>
-          ) : (
-            // ❌ النافذة مقفلة - تظهر رسالة أن الإدارة أوقفتها
-            <>
-              <div className="text-center mb-6">
-                <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Bell size={32} className="text-red-600" />
-                </div>
-                <h3 className="text-2xl font-black text-slate-900 mb-2">🚫 النافذة مقفلة</h3>
-                <p className="text-slate-500 font-bold text-sm leading-relaxed">
-                  تم إيقاف نافذة الاشتراك الترويجي من قبل الإدارة.
-                </p>
-              </div>
-              <button 
-                onClick={() => setShowPromoPopup(false)} 
-                className="w-full bg-slate-200 hover:bg-slate-300 text-slate-800 py-4 rounded-xl font-black transition-all"
-              >
-                إغلاق
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-    );
-  };
+  // (تم نقل مكوّن النافذة خارج App لتثبيت تركيز حقل الإيميل أثناء الكتابة)
 
   // ============================
   // 19. الواجهة الرئيسية (Home View)
@@ -1791,7 +2162,15 @@ const App = () => {
       )}
 
       {/* نافذة الاشتراك - باستخدام المكون الجديد */}
-      <PromoPopup />
+      <PromoPopup
+        isOpen={showPromoPopup}
+        onClose={() => setShowPromoPopup(false)}
+        enabled={adminConfig.promoPopupEnabled !== false}
+        promoEmail={promoEmail}
+        setPromoEmail={setPromoEmail}
+        onSubmit={handleSubscribe}
+        t={t}
+      />
 
       {/* زر فتح لوحة المساحة الشخصية */}
       <button 
@@ -2005,9 +2384,25 @@ const App = () => {
                   onChange={(e) => setSearchQuery(e.target.value)} 
                 />
                 <Search className={`absolute ${lang === 'ar' ? 'right-8' : 'left-8'} top-1/2 -translate-y-1/2 text-slate-400 z-20`} size={28} />
+                <button
+                  type="button"
+                  onClick={handleOpenVisualSearch}
+                  className={`absolute ${lang === 'ar' ? 'right-16' : 'left-16'} top-1/2 -translate-y-1/2 z-20 text-slate-400 hover:text-blue-600 transition-colors`}
+                  title={t.visualSearch}
+                  aria-label={t.visualSearch}
+                >
+                  {isVisualSearching ? <Loader2 size={24} className="animate-spin" /> : <Camera size={24} />}
+                </button>
+                <input
+                  ref={visualFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleVisualFileChange}
+                />
                 <button 
                   type="submit" 
-                  disabled={isSearching} 
+                  disabled={isSearching || isVisualSearching} 
                   className={`absolute ${lang === 'ar' ? 'left-3' : 'right-3'} top-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-[2rem] font-black transition-all flex items-center gap-2 disabled:bg-slate-400 shadow-xl active:scale-95 z-20 text-sm md:text-base group-hover:shadow-blue-500/50`}
                 >
                   {isSearching ? <span className="animate-pulse">{t.analyzing}</span> : <>{t.searchBtn} <Rocket size={18} /></>}
@@ -2122,6 +2517,26 @@ const App = () => {
                             </button>
                           </div>
                         </div>
+
+                        {/* صورة المنتج */}
+                        <div className="relative">
+                          <div className="aspect-[16/10] bg-slate-100 overflow-hidden">
+                            <img
+                              src={item.imageUrl}
+                              alt={item.productName || searchQuery}
+                              className="w-full h-full object-cover"
+                              loading="lazy"
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(item.productName || searchQuery || 'Moqaren')}&background=0ea5e9&color=fff&size=512&format=png`;
+                              }}
+                            />
+                          </div>
+                          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent"></div>
+                          <div className={`absolute bottom-4 ${lang === 'ar' ? 'right-4' : 'left-4'} bg-white/90 backdrop-blur-md text-slate-900 px-4 py-2 rounded-2xl shadow-lg border border-white/40 max-w-[85%]`}>
+                            <p className="font-black text-sm md:text-base line-clamp-1">{item.productName || searchQuery}</p>
+                          </div>
+                        </div>
                         
                         <div className="p-6 md:p-8 flex-grow flex flex-col">
                           <div className="flex justify-between items-end mb-6 md:mb-8 border-b border-dashed border-slate-200 pb-4 md:pb-6">
@@ -2162,6 +2577,34 @@ const App = () => {
                             <Info size={16} className="shrink-0 mt-0.5" />
                             "{item.aiAnalysis}"
                           </div>
+
+                          {/* تحليل الزبدة من التعليقات */}
+                          {(() => {
+                            const productName = item.productName || searchQuery;
+                            const productKey = toSafeDocId(productName);
+                            const butter = reviewButterByProductKey?.[productKey]?.text;
+                            const isLoading = reviewButterLoadingByProductKey?.[productKey];
+
+                            return (
+                              <div className="mb-6 md:mb-8">
+                                <button
+                                  type="button"
+                                  onClick={() => handleAnalyzeReviewButter(productName)}
+                                  disabled={isLoading}
+                                  className="w-full bg-white border-2 border-slate-200 hover:border-blue-300 hover:bg-blue-50 text-slate-900 py-3 rounded-2xl font-black transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-60"
+                                >
+                                  {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} className="text-blue-600" />}
+                                  <span>{isLoading ? t.analyzingComments : t.analyzeButter}</span>
+                                </button>
+
+                                {butter && (
+                                  <div className="mt-4 bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm text-slate-700 font-bold leading-relaxed whitespace-pre-wrap">
+                                    {butter}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
                           
                           <a 
                             href={getStoreLink(item.storeKey)} 
@@ -2196,6 +2639,83 @@ const App = () => {
                 <section id="why-trust" className="mb-32 scroll-mt-32">
                     <div className="text-center mb-16"><h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-6">{t.trustTitle}</h2><div className="inline-flex items-center gap-3 bg-blue-50 text-blue-900 px-6 py-3 rounded-full font-black text-lg animate-bounce"><Activity size={24} className="text-blue-600" /><span>{realSearchCount.toLocaleString()} {t.realSearch}</span></div></div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8"><div className="bg-white p-12 rounded-[3rem] shadow-xl border border-slate-100 hover:shadow-2xl transition-all"><div className="bg-blue-50 text-blue-600 w-20 h-20 rounded-[2rem] flex items-center justify-center mb-8"><BarChart3 size={40} /></div><h3 className="text-2xl font-black mb-4 text-slate-900">{t.trust1Title}</h3><p className="text-slate-500 font-bold leading-relaxed">{t.trust1Desc}</p></div><div className="bg-white p-12 rounded-[3rem] shadow-xl border border-slate-100 hover:shadow-2xl transition-all"><div className="bg-green-50 text-green-600 w-20 h-20 rounded-[2rem] flex items-center justify-center mb-8"><Shield size={40} /></div><h3 className="text-2xl font-black mb-4 text-slate-900">{t.trust2Title}</h3><p className="text-slate-500 font-bold leading-relaxed">{t.trust2Desc}</p></div><div className="bg-white p-12 rounded-[3rem] shadow-xl border border-slate-100 hover:shadow-2xl transition-all"><div className="bg-purple-50 text-purple-600 w-20 h-20 rounded-[2rem] flex items-center justify-center mb-8"><Heart size={40} /></div><h3 className="text-2xl font-black mb-4 text-slate-900">{t.trust3Title}</h3><p className="text-slate-500 font-bold leading-relaxed">{t.trust3Desc}</p></div></div>
+                </section>
+
+                {/* ==================== */}
+                {/* 🆕 آراء وتعليقات العملاء */}
+                {/* ==================== */}
+                <section id="customer-feedback" className="mb-10 scroll-mt-32">
+                  <div className="text-center mb-10">
+                    <h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-4">{t.customerFeedbackTitle}</h2>
+                    <p className="text-slate-500 font-bold text-lg">{t.customerFeedbackDesc}</p>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-8">
+                    <div className="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100">
+                      <h3 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-2">
+                        <MessageSquare className="text-blue-600" /> {lang === 'ar' ? 'اكتب رأيك' : 'Write your feedback'}
+                      </h3>
+
+                      <form onSubmit={handleSubmitCustomerFeedback} className="space-y-4">
+                        <input
+                          type="text"
+                          className="w-full p-4 rounded-2xl bg-slate-50 border border-slate-200 font-bold focus:ring-4 focus:ring-blue-100"
+                          placeholder={t.yourName}
+                          required
+                          value={feedbackName}
+                          onChange={(e) => setFeedbackName(e.target.value)}
+                        />
+                        <textarea
+                          className="w-full p-4 rounded-2xl bg-slate-50 border border-slate-200 font-bold focus:ring-4 focus:ring-blue-100 h-32 resize-none"
+                          placeholder={t.yourComment}
+                          required
+                          value={feedbackMessage}
+                          onChange={(e) => setFeedbackMessage(e.target.value)}
+                        ></textarea>
+                        <button
+                          type="submit"
+                          disabled={isSendingFeedback}
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-black text-lg shadow-lg transition-all active:scale-95 disabled:bg-slate-400 flex items-center justify-center gap-2"
+                        >
+                          {isSendingFeedback ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+                          {isSendingFeedback ? t.sending : t.sendComment}
+                        </button>
+                      </form>
+                    </div>
+
+                    <div className="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100">
+                      <h3 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-2">
+                        <Users className="text-indigo-600" /> {lang === 'ar' ? 'آخر التعليقات' : 'Latest feedback'}
+                      </h3>
+
+                      <div className="space-y-4 max-h-[420px] overflow-y-auto custom-scrollbar pr-1">
+                        {publicFeedbackList?.length > 0 ? (
+                          publicFeedbackList.slice(0, 10).map((fb) => (
+                            <div key={fb.id} className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                              <div className="flex items-start justify-between gap-4 mb-2">
+                                <p className="font-black text-slate-900">{fb.name}</p>
+                                <p className="text-[10px] font-bold text-slate-400 whitespace-nowrap">
+                                  {fb.createdAtIso ? new Date(fb.createdAtIso).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US') : ''}
+                                </p>
+                              </div>
+                              <p className="text-sm font-bold text-slate-700 leading-relaxed whitespace-pre-wrap">{fb.message}</p>
+
+                              {fb.reply && String(fb.reply).trim() && (
+                                <div className="mt-3 bg-white border border-blue-100 rounded-2xl p-3">
+                                  <p className="text-xs font-black text-blue-800 mb-1">{lang === 'ar' ? 'رد الإدارة' : 'Admin reply'}</p>
+                                  <p className="text-sm font-bold text-slate-700 whitespace-pre-wrap">{fb.reply}</p>
+                                </div>
+                              )}
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-center py-12 opacity-60">
+                            <p className="font-bold text-slate-500">{t.noFeedback}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </section>
               </>
             )}
@@ -2692,6 +3212,58 @@ const App = () => {
                           />
                         </div>
                       </div>
+
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 mb-2 block">API Key (تحليل التعليقات)</label>
+                        <div className="relative">
+                          <input
+                            type="password"
+                            value={adminConfig.aiSettings?.reviewButterApiKey || ''}
+                            onChange={(e) => setAdminConfig({
+                              ...adminConfig,
+                              aiSettings: {
+                                ...adminConfig.aiSettings,
+                                reviewButterApiKey: e.target.value
+                              }
+                            })}
+                            className="w-full p-3 rounded-xl bg-slate-50 border border-blue-200 font-bold text-sm pr-10"
+                            placeholder="Gemini API Key"
+                          />
+                          <Eye size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-300 cursor-pointer"
+                            onClick={(e) => {
+                              const input = e.target.previousSibling;
+                              if (input.type === 'password') input.type = 'text';
+                              else input.type = 'password';
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 mb-2 block">API Key (البحث بالصورة)</label>
+                        <div className="relative">
+                          <input
+                            type="password"
+                            value={adminConfig.aiSettings?.geminiVisionApiKey || ''}
+                            onChange={(e) => setAdminConfig({
+                              ...adminConfig,
+                              aiSettings: {
+                                ...adminConfig.aiSettings,
+                                geminiVisionApiKey: e.target.value
+                              }
+                            })}
+                            className="w-full p-3 rounded-xl bg-slate-50 border border-blue-200 font-bold text-sm pr-10"
+                            placeholder="Gemini Vision API Key"
+                          />
+                          <Eye size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-300 cursor-pointer"
+                            onClick={(e) => {
+                              const input = e.target.previousSibling;
+                              if (input.type === 'password') input.type = 'text';
+                              else input.type = 'password';
+                            }}
+                          />
+                        </div>
+                      </div>
                       
                       <div>
                         <label className="text-xs font-bold text-slate-500 mb-2 block">الموديل</label>
@@ -2710,6 +3282,46 @@ const App = () => {
                           <option value="gemini-1.5-pro">Pro (أدق)</option>
                           <option value="gemini-2.0-pro-exp">Pro Experimental</option>
                         </select>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 mb-2 block">موديل (تحليل التعليقات)</label>
+                          <select
+                            value={adminConfig.aiSettings?.reviewButterModel || 'gemini-2.0-flash-exp'}
+                            onChange={(e) => setAdminConfig({
+                              ...adminConfig,
+                              aiSettings: {
+                                ...adminConfig.aiSettings,
+                                reviewButterModel: e.target.value
+                              }
+                            })}
+                            className="w-full p-3 rounded-xl bg-slate-50 border border-blue-200 font-bold text-sm"
+                          >
+                            <option value="gemini-2.0-flash-exp">Flash (أسرع)</option>
+                            <option value="gemini-1.5-pro">Pro (أدق)</option>
+                            <option value="gemini-2.0-pro-exp">Pro Experimental</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 mb-2 block">موديل (البحث بالصورة)</label>
+                          <select
+                            value={adminConfig.aiSettings?.geminiVisionModel || 'gemini-2.0-flash-exp'}
+                            onChange={(e) => setAdminConfig({
+                              ...adminConfig,
+                              aiSettings: {
+                                ...adminConfig.aiSettings,
+                                geminiVisionModel: e.target.value
+                              }
+                            })}
+                            className="w-full p-3 rounded-xl bg-slate-50 border border-blue-200 font-bold text-sm"
+                          >
+                            <option value="gemini-2.0-flash-exp">Flash (أسرع)</option>
+                            <option value="gemini-1.5-pro">Pro (أدق)</option>
+                            <option value="gemini-2.0-pro-exp">Pro Experimental</option>
+                          </select>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -3279,6 +3891,69 @@ const App = () => {
                 </div>
               </div>
               
+              {/* ==================== */}
+              {/* 🆕 قسم تعليقات العملاء */}
+              {/* ==================== */}
+              <div className="mb-12 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-[2rem] p-8 shadow-lg">
+                <h3 className="font-black text-amber-900 border-b-2 border-amber-200 pb-4 mb-8 flex items-center gap-3 text-xl">
+                  <MessageSquare className="text-amber-600" size={28} />
+                  {t.adminFeedback}
+                </h3>
+
+                {adminFeedbackList?.length > 0 ? (
+                  <div className="space-y-4 max-h-[520px] overflow-y-auto custom-scrollbar pr-1">
+                    {adminFeedbackList.map((fb) => (
+                      <div key={fb.id} className="bg-white rounded-2xl border border-amber-200 p-5 shadow-sm">
+                        <div className="flex items-start justify-between gap-4 mb-3">
+                          <div>
+                            <p className="font-black text-slate-900">{fb.name}</p>
+                            <p className="text-xs font-bold text-slate-400" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+                              {fb.createdAtIso ? new Date(fb.createdAtIso).toLocaleString(lang === 'ar' ? 'ar-SA' : 'en-US') : ''}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => handleAdminDeleteFeedback(fb.id)}
+                            className="px-4 py-2 bg-red-50 text-red-600 rounded-xl font-black text-xs hover:bg-red-100 transition-colors flex items-center gap-2"
+                            title={t.delete}
+                          >
+                            <Trash2 size={14} /> {t.delete}
+                          </button>
+                        </div>
+
+                        <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 mb-4">
+                          <p className="text-sm font-bold text-slate-800 leading-relaxed whitespace-pre-wrap">{fb.message}</p>
+                        </div>
+
+                        <div className="grid md:grid-cols-2 gap-4">
+                          <div className="md:col-span-2">
+                            <label className="text-xs font-bold text-slate-500 mb-2 block">{lang === 'ar' ? 'رد الإدارة' : 'Admin reply'}</label>
+                            <textarea
+                              className="w-full p-4 rounded-2xl bg-slate-50 border border-amber-200 font-bold focus:ring-4 focus:ring-amber-100 h-28 resize-none"
+                              value={feedbackReplyDrafts?.[fb.id] ?? fb.reply ?? ''}
+                              onChange={(e) => setFeedbackReplyDrafts(prev => ({ ...prev, [fb.id]: e.target.value }))}
+                              placeholder={lang === 'ar' ? 'اكتب ردك هنا...' : 'Write your reply...'}
+                            ></textarea>
+                          </div>
+
+                          <div className="md:col-span-2 flex gap-3">
+                            <button
+                              onClick={() => handleAdminSaveFeedbackReply(fb.id)}
+                              className="flex-1 bg-amber-600 hover:bg-amber-700 text-white py-3 rounded-2xl font-black transition-all active:scale-95 flex items-center justify-center gap-2"
+                            >
+                              <Send size={16} /> {t.saveReply}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <p className="text-slate-500 font-bold">{t.noFeedback}</p>
+                  </div>
+                )}
+              </div>
+
               {/* ==================== */}
               {/* إعدادات عامة */}
               {/* ==================== */}

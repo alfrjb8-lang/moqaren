@@ -27,6 +27,7 @@ const MapPinIcon = () => (
 // ============================
 const translations = {
   ar: {
+    siteName: 'مقارن',
     siteTitle: 'مقارن | محرك بحث الأسعار الأول في السعودية',
     siteDesc: 'قارن أسعار الجوالات، الإلكترونيات، والعطور في السعودية. محرك مقارن يبحث لك في أمازون، نون، جرير وإكسترا ويعطيك أرخص سعر في ثانية.',
     keywords: 'مقارنة أسعار, أرخص سعر ايفون, عروض السعودية, أمازون السعودية, نون, جرير, تسوق ذكي',
@@ -60,6 +61,7 @@ const translations = {
     visitStore: 'زيارة المتجر',
     specialOffer: 'عرض خاص',
     howItWorksTitle: 'كيف يشتغل "مقارن"؟ 🤔',
+    threeStepsDesc: 'ثلاث خطوات بسيطة.. وتوفر فلوسك',
     step1Title: 'اكتب وش تبي',
     step1Desc: 'بس اكتب اسم المنتج في البحث (جوال، عطر، أي شي).',
     step2Title: 'الذكاء يفرّ السوق',
@@ -145,7 +147,8 @@ const translations = {
     aiQaThinking: 'جاري التفكير...'
   },
   en: {
-    siteTitle: 'Moqaren | #1 Price Comparison Engine in Saudi Arabia',
+    siteName: 'moqaren',
+    siteTitle: 'moqaren | #1 Price Comparison Engine in Saudi Arabia',
     siteDesc: 'Compare prices for phones, electronics, and perfumes in KSA. Moqaren searches Amazon, Noon, Jarir, and Xcite to find you the best deal instantly.',
     keywords: 'price comparison, cheapest iphone, ksa deals, amazon saudi, noon, jarir, smart shopping',
     ogTitle: 'Save Money with Moqaren - Your Guide to Best Prices',
@@ -176,7 +179,8 @@ const translations = {
     deliveryTitle: 'Delivery',
     visitStore: 'Visit Store',
     specialOffer: 'Special Offer',
-    howItWorksTitle: 'How Moqaren Works? 🤔',
+    howItWorksTitle: 'How moqaren works? 🤔',
+    threeStepsDesc: 'Three simple steps.. and save your money',
     step1Title: 'Type what you need',
     step1Desc: 'Just type the product name (Phone, Perfume, anything).',
     step2Title: 'AI Scans Market',
@@ -184,7 +188,7 @@ const translations = {
     step3Title: 'Get the Gist & Save',
     step3Desc: 'We tell you where is cheaper and safer, so you buy with peace of mind.',
     earnTitle: 'How we earn? (Transparently) 💰',
-    earnDesc: 'Moqaren is 100% free for you. We earn a small commission from stores when you buy through us, and this NEVER increases the price for you.',
+    earnDesc: 'moqaren is 100% free for you. We earn a small commission from stores when you buy through us, and this NEVER increases the price for you.',
     neutrality: '100% Neutral',
     noExtraCost: 'No Extra Cost',
     trustTitle: 'Why Trust Us? 🤝',
@@ -198,7 +202,7 @@ const translations = {
     quickLinks: 'Quick Links',
     legal: 'Legal',
     contactTitle: 'Contact Us',
-    rights: 'All rights reserved Moqaren © 2026',
+    rights: 'All rights reserved moqaren © 2026',
     madeIn: 'Made with love in Saudi Arabia 🇸🇦',
     privacy: 'Privacy Policy',
     terms: 'Terms & Conditions',
@@ -221,7 +225,7 @@ const translations = {
     noHistory: 'No recent searches',
     clearHistory: 'Clear History',
     shareSuccess: 'Offer copied to share!',
-    shareText: 'Check out this great offer I found on "Moqaren" 😍',
+    shareText: 'Check out this great offer I found on "moqaren" 😍',
     sharePrice: 'Price',
     shareLink: 'Link:',
     promoTitle: 'Don\'t miss exclusive deals! 🎁',
@@ -366,6 +370,7 @@ const PromoPopup = React.memo(function PromoPopup({
   promoEmail,
   setPromoEmail,
   onSubmit,
+  isSubscribing,
   t
 }) {
   if (!isOpen) return null;
@@ -387,7 +392,7 @@ const PromoPopup = React.memo(function PromoPopup({
               <h3 className="text-2xl font-black text-slate-900 mb-2">{t.promoTitle}</h3>
               <p className="text-slate-500 font-bold text-sm leading-relaxed">{t.promoDesc}</p>
             </div>
-            <form onSubmit={onSubmit} className="space-y-3">
+            <form onSubmit={(e) => { e.preventDefault(); onSubmit(e); }} className="space-y-3">
               <input
                 type="email"
                 required
@@ -398,9 +403,10 @@ const PromoPopup = React.memo(function PromoPopup({
               />
               <button
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-black shadow-lg shadow-blue-200 transition-all active:scale-95"
+                disabled={isSubscribing}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-black shadow-lg shadow-blue-200 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                {t.subscribe}
+                {isSubscribing ? (t.sending || '...') : t.subscribe}
               </button>
             </form>
             <p className="text-[10px] text-center text-slate-300 font-bold mt-4">نحترم خصوصيتك، لا رسائل مزعجة.</p>
@@ -1337,8 +1343,26 @@ const App = () => {
   // ============================
   
   const handleSubscribe = async (e) => {
-      e.preventDefault();
-      if (!promoEmail || !user || isSubscribing) return;
+      if (e && typeof e.preventDefault === 'function') e.preventDefault();
+      console.log('handleSubscribe called', { hasUser: !!user, email: promoEmail?.slice(0, 5) + '...', isSubscribing });
+
+      if (!promoEmail || isSubscribing) return;
+
+      let currentUser = user;
+      if (!currentUser) {
+        try {
+          const cred = await signInAnonymously(auth);
+          currentUser = cred?.user || auth.currentUser;
+        } catch (anonErr) {
+          console.log('handleSubscribe: anonymous sign-in failed', anonErr);
+          showNotification(lang === 'ar' ? 'جاري التحقق، حاول مرة أخرى' : 'Verifying, please try again', 'error');
+          return;
+        }
+      }
+      if (!currentUser) {
+        showNotification(lang === 'ar' ? 'جاري التحقق، حاول مرة أخرى' : 'Verifying, please try again', 'error');
+        return;
+      }
 
       const email = promoEmail.trim().toLowerCase();
       const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(email);
@@ -1353,7 +1377,7 @@ const App = () => {
           const cleanTerm = (searchQuery || '').trim().toLowerCase();
           const payload = {
             email,
-            uid: user.uid,
+            uid: currentUser.uid,
             joined_at: new Date().toISOString(),
             joined_at_ts: serverTimestamp(),
             updated_at_ts: serverTimestamp()
@@ -1365,6 +1389,7 @@ const App = () => {
           }
 
           await setDoc(subDocRef, payload, { merge: true });
+          console.log('handleSubscribe: saved to newsletter_subscribers', email);
 
           localStorage.setItem('moqaren_user_email', email);
           setSubscriberEmail(email);
@@ -2534,19 +2559,20 @@ ${languageInstruction}
         promoEmail={promoEmail}
         setPromoEmail={setPromoEmail}
         onSubmit={handleSubscribe}
+        isSubscribing={isSubscribing}
         t={t}
       />
 
-      {/* الشعار العائم (منفصل عن شريط التنقل) */}
+      {/* الشعار العائم (أعلى اليمين) */}
       <button
         onClick={handleLogoClick}
-        className="fixed left-4 top-6 z-[90] bg-white/90 backdrop-blur-xl shadow-xl border border-white/60 rounded-full px-3 py-2 flex items-center gap-2 cursor-pointer group active:scale-95 transition-all"
+        className="fixed right-4 top-6 z-[90] bg-white/90 backdrop-blur-xl shadow-xl border border-white/60 rounded-full px-3 py-2 flex items-center gap-2 cursor-pointer group active:scale-95 transition-all"
       >
         <div className="bg-gradient-to-tr from-blue-600 to-indigo-600 p-1.5 rounded-full text-white shadow-lg group-hover:scale-110 transition-transform">
           <Brain size={18} />
         </div>
         <span className="text-lg font-black text-slate-800 tracking-tighter hidden md:block">
-          مقارن
+          {t.siteName}
         </span>
       </button>
 
@@ -2622,14 +2648,14 @@ ${languageInstruction}
         </div>
       </div>
 
-      {/* زر تبديل اللغة */}
+      {/* زر تبديل اللغة (أعلى اليسار) */}
       <button 
         onClick={toggleLanguage} 
-        className="fixed right-4 top-24 md:top-6 z-[100] bg-white/90 backdrop-blur-xl shadow-xl border border-white/50 p-3 rounded-full hover:scale-110 transition-all active:scale-95 group"
+        className="fixed left-4 top-6 z-[100] bg-white/90 backdrop-blur-xl shadow-xl border border-white/50 p-3 rounded-full hover:scale-110 transition-all active:scale-95 group"
         title="Switch Language"
       >
         <Languages size={20} className="text-slate-600 group-hover:text-blue-600 transition-colors" />
-        <span className="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none font-bold">
+        <span className="absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none font-bold">
           {t.langName}
         </span>
       </button>
@@ -2764,11 +2790,11 @@ ${languageInstruction}
                 <input 
                   type="text" 
                   placeholder={t.searchPlaceholder} 
-                  className="w-full py-6 md:py-8 px-8 rounded-[2.5rem] text-slate-900 shadow-2xl text-lg md:text-xl focus:outline-none focus:ring-4 focus:ring-blue-400/50 transition-all font-bold border-none relative z-10 placeholder:text-slate-400" 
+                  className={`w-full py-6 md:py-8 rounded-[2.5rem] text-slate-900 shadow-2xl text-lg md:text-xl focus:outline-none focus:ring-4 focus:ring-blue-400/50 transition-all font-bold border-none relative z-10 placeholder:text-slate-400 ${lang === 'ar' ? 'pl-8 pr-14' : 'pr-8 pl-14'}`}
                   value={searchQuery} 
                   onChange={(e) => setSearchQuery(e.target.value)} 
                 />
-                <Search className={`absolute ${lang === 'ar' ? 'right-8' : 'left-8'} top-1/2 -translate-y-1/2 text-slate-400 z-20`} size={28} />
+                <Search className={`absolute ${lang === 'ar' ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 text-slate-400 z-20 pointer-events-none`} size={28} />
                 <button 
                   type="submit" 
                   disabled={isSearching || isVisualSearching} 
@@ -3089,7 +3115,7 @@ ${languageInstruction}
             {!results && !isSearching && (
               <>
                 <section id="about" className="mb-32 scroll-mt-32 mt-32">
-                  <div className="text-center mb-16"><h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-6">{t.howItWorksTitle}</h2><p className="text-slate-500 font-bold text-xl">ثلاث خطوات بسيطة.. وتوفر فلوسك</p></div>
+                  <div className="text-center mb-16"><h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-6">{t.howItWorksTitle}</h2><p className="text-slate-500 font-bold text-xl">{t.threeStepsDesc}</p></div>
                   <div className="grid md:grid-cols-3 gap-8">{[{ icon: MousePointer2, title: t.step1Title, desc: t.step1Desc, color: 'blue' }, { icon: Cpu, title: t.step2Title, desc: t.step2Desc, color: 'indigo' }, { icon: Rocket, title: t.step3Title, desc: t.step3Desc, color: 'green' }].map((item, i) => (<div key={i} className="bg-white p-12 rounded-[3rem] shadow-xl border border-slate-100 hover:-translate-y-2 transition-all text-center group"><div className={`bg-${item.color}-50 text-${item.color}-600 w-24 h-24 rounded-[2rem] flex items-center justify-center mx-auto mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}><item.icon size={48} /></div><h3 className="text-2xl font-black mb-4 text-slate-900">{item.title}</h3><p className="text-slate-500 font-bold leading-relaxed">{item.desc}</p></div>))}</div>
                 </section>
                 
@@ -4671,7 +4697,7 @@ ${languageInstruction}
         <div className="max-w-4xl mx-auto px-4 py-32 animate-in fade-in">
            <div className="bg-white rounded-[3rem] shadow-2xl p-10 md:p-20 border border-slate-100 text-center">
              <Award size={48} className="text-blue-600 mx-auto mb-6" />
-             <h1 className="text-3xl font-black text-slate-900 mb-4">شريك أعمال مقارن</h1>
+             <h1 className="text-3xl font-black text-slate-900 mb-4">{lang === 'ar' ? 'شريك أعمال ' : ''}{t.siteName}{lang === 'en' ? ' Business Partner' : ''}</h1>
              <p className="text-slate-500 font-bold text-lg mb-10">وصل منتجاتك لآلاف العملاء.</p>
              <form className="space-y-6 text-right max-w-xl mx-auto" onSubmit={handleMerchantSubmit}>
                <input 
@@ -4709,7 +4735,7 @@ ${languageInstruction}
                 <div className="space-y-8 text-slate-600 font-bold leading-loose text-base md:text-lg">
                   <div className="bg-slate-50 p-6 rounded-2xl">
                     <h3 className="text-xl font-black text-slate-900 mb-2">1. مقدمة</h3>
-                    <p>في "مقارن"، نأخذ خصوصيتك على محمل الجد. تشرح هذه الوثيقة كيف نجمع بياناتك ونستخدمها ونحميها عند استخدامك لموقعنا.</p>
+                    <p>في "{t.siteName}"، نأخذ خصوصيتك على محمل الجد. تشرح هذه الوثيقة كيف نجمع بياناتك ونستخدمها ونحميها عند استخدامك لموقعنا.</p>
                   </div>
                   <div className="bg-slate-50 p-6 rounded-2xl">
                     <h3 className="text-xl font-black text-slate-900 mb-2">2. البيانات التي نجمعها</h3>
@@ -4814,7 +4840,7 @@ ${languageInstruction}
             <div className="col-span-1 md:col-span-1">
               <div className="flex items-center gap-2 text-white mb-6">
                 <div className="bg-blue-600 p-2 rounded-xl"><Brain size={24} /></div>
-                <span className="text-3xl font-black tracking-tighter">مقارن</span>
+                <span className="text-3xl font-black tracking-tighter">{t.siteName}</span>
               </div>
               <p className="text-slate-400 text-sm leading-relaxed font-medium mb-6">{t.footerDesc}</p>
               <div className="flex gap-4">

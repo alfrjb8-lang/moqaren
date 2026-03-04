@@ -6,10 +6,10 @@ import {
   Search, ShoppingCart, Star, Shield, Info, ExternalLink, Zap, 
   BarChart3, TrendingDown, AlertCircle, CheckCircle, MousePointer2, 
   Cpu, Rocket, Mail, Lock, Phone, MessageSquare, Tag, Award, Users, Heart,
-  Instagram, Twitter, Send, Settings, Eye, EyeOff, Save, ArrowLeft, Plus, Trash2, X,
+  Instagram, Send, Settings, Eye, EyeOff, Save, ArrowLeft, Plus, Trash2, X,
   FileText, Activity, Globe, ChevronLeft, Coins, Database, Bell, MessageCircle, BarChart2, Flame, Languages, Link, Server,
   ChevronRight, Clock, XCircle, Share2, Calendar, TrendingUp, Filter, UserCheck, LogOut,
-  Brain, Hexagon, Key, Upload, Image, Type, AlignLeft, Layers, Grid, Move, Camera, Loader2, Sparkles
+  Brain, Hexagon, Key, Upload, Image, Type, AlignLeft, Layers, Grid, Move, Camera, Loader2, Sparkles, Music
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, onSnapshot, collection, increment, updateDoc, addDoc, deleteDoc, getDocs, arrayUnion, serverTimestamp, query, orderBy, limit } from 'firebase/firestore';
@@ -134,7 +134,15 @@ const translations = {
     reply: 'رد',
     delete: 'حذف',
     saveReply: 'حفظ الرد',
-    noFeedback: 'لا توجد تعليقات حالياً'
+    noFeedback: 'لا توجد تعليقات حالياً',
+
+    aiQaTitle: 'اسأل عن المنتج',
+    aiQaPlaceholder: 'اكتب سؤالك عن المنتج (مثال: هل ينفع للدراسة؟)',
+    aiQaAskButton: 'اسأل الذكاء',
+    aiQaNoQuestionsYet: 'ما فيه أسئلة سابقة لهذا البحث.',
+    aiQaQuestionLabel: 'سؤال',
+    aiQaAnswerLabel: 'إجابة',
+    aiQaThinking: 'جاري التفكير...'
   },
   en: {
     siteTitle: 'Moqaren | #1 Price Comparison Engine in Saudi Arabia',
@@ -243,7 +251,15 @@ const translations = {
     reply: 'Reply',
     delete: 'Delete',
     saveReply: 'Save reply',
-    noFeedback: 'No feedback yet'
+    noFeedback: 'No feedback yet',
+
+    aiQaTitle: 'Ask about the product',
+    aiQaPlaceholder: 'Ask a question about the product (e.g. Is it good for studying?)',
+    aiQaAskButton: 'Ask AI',
+    aiQaNoQuestionsYet: 'No questions for this search yet.',
+    aiQaQuestionLabel: 'Question',
+    aiQaAnswerLabel: 'Answer',
+    aiQaThinking: 'Thinking...'
   }
 };
 
@@ -454,6 +470,11 @@ const StoreApiCard = ({ storeKey, storeIndex, storeName, storeLetter, storeColor
     if (storeKey === 'amazon') return adminConfig?.storeApiKeys?.amazon;
     if (storeKey === 'noon') return adminConfig?.storeApiKeys?.noon;
     if (storeKey === 'custom' && storeIndex !== undefined) return adminConfig?.storeApiKeys?.customStores?.[storeIndex];
+    if (storeKey === 'reviews-google') return adminConfig?.reviewApis?.googleReviews;
+    if (storeKey === 'reviews-trustpilot') return adminConfig?.reviewApis?.trustpilot;
+    if (storeKey === 'reviews-capterra') return adminConfig?.reviewApis?.capterra;
+    if (storeKey === 'reviews-g2') return adminConfig?.reviewApis?.g2;
+    if (storeKey === 'reviews-other') return adminConfig?.reviewApis?.other;
     return null;
   };
 
@@ -552,6 +573,12 @@ const App = () => {
   const visualFileInputRef = useRef(null);
   const [reviewButterByProductKey, setReviewButterByProductKey] = useState({});
   const [reviewButterLoadingByProductKey, setReviewButterLoadingByProductKey] = useState({});
+
+  const [aiQuestion, setAiQuestion] = useState('');
+  const [aiQaLoading, setAiQaLoading] = useState(false);
+  const [aiQaError, setAiQaError] = useState('');
+  const [aiQaConversationsByKey, setAiQaConversationsByKey] = useState({});
+  const [currentAiQaKey, setCurrentAiQaKey] = useState(null);
 
   // ===== تعليقات العملاء (الصفحة الرئيسية + لوحة الإدارة) =====
   const [feedbackName, setFeedbackName] = useState('');
@@ -725,6 +752,10 @@ const App = () => {
   const [storeApiTestingStatus, setStoreApiTestingStatus] = useState(null);
   const [storeApiEditingKey, setStoreApiEditingKey] = useState(null);
 
+  const [reviewApiConnectionStatus, setReviewApiConnectionStatus] = useState({});
+  const [reviewApiTestingKey, setReviewApiTestingKey] = useState(null);
+  const [reviewApiEditingKey, setReviewApiEditingKey] = useState(null);
+
   const [merchantForm, setMerchantForm] = useState({ store: '', email: '' });
   const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
 
@@ -811,7 +842,7 @@ const App = () => {
   const defaultAdminConfig = {
     supportEmail: "support@moqaren.com",
     whatsappNumber: "+966500000000",
-    twitterLink: "https://twitter.com/moqaren",
+    twitterLink: "https://www.tiktok.com/@moqaren",
     instagramLink: "https://instagram.com/moqaren",
     trendingKeywords: ['آيفون 15', 'سوني 5', 'ماك بوك', 'سماعات ابل'],
     affiliateLinks: [
@@ -855,6 +886,14 @@ const App = () => {
       xcite: { apiKey: '', affiliateId: '', enabled: true },
       extra: { apiKey: '', enabled: true },
       customStores: []
+    },
+
+    reviewApis: {
+      googleReviews: { apiKey: '', secretKey: '', sourceId: '', enabled: false },
+      trustpilot: { apiKey: '', secretKey: '', sourceId: '', enabled: false },
+      capterra: { apiKey: '', secretKey: '', sourceId: '', enabled: false },
+      g2: { apiKey: '', secretKey: '', sourceId: '', enabled: false },
+      other: { apiKey: '', secretKey: '', sourceId: '', enabled: false }
     },
     
     apiSettings: {
@@ -1692,6 +1731,11 @@ const App = () => {
     return false;
   };
 
+  const hasReviewKeysSaved = (sourceKey) => {
+    const s = adminConfig.reviewApis?.[sourceKey];
+    return !!(s?.apiKey || s?.secretKey);
+  };
+
   const testStoreConnection = async (storeKey, index = null) => {
     setStoreApiTestingStatus(storeKey + (index !== null ? `-${index}` : ''));
     await new Promise(r => setTimeout(r, 1200));
@@ -1706,6 +1750,15 @@ const App = () => {
     const status = hasKeys ? 'working' : 'error';
     setStoreApiConnectionStatus(prev => ({ ...prev, [storeKey + (index !== null ? `-${index}` : '')]: status }));
     setStoreApiTestingStatus(null);
+  };
+
+  const testReviewConnection = async (sourceKey) => {
+    setReviewApiTestingKey(sourceKey);
+    await new Promise(r => setTimeout(r, 1200));
+    const hasKeys = hasReviewKeysSaved(sourceKey);
+    const status = hasKeys ? 'working' : 'error';
+    setReviewApiConnectionStatus(prev => ({ ...prev, [sourceKey]: status }));
+    setReviewApiTestingKey(null);
   };
 
   const handleSaveStoreApiKeys = (storeKey, index = null, formData) => {
@@ -1758,6 +1811,29 @@ const App = () => {
     showNotification('تم حفظ المفاتيح بنجاح');
   };
 
+  const handleSaveReviewApiKeys = (sourceKey, formData) => {
+    const current = adminConfig.reviewApis || {};
+    const existing = current[sourceKey] || {};
+    const updatedSource = {
+      ...existing,
+      apiKey: formData.apiKey || existing.apiKey || '',
+      secretKey: formData.secretKey || existing.secretKey || '',
+      sourceId: formData.storeId || existing.sourceId || '',
+      enabled: existing.enabled === undefined ? true : existing.enabled
+    };
+
+    setAdminConfig({
+      ...adminConfig,
+      reviewApis: {
+        ...current,
+        [sourceKey]: updatedSource
+      }
+    });
+
+    setReviewApiEditingKey(null);
+    showNotification(lang === 'ar' ? 'تم حفظ مفاتيح التعليقات بنجاح' : 'Review API keys saved successfully');
+  };
+
   const handleDeleteCustomStore = (index) => { 
     const updated = [...(adminConfig.storeApiKeys?.customStores || [])]; 
     updated.splice(index, 1); 
@@ -1797,6 +1873,21 @@ const App = () => {
         }
       });
     }
+  };
+
+  const toggleReviewApiEnabled = (sourceKey) => {
+    const current = adminConfig.reviewApis || {};
+    const existing = current[sourceKey] || {};
+    setAdminConfig({
+      ...adminConfig,
+      reviewApis: {
+        ...current,
+        [sourceKey]: {
+          ...existing,
+          enabled: !existing.enabled
+        }
+      }
+    });
   };
 
   // ============================
@@ -1970,6 +2061,108 @@ ${languageInstruction}`;
     }
   };
 
+  const handleAskAiQuestion = async () => {
+    const question = String(aiQuestion || '').trim();
+    if (!question) return;
+
+    if (!results || !Array.isArray(results) || results.length === 0) {
+      showNotification(
+        lang === 'ar'
+          ? 'اسأل بعد ما تطلع نتائج البحث'
+          : 'Please ask after search results are loaded',
+        'error'
+      );
+      return;
+    }
+
+    const apiKey = adminConfig.aiSettings?.geminiApiKey;
+    const model = adminConfig.aiSettings?.geminiModel || 'gemini-2.0-flash-exp';
+    if (!apiKey) {
+      showNotification(
+        lang === 'ar'
+          ? 'أضف مفتاح Gemini API من لوحة الإدارة أولاً'
+          : 'Add Gemini API key from the Admin page first',
+        'error'
+      );
+      return;
+    }
+
+    const baseName = String(searchQuery || results[0]?.productName || '').trim();
+    if (!baseName) return;
+
+    const key = currentAiQaKey || toSafeDocId(baseName);
+    const previous = aiQaConversationsByKey[key] || [];
+
+    const languageInstruction = lang === 'en'
+      ? 'Answer in clear, friendly English suitable for online shoppers in Saudi Arabia.'
+      : 'أجب باللهجة السعودية وبأسلوب واضح وبسيط مناسب لمتسوقين أونلاين في السعودية.';
+
+    const storesInfo = results
+      .slice(0, 5)
+      .map((item, index) => (
+        `${index + 1}) المتجر: ${item.store || '-'} - السعر: ${item.price || item.finalPrice || 'غير مذكور'} - رابط: ${item.link || item.url || 'بدون رابط'}`
+      ))
+      .join('\n');
+
+    const historyText = previous.length
+      ? `\n\nمحادثات سابقة لهذا البحث:\n${previous
+          .map((entry, i) => `${i + 1}) س: ${entry.question}\n   ج: ${entry.answer}`)
+          .join('\n\n')}\n`
+      : '';
+
+    const prompt = lang === 'en'
+      ? `You are a shopping assistant for "Moqaren", a Saudi price comparison site.
+
+Current product being searched:
+"${baseName}".
+
+Available store offers (approximate):
+${storesInfo || 'No structured store data, answer based on general shopping knowledge.'}
+${historyText}
+New question from the user about this product:
+"${question}".
+
+${languageInstruction}
+
+Focus on being concise, practical and honest. If something is unknown, say so clearly. Answer in one or two short paragraphs maximum.`
+      : `أنت مساعد تسوّق ذكي في موقع "مقارن" لمقارنة الأسعار في السعودية.
+
+اسم المنتج الذي يبحث عنه العميل:
+"${baseName}".
+
+عندك هذه البيانات عن المتاجر (تقريبياً):
+${storesInfo || 'ما فيه بيانات متاجر واضحة، جاوب بشكل عام من خبرتك.'}${historyText}
+السؤال الجديد من العميل عن هذا المنتج:
+"${question}".
+
+${languageInstruction}
+
+اعطِ إجابة عملية وواضحة في فقرة أو فقرتين بالكثير، وإذا ما تقدر تجاوب على شيء فاذكر أن المعلومة غير متوفرة بدقة.`;
+
+    setAiQaLoading(true);
+    setAiQaError('');
+    try {
+      const text = await callGeminiText({ prompt, apiKey, model, temperature: 0.6, maxOutputTokens: 600 });
+      const answer = text || (lang === 'ar'
+        ? 'ما قدرت أطلع إجابة واضحة حالياً.'
+        : 'I could not generate a clear answer right now.');
+
+      setAiQaConversationsByKey(prev => ({
+        ...prev,
+        [key]: [...previous, { question, answer }]
+      }));
+      setAiQuestion('');
+    } catch (err) {
+      console.error('AI Q&A error', err);
+      const fallback = lang === 'ar'
+        ? 'صار خطأ في الإجابة، جرّب مرة ثانية لاحقاً.'
+        : 'Something went wrong while answering, please try again later.';
+      setAiQaError(fallback);
+    } finally {
+      setAiQaLoading(false);
+    }
+  };
+
   // ============================
   // 16. وظيفة البحث الرئيسية
   // ============================
@@ -2015,6 +2208,11 @@ ${languageInstruction}`;
       const aiResponse = await callGeminiAI(q, searchResults);
       setResults(searchResults);
       setAiSummary(aiResponse);
+
+      const aiKey = toSafeDocId(q);
+      setCurrentAiQaKey(aiKey);
+      setAiQuestion('');
+      setAiQaError('');
 
       const matchedOffer = adminConfig.exclusiveOffers?.find(offer =>
         q.toLowerCase().includes(offer.keyword.toLowerCase())
@@ -2339,6 +2537,19 @@ ${languageInstruction}`;
         t={t}
       />
 
+      {/* الشعار العائم (منفصل عن شريط التنقل) */}
+      <button
+        onClick={handleLogoClick}
+        className="fixed left-4 top-6 z-[90] bg-white/90 backdrop-blur-xl shadow-xl border border-white/60 rounded-full px-3 py-2 flex items-center gap-2 cursor-pointer group active:scale-95 transition-all"
+      >
+        <div className="bg-gradient-to-tr from-blue-600 to-indigo-600 p-1.5 rounded-full text-white shadow-lg group-hover:scale-110 transition-transform">
+          <Brain size={18} />
+        </div>
+        <span className="text-lg font-black text-slate-800 tracking-tighter hidden md:block">
+          مقارن
+        </span>
+      </button>
+
       {/* زر فتح لوحة المساحة الشخصية */}
       <button 
         onClick={() => setShowSidePanel(true)}
@@ -2414,11 +2625,11 @@ ${languageInstruction}`;
       {/* زر تبديل اللغة */}
       <button 
         onClick={toggleLanguage} 
-        className={`fixed ${lang === 'ar' ? 'left-4' : 'right-4'} top-24 md:top-6 z-[100] bg-white/90 backdrop-blur-xl shadow-xl border border-white/50 p-3 rounded-full hover:scale-110 transition-all active:scale-95 group`}
+        className="fixed right-4 top-24 md:top-6 z-[100] bg-white/90 backdrop-blur-xl shadow-xl border border-white/50 p-3 rounded-full hover:scale-110 transition-all active:scale-95 group"
         title="Switch Language"
       >
         <Languages size={20} className="text-slate-600 group-hover:text-blue-600 transition-colors" />
-        <span className={`absolute ${lang === 'ar' ? 'left-full ml-2' : 'right-full mr-2'} top-1/2 -translate-y-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none font-bold`}>
+        <span className="absolute right-full mr-2 top-1/2 -translate-y-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none font-bold">
           {t.langName}
         </span>
       </button>
@@ -2450,14 +2661,9 @@ ${languageInstruction}`;
             ))}
           </div>
           <div className="h-6 w-px bg-slate-200 mx-1 hidden md:block"></div>
-          <button onClick={() => setView('merchant')} className="hidden md:flex bg-slate-900 text-white px-5 py-2 rounded-full font-bold text-xs hover:bg-slate-800 shadow-lg items-center gap-2 active:scale-95 transition-all whitespace-nowrap"><Award size={14} /> {t.merchant}</button>
-          <div className="h-6 w-px bg-slate-200 mx-1"></div>
-          <div className="flex items-center gap-2 px-4 cursor-pointer group select-none" onClick={handleLogoClick}>
-            <div className="bg-gradient-to-tr from-blue-600 to-indigo-600 p-1.5 rounded-full text-white shadow-lg group-hover:scale-110 transition-transform">
-                <Brain size={18} />
-            </div>
-            <span className="text-lg font-black text-slate-800 tracking-tighter hidden md:block">مقارن</span>
-          </div>
+          <button onClick={() => setView('merchant')} className="hidden md:flex bg-slate-900 text-white px-5 py-2 rounded-full font-bold text-xs hover:bg-slate-800 shadow-lg items-center gap-2 active:scale-95 transition-all whitespace-nowrap">
+            <Award size={14} /> {t.merchant}
+          </button>
         </div>
       </nav>
 
@@ -2644,6 +2850,83 @@ ${languageInstruction}`;
                             </div>
                         </div>
                     </div>
+                )}
+
+                {aiSummary && (
+                  <div className="bg-white border border-blue-100 rounded-[2rem] p-6 md:p-8 shadow-lg space-y-4">
+                    <h4 className="font-black text-slate-900 text-lg flex items-center gap-2">
+                      <Brain size={18} className="text-blue-600" />
+                      {t.aiQaTitle}
+                    </h4>
+                    <p className="text-sm text-slate-500">
+                      {t.aiQaPlaceholder}
+                    </p>
+                    <div className="flex flex-col md:flex-row gap-3">
+                      <input
+                        type="text"
+                        value={aiQuestion}
+                        onChange={(e) => setAiQuestion(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !aiQaLoading && aiQuestion.trim()) {
+                            e.preventDefault();
+                            handleAskAiQuestion();
+                          }
+                        }}
+                        placeholder={t.aiQaPlaceholder}
+                        className="flex-1 px-4 py-3 rounded-2xl border border-slate-200 bg-white text-sm md:text-base font-bold focus:outline-none focus:ring-4 focus:ring-blue-100"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAskAiQuestion}
+                        disabled={aiQaLoading || !aiQuestion.trim()}
+                        className="md:w-40 px-5 py-3 rounded-2xl font-black text-sm md:text-base text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed shadow-lg flex items-center justify-center gap-2"
+                      >
+                        {aiQaLoading ? (
+                          <>
+                            <Loader2 size={18} className="animate-spin" />
+                            {t.aiQaThinking}
+                          </>
+                        ) : (
+                          <>
+                            <Brain size={18} />
+                            {t.aiQaAskButton}
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    {aiQaError && (
+                      <p className="text-xs text-red-600 font-bold">
+                        {aiQaError}
+                      </p>
+                    )}
+                    {(() => {
+                      const baseName = String(searchQuery || (Array.isArray(results) && results[0]?.productName) || '').trim();
+                      if (!baseName) return null;
+                      const key = currentAiQaKey || toSafeDocId(baseName);
+                      const list = aiQaConversationsByKey?.[key] || [];
+                      if (!list.length) {
+                        return (
+                          <p className="text-xs text-slate-400">
+                            {t.aiQaNoQuestionsYet}
+                          </p>
+                        );
+                      }
+                      return (
+                        <div className="space-y-3">
+                          {list.map((entry, idx) => (
+                            <div key={idx} className="bg-slate-50 rounded-2xl p-3 md:p-4 border border-slate-100">
+                              <p className="text-xs md:text-sm font-bold text-slate-800 mb-1">
+                                {t.aiQaQuestionLabel}: {entry.question}
+                              </p>
+                              <p className="text-xs md:text-sm text-slate-700 whitespace-pre-line leading-relaxed">
+                                {t.aiQaAnswerLabel}: {entry.answer}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
+                  </div>
                 )}
                 
                 <div className="relative">
@@ -3671,66 +3954,116 @@ ${languageInstruction}`;
                     </div>
                   </div>
                   
-                  <div className="bg-white p-4 rounded-xl border border-green-100 mt-6">
-                    <h4 className="font-bold text-green-800 mb-3 flex items-center gap-2">
-                      <Link className="text-green-600" size={18} />
-                      روابط المتاجر (لروابط العمولة)
-                    </h4>
-                    <p className="text-sm text-slate-500 mb-4">أضف روابط المتاجر لربطها بنتائج البحث</p>
-                    
-                    <div className="space-y-3">
-                      {adminConfig.affiliateLinks?.map((store, index) => (
-                        <div key={index} className="flex gap-2">
-                          <input 
-                            type="text" 
-                            value={store.link}
-                            onChange={(e) => { 
-                              const newLinks = [...adminConfig.affiliateLinks]; 
-                              newLinks[index].link = e.target.value; 
-                              setAdminConfig({...adminConfig, affiliateLinks: newLinks}); 
-                            }} 
-                            className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 font-bold text-xs text-left"
-                            dir="ltr"
-                            placeholder="رابط المتجر"
-                          />
-                          <div className="w-24 p-2 rounded-lg bg-green-100 font-black text-center text-xs flex items-center justify-center">
-                            {store.name.toUpperCase()}
-                          </div>
-                          <button 
-                            onClick={() => handleDeleteStore(index)} 
-                            className="p-2 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition-colors"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      ))}
-                      
-                      <div className="flex gap-2 mt-2">
-                        <input 
-                          type="text" 
-                          placeholder="اسم المتجر (مثال: amazon)"
-                          className="w-1/3 p-2 rounded-lg border border-green-200 text-sm font-bold"
-                          value={newStoreName}
-                          onChange={(e) => setNewStoreName(e.target.value)}
-                        />
-                        <input 
-                          type="text" 
-                          placeholder="رابط المتجر (https://...)"
-                          className="flex-1 p-2 rounded-lg border border-green-200 text-sm font-bold text-left"
-                          dir="ltr"
-                          value={newStoreLink}
-                          onChange={(e) => setNewStoreLink(e.target.value)}
-                        />
-                        <button 
-                          onClick={handleAddStore}
-                          className="bg-green-600 text-white px-4 rounded-lg font-bold text-sm hover:bg-green-700 transition-colors flex items-center gap-1"
-                        >
-                          <Plus size={16} />
-                          إضافة
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+                </div>
+              </div>
+            
+              {/* ==================== */}
+              {/* قسم مفاتيح API لجلب التعليقات من المصادر الخارجية */}
+              {/* ==================== */}
+              <div className="mb-12 bg-gradient-to-r from-sky-50 to-cyan-50 border border-sky-100 rounded-[2rem] p-8">
+                <h3 className="font-black text-sky-900 border-b border-sky-200 pb-4 mb-6 flex items-center gap-2">
+                  <MessageCircle className="text-sky-600" />
+                  مفاتيح API لجلب التعليقات من المصادر الخارجية
+                </h3>
+                <p className="text-sm text-slate-600 mb-6 font-bold">
+                  هذا القسم خاص فقط بجلب تعليقات ومراجعات العملاء من منصات المراجعات مثل Google Reviews و Trustpilot و Capterra و G2.com، ولا يؤثر على جلب الأسعار أو المنتجات.
+                </p>
+
+                <div className="space-y-6">
+                  <StoreApiCard
+                    storeKey="reviews-google"
+                    storeName="Google Reviews API"
+                    storeLetter="G"
+                    storeColor="green"
+                    hasKeys={hasReviewKeysSaved('googleReviews')}
+                    isEditing={reviewApiEditingKey === 'googleReviews'}
+                    onEdit={() => setReviewApiEditingKey('googleReviews')}
+                    onCancel={() => setReviewApiEditingKey(null)}
+                    connectionStatus={reviewApiConnectionStatus.googleReviews}
+                    isTesting={reviewApiTestingKey === 'googleReviews'}
+                    onTest={() => testReviewConnection('googleReviews')}
+                    onSave={(formData) => handleSaveReviewApiKeys('googleReviews', formData)}
+                    adminConfig={adminConfig}
+                    setAdminConfig={setAdminConfig}
+                    toggleEnabled={() => toggleReviewApiEnabled('googleReviews')}
+                    enabled={adminConfig.reviewApis?.googleReviews?.enabled === true}
+                  />
+
+                  <StoreApiCard
+                    storeKey="reviews-trustpilot"
+                    storeName="Trustpilot API"
+                    storeLetter="T"
+                    storeColor="green"
+                    hasKeys={hasReviewKeysSaved('trustpilot')}
+                    isEditing={reviewApiEditingKey === 'trustpilot'}
+                    onEdit={() => setReviewApiEditingKey('trustpilot')}
+                    onCancel={() => setReviewApiEditingKey(null)}
+                    connectionStatus={reviewApiConnectionStatus.trustpilot}
+                    isTesting={reviewApiTestingKey === 'trustpilot'}
+                    onTest={() => testReviewConnection('trustpilot')}
+                    onSave={(formData) => handleSaveReviewApiKeys('trustpilot', formData)}
+                    adminConfig={adminConfig}
+                    setAdminConfig={setAdminConfig}
+                    toggleEnabled={() => toggleReviewApiEnabled('trustpilot')}
+                    enabled={adminConfig.reviewApis?.trustpilot?.enabled === true}
+                  />
+
+                  <StoreApiCard
+                    storeKey="reviews-capterra"
+                    storeName="Capterra API"
+                    storeLetter="C"
+                    storeColor="green"
+                    hasKeys={hasReviewKeysSaved('capterra')}
+                    isEditing={reviewApiEditingKey === 'capterra'}
+                    onEdit={() => setReviewApiEditingKey('capterra')}
+                    onCancel={() => setReviewApiEditingKey(null)}
+                    connectionStatus={reviewApiConnectionStatus.capterra}
+                    isTesting={reviewApiTestingKey === 'capterra'}
+                    onTest={() => testReviewConnection('capterra')}
+                    onSave={(formData) => handleSaveReviewApiKeys('capterra', formData)}
+                    adminConfig={adminConfig}
+                    setAdminConfig={setAdminConfig}
+                    toggleEnabled={() => toggleReviewApiEnabled('capterra')}
+                    enabled={adminConfig.reviewApis?.capterra?.enabled === true}
+                  />
+
+                  <StoreApiCard
+                    storeKey="reviews-g2"
+                    storeName="G2.com API"
+                    storeLetter="G2"
+                    storeColor="green"
+                    hasKeys={hasReviewKeysSaved('g2')}
+                    isEditing={reviewApiEditingKey === 'g2'}
+                    onEdit={() => setReviewApiEditingKey('g2')}
+                    onCancel={() => setReviewApiEditingKey(null)}
+                    connectionStatus={reviewApiConnectionStatus.g2}
+                    isTesting={reviewApiTestingKey === 'g2'}
+                    onTest={() => testReviewConnection('g2')}
+                    onSave={(formData) => handleSaveReviewApiKeys('g2', formData)}
+                    adminConfig={adminConfig}
+                    setAdminConfig={setAdminConfig}
+                    toggleEnabled={() => toggleReviewApiEnabled('g2')}
+                    enabled={adminConfig.reviewApis?.g2?.enabled === true}
+                  />
+
+                  <StoreApiCard
+                    storeKey="reviews-other"
+                    storeName="Other Reviews Source"
+                    storeLetter="O"
+                    storeColor="green"
+                    hasKeys={hasReviewKeysSaved('other')}
+                    isEditing={reviewApiEditingKey === 'other'}
+                    onEdit={() => setReviewApiEditingKey('other')}
+                    onCancel={() => setReviewApiEditingKey(null)}
+                    connectionStatus={reviewApiConnectionStatus.other}
+                    isTesting={reviewApiTestingKey === 'other'}
+                    onTest={() => testReviewConnection('other')}
+                    onSave={(formData) => handleSaveReviewApiKeys('other', formData)}
+                    adminConfig={adminConfig}
+                    setAdminConfig={setAdminConfig}
+                    toggleEnabled={() => toggleReviewApiEnabled('other')}
+                    enabled={adminConfig.reviewApis?.other?.enabled === true}
+                  />
                 </div>
               </div>
               
@@ -4253,15 +4586,6 @@ ${languageInstruction}`;
                 <div className="space-y-6">
                   <h3 className="font-black text-blue-900 border-b pb-2">بيانات التواصل</h3>
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-400">الواتساب</label>
-                    <input 
-                      type="text" 
-                      value={adminConfig.whatsappNumber} 
-                      onChange={(e) => setAdminConfig({...adminConfig, whatsappNumber: e.target.value})} 
-                      className="w-full p-4 rounded-xl bg-slate-50 font-bold border" 
-                    />
-                  </div>
-                  <div className="space-y-2">
                     <label className="text-xs font-bold text-slate-400">الإيميل</label>
                     <input 
                       type="email" 
@@ -4271,7 +4595,7 @@ ${languageInstruction}`;
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-400">تويتر</label>
+                    <label className="text-xs font-bold text-slate-400">تيك توك</label>
                     <input 
                       type="text" 
                       value={adminConfig.twitterLink} 
@@ -4431,18 +4755,11 @@ ${languageInstruction}`;
                     </div>
                  </div>
                  <div className="bg-white p-8 rounded-[2.5rem] shadow-lg border border-slate-50 flex items-center gap-6 hover:-translate-y-1 transition-transform">
-                    <div className="bg-green-100 text-green-600 p-4 rounded-2xl"><MessageSquare size={28} /></div>
-                    <div>
-                      <h3 className="font-black text-lg text-slate-800">واتساب</h3>
-                      <p className="text-green-600 font-bold" dir="ltr">{adminConfig.whatsappNumber}</p>
-                    </div>
-                 </div>
-                 <div className="bg-white p-8 rounded-[2.5rem] shadow-lg border border-slate-50 flex items-center gap-6 hover:-translate-y-1 transition-transform">
                     <div className="bg-purple-100 text-purple-600 p-4 rounded-2xl"><Send size={28} /></div>
                     <div>
                       <h3 className="font-black text-lg text-slate-800">سوشيال ميديا</h3>
                       <div className="flex gap-3 mt-1">
-                        <a href={adminConfig.twitterLink} className="text-slate-400 hover:text-blue-500 transition-colors"><Twitter size={20} /></a>
+                        <a href={adminConfig.twitterLink} className="text-slate-400 hover:text-blue-500 transition-colors"><Music size={20} /></a>
                         <a href={adminConfig.instagramLink} className="text-slate-400 hover:text-pink-500 transition-colors"><Instagram size={20} /></a>
                       </div>
                     </div>
@@ -4501,7 +4818,7 @@ ${languageInstruction}`;
               </div>
               <p className="text-slate-400 text-sm leading-relaxed font-medium mb-6">{t.footerDesc}</p>
               <div className="flex gap-4">
-                <a href={adminConfig.twitterLink} className="bg-white/5 hover:bg-blue-500 hover:text-white p-3 rounded-full transition-all"><Twitter size={18} /></a>
+                <a href={adminConfig.twitterLink} className="bg-white/5 hover:bg-blue-500 hover:text-white p-3 rounded-full transition-all"><Music size={18} /></a>
                 <a href={adminConfig.instagramLink} className="bg-white/5 hover:bg-pink-500 hover:text-white p-3 rounded-full transition-all"><Instagram size={18} /></a>
               </div>
             </div>
@@ -4527,7 +4844,6 @@ ${languageInstruction}`;
               <h4 className="text-white font-black text-lg mb-6">{t.contactTitle}</h4>
               <ul className="space-y-4 text-sm font-medium">
                 <li className="flex items-center gap-3"><Mail size={18} className="text-blue-500" /><span dir="ltr">{adminConfig.supportEmail}</span></li>
-                <li className="flex items-center gap-3"><Phone size={18} className="text-green-500" /><span dir="ltr">{adminConfig.whatsappNumber}</span></li>
                 <li className="flex items-start gap-3"><MapPinIcon /><span>الرياض، المملكة العربية السعودية</span></li>
               </ul>
             </div>

@@ -87,6 +87,12 @@ const translations = {
     madeIn: 'صُنع بحب في السعودية 🇸🇦',
     privacy: 'سياسة الخصوصية',
     terms: 'الشروط والأحكام',
+    privacyTitle: 'سياسة الخصوصية',
+    privacyIntro: 'في "مقارن"، نأخذ خصوصيتك على محمل الجد. تشرح هذه الوثيقة كيف نجمع بياناتك ونستخدمها ونحميها عند استخدامك لموقعنا.',
+    privacyDataWeCollect: 'البيانات التي نجمعها',
+    privacyCookies: 'ملفات تعريف الارتباط (Cookies)',
+    privacyExternalLinks: 'الروابط الخارجية والعمولات',
+    privacySecurity: 'أمان البيانات',
     adminLogin: 'بوابة الإدارة الآمنة',
     enterCode: 'يرجى إدخال بيانات الدخول',
     login: 'تسجيل دخول',
@@ -206,6 +212,12 @@ const translations = {
     madeIn: 'Made with love in Saudi Arabia 🇸🇦',
     privacy: 'Privacy Policy',
     terms: 'Terms & Conditions',
+    privacyTitle: 'Privacy Policy',
+    privacyIntro: 'At "moqaren", we take your privacy seriously. This document explains how we collect, use and protect your data when you use our site.',
+    privacyDataWeCollect: 'Data We Collect',
+    privacyCookies: 'Cookies',
+    privacyExternalLinks: 'External Links & Commissions',
+    privacySecurity: 'Data Security',
     adminLogin: 'Secure Admin Portal',
     enterCode: 'Please enter credentials',
     login: 'Login',
@@ -2563,13 +2575,13 @@ ${languageInstruction}
         t={t}
       />
 
-      {/* الشعار العائم (أعلى اليمين) */}
+      {/* الشعار العائم (أعلى اليمين) - mobile: أصغر وبدون نص */}
       <button
         onClick={handleLogoClick}
-        className="fixed right-4 top-6 z-[90] bg-white/90 backdrop-blur-xl shadow-xl border border-white/60 rounded-full px-3 py-2 flex items-center gap-2 cursor-pointer group active:scale-95 transition-all"
+        className="fixed right-2 md:right-4 top-2 md:top-6 z-[90] bg-white/90 backdrop-blur-xl shadow-xl border border-white/60 rounded-full p-1 md:px-3 md:py-2 flex items-center gap-2 cursor-pointer group active:scale-95 transition-all"
       >
-        <div className="bg-gradient-to-tr from-blue-600 to-indigo-600 p-1.5 rounded-full text-white shadow-lg group-hover:scale-110 transition-transform">
-          <Brain size={18} />
+        <div className="bg-gradient-to-tr from-blue-600 to-indigo-600 p-1 md:p-1.5 rounded-full text-white shadow-lg md:group-hover:scale-110 transition-transform">
+          <Brain size={18} className="w-4 h-4 md:w-[18px] md:h-[18px]" />
         </div>
         <span className="text-lg font-black text-slate-800 tracking-tighter hidden md:block">
           {t.siteName}
@@ -2648,13 +2660,13 @@ ${languageInstruction}
         </div>
       </div>
 
-      {/* زر تبديل اللغة (أعلى اليسار) */}
+      {/* زر تبديل اللغة (أعلى اليسار) - mobile: أصغر و top-2 */}
       <button 
         onClick={toggleLanguage} 
-        className="fixed left-4 top-6 z-[100] bg-white/90 backdrop-blur-xl shadow-xl border border-white/50 p-3 rounded-full hover:scale-110 transition-all active:scale-95 group"
+        className="fixed left-2 md:left-4 top-2 md:top-6 z-[100] bg-white/90 backdrop-blur-xl shadow-xl border border-white/50 p-2 md:p-3 rounded-full md:hover:scale-110 transition-all active:scale-95 group"
         title="Switch Language"
       >
-        <Languages size={20} className="text-slate-600 group-hover:text-blue-600 transition-colors" />
+        <Languages size={20} className="text-slate-600 md:group-hover:text-blue-600 transition-colors w-[18px] h-[18px] md:w-5 md:h-5" />
         <span className="absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none font-bold">
           {t.langName}
         </span>
@@ -2675,18 +2687,18 @@ ${languageInstruction}
         </div>
       )}
 
-      {/* شريط التنقل: عن - ليش نثق فينا؟ - كيف نربح؟ - للشركات - [شعار مقارن في أقصى اليمين] */}
-      <nav className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
-        <div className="bg-white/90 backdrop-blur-xl shadow-2xl shadow-blue-900/10 rounded-full px-2 py-2 flex items-center gap-1 md:gap-2 pointer-events-auto border border-white/50 max-w-full overflow-x-auto no-scrollbar">
-          <div className="flex items-center flex-1">
+      {/* شريط التنقل - mobile: padding أقل، تمرير أفقي، زر للشركات مخفي */}
+      <nav className="fixed top-2 md:top-6 left-0 right-0 z-50 flex justify-center px-2 md:px-4 pointer-events-none">
+        <div className="bg-white/90 backdrop-blur-xl shadow-2xl shadow-blue-900/10 rounded-full px-1 py-1 md:px-2 md:py-2 flex items-center flex-nowrap gap-1 md:gap-2 pointer-events-auto border border-white/50 max-w-full overflow-x-auto no-scrollbar">
+          <div className="flex items-center flex-1 flex-nowrap min-w-0">
             {[{ id: 'about', label: t.about, icon: Info, action: () => scrollToSection('about') }, { id: 'features', label: t.features, icon: Star, action: () => scrollToSection('why-trust') }, { id: 'earn', label: t.earn, icon: Coins, action: () => scrollToSection('how-we-earn') }].map((item) => (
-                <button key={item.id} onClick={item.action} className={`px-3 md:px-5 py-2 rounded-full font-bold text-xs md:text-sm flex items-center gap-2 transition-all duration-300 ${view === 'home' ? 'hover:bg-blue-50 hover:text-blue-600 text-slate-600' : ''}`}>
-                    <item.icon size={14} className="opacity-70" />
+                <button key={item.id} onClick={item.action} className={`px-2 md:px-5 py-1.5 md:py-2 rounded-full font-bold text-xs flex items-center gap-1 md:gap-2 transition-all duration-300 shrink-0 ${view === 'home' ? 'active:bg-blue-50 active:text-blue-600 md:hover:bg-blue-50 md:hover:text-blue-600 text-slate-600' : ''}`}>
+                    <item.icon size={12} className="md:w-3.5 md:h-3.5 opacity-70 shrink-0" />
                     <span className="whitespace-nowrap">{item.label}</span>
                 </button>
             ))}
           </div>
-          <div className="h-6 w-px bg-slate-200 mx-1 hidden md:block"></div>
+          <div className="h-6 w-px bg-slate-200 mx-1 hidden md:block shrink-0"></div>
           <button onClick={() => setView('merchant')} className="hidden md:flex bg-slate-900 text-white px-5 py-2 rounded-full font-bold text-xs hover:bg-slate-800 shadow-lg items-center gap-2 active:scale-95 transition-all whitespace-nowrap">
             <Award size={14} /> {t.merchant}
           </button>
@@ -2697,7 +2709,7 @@ ${languageInstruction}
       {view === 'home' && (
         <button
           onClick={() => scrollToSection('customer-feedback')}
-          className="fixed z-40 top-28 md:top-24 left-1/2 -translate-x-1/2 flex items-center gap-2 px-5 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-lg shadow-blue-500/30 transition-all active:scale-95"
+          className="fixed z-40 top-14 md:top-24 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 md:px-5 md:py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-xs md:text-sm shadow-lg shadow-blue-500/30 transition-all active:scale-95"
           title={t.customerFeedbackTitle}
         >
           <MessageCircle size={18} />
@@ -2709,7 +2721,7 @@ ${languageInstruction}
       {view === 'home' && (
         <>
           {/* الهيدر الأزرق مع شعارات ونصوص الشركات */}
-          <div className="bg-gradient-to-b from-slate-950 via-blue-950 to-indigo-900 text-white pt-40 pb-32 px-4 relative overflow-hidden rounded-b-[3rem] md:rounded-b-[5rem] shadow-2xl">
+          <div className="bg-gradient-to-b from-slate-950 via-blue-950 to-indigo-900 text-white pt-32 md:pt-40 pb-20 md:pb-32 px-4 relative overflow-hidden rounded-b-2xl md:rounded-b-[5rem] shadow-2xl">
             {/* طبقة الخلفية المتحركة */}
             <div className="absolute top-0 left-0 w-full h-full opacity-30 pointer-events-none">
                 <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-blue-500 rounded-full blur-[120px] animate-pulse"></div>
@@ -2843,48 +2855,187 @@ ${languageInstruction}
             </div>
           </div>
 
-          <main className="max-w-7xl mx-auto px-4 -mt-20 relative z-20">
+          <main className="max-w-7xl mx-auto px-4 md:px-6 -mt-16 md:-mt-20 relative z-20">
             {isSearching && (
-              <div className="bg-white rounded-[3rem] p-12 md:p-20 shadow-xl border border-slate-100 text-center mb-32">
-                <div className="relative w-24 h-24 mx-auto mb-8">
+              <div className="bg-white rounded-2xl md:rounded-[3rem] p-8 md:p-20 shadow-xl border border-slate-100 text-center mb-20 md:mb-32">
+                <div className="relative w-16 h-16 md:w-24 md:h-24 mx-auto mb-6 md:mb-8">
                     <div className="absolute inset-0 border-8 border-slate-100 rounded-full"></div>
                     <div className="absolute inset-0 border-8 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                    <Brain className="absolute inset-0 m-auto text-blue-600 animate-pulse" size={32} />
+                    <Brain className="absolute inset-0 m-auto text-blue-600 animate-pulse w-8 h-8 md:w-8 md:h-8" />
                 </div>
-                <h3 className="text-slate-900 font-black text-2xl md:text-3xl animate-pulse tracking-tight mb-2">{t.loadingTitle}</h3>
-                <p className="text-slate-400 font-medium">{t.loadingDesc}</p>
+                <h3 className="text-slate-900 font-black text-xl md:text-3xl animate-pulse tracking-tight mb-2">{t.loadingTitle}</h3>
+                <p className="text-slate-400 font-medium text-sm md:text-base">{t.loadingDesc}</p>
               </div>
             )}
 
             {results && !isSearching && (
               <div className="space-y-12 animate-in fade-in slide-in-from-bottom-10 duration-700 mb-32">
-                {aiSummary && (
-                    <div className="bg-gradient-to-br from-slate-900 to-blue-950 text-white p-8 md:p-12 rounded-[3rem] shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-8 relative overflow-hidden border border-white/10">
-                        <div className="absolute top-0 right-0 w-full h-full opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-                        <div className="relative z-10 flex-1">
-                          <div className="flex items-center gap-3 mb-6 text-blue-300 font-black text-sm uppercase tracking-widest bg-white/10 w-fit px-4 py-1.5 rounded-full backdrop-blur-sm"><BarChart3 size={16} /> {t.aiTitle}</div>
-                          <p className="text-white text-2xl md:text-4xl font-black leading-snug tracking-tight mb-4">"{aiSummary.summary}"</p>
-                          {aiSummary.advice && (
-                            <p className="text-blue-200 text-lg font-bold mt-4">💡 نصيحة: {aiSummary.advice}</p>
-                          )}
-                        </div>
-                        <div className="relative z-10 bg-white/10 backdrop-blur-md border border-white/10 p-8 rounded-[2.5rem] shadow-2xl shrink-0 text-center min-w-[220px]">
-                            <span className="text-xs font-bold text-blue-200 block mb-3 uppercase tracking-widest">{t.winner}</span>
-                            <div className="flex flex-col items-center justify-center gap-2 font-black text-3xl">
-                                <div className="bg-green-500 rounded-full p-2 mb-2 shadow-lg shadow-green-500/30"><CheckCircle size={32} className="text-white" /></div>
-                                {aiSummary.verdict}
+                {/* 1. بطاقات المنتجات أولاً */}
+                <div className="relative">
+                  <div className="md:hidden mb-4 text-center">
+                    <p className="text-slate-600 text-xs md:text-sm font-bold flex items-center justify-center gap-2 animate-pulse">
+                      <span>{t.swipeHint}</span>
+                      <ChevronRight size={14} className="md:w-4 md:h-4" />
+                    </p>
+                  </div>
+                  
+                  <div 
+                    ref={resultsContainerRef}
+                    className="flex flex-col gap-6 md:flex-row md:overflow-x-auto pb-6 md:pb-0 md:gap-8 md:grid md:grid-cols-3 md:overflow-visible scrollbar-hide touch-pan-y"
+                    style={{ touchAction: 'pan-y' }}
+                  >
+                    {results.map((item) => (
+                      <div 
+                        key={item.id} 
+                        className="bg-white rounded-2xl md:rounded-[2.5rem] shadow-xl md:hover:shadow-2xl transition-all duration-300 border border-slate-100 overflow-hidden w-full md:w-auto flex-shrink-0 md:flex-grow active:scale-[0.99] md:hover:-translate-y-2"
+                        style={{ touchAction: 'pan-y' }}
+                      >
+                        {item.store.includes('شريك') && (
+                          <div className="absolute top-6 right-6 bg-red-500 text-white px-4 py-1.5 rounded-full text-[10px] font-black z-20 animate-pulse shadow-lg ring-4 ring-red-100">
+                            {t.specialOffer}
+                          </div>
+                        )}
+                        
+                        <div className={`${item.storeColor} py-4 md:py-8 px-4 md:px-8 text-white flex justify-between items-start relative overflow-hidden`}>
+                          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                          <div>
+                            <span className="font-black text-lg md:text-2xl tracking-tighter block mb-1">{item.store}</span>
+                            <div className="flex gap-1.5 md:gap-2">
+                              <div className="bg-white/20 px-2 md:px-3 py-0.5 md:py-1 rounded-full text-[9px] md:text-[10px] font-black uppercase backdrop-blur-md inline-flex items-center gap-0.5 md:gap-1">
+                                <Shield size={8} className="md:w-2.5 md:h-2.5" /> {t.trusted}
+                              </div>
+                              {item.isRealData ? (
+                                <div className="bg-green-500/80 px-3 py-1 rounded-full text-[10px] font-black uppercase backdrop-blur-md inline-flex items-center gap-1">
+                                  <CheckCircle size={10} /> بيانات حقيقية
+                                </div>
+                              ) : (
+                                <div className="bg-yellow-500/80 px-3 py-1 rounded-full text-[10px] font-black uppercase backdrop-blur-md inline-flex items-center gap-1">
+                                  <Info size={10} /> بيانات تجريبية
+                                </div>
+                              )}
                             </div>
+                          </div>
+                          <div className="relative z-10 flex gap-1.5 md:gap-2">
+                            <button onClick={() => handleShare(item)} className="bg-white/20 active:bg-white active:text-blue-600 md:hover:bg-white md:hover:text-blue-600 p-1.5 md:p-2 rounded-full transition-all text-white backdrop-blur-md" title="مشاركة">
+                              <Share2 size={16} className="md:w-5 md:h-5" />
+                            </button>
+                            <button onClick={() => toggleFavorite(item)} className="bg-white/20 active:bg-white active:text-red-500 md:hover:bg-white md:hover:text-red-500 p-1.5 md:p-2 rounded-full transition-all text-white backdrop-blur-md" title="مفضلتي">
+                              <Heart size={16} className={`md:w-5 md:h-5 ${isFavorite(item) ? 'fill-red-500 text-red-500' : ''}`} />
+                            </button>
+                          </div>
                         </div>
-                    </div>
-                )}
 
+                        {/* صورة المنتج */}
+                        <div className="relative">
+                          <div className="aspect-[16/10] bg-slate-100 overflow-hidden">
+                            <img
+                              src={item.imageUrl}
+                              alt={item.productName || searchQuery}
+                              className="w-full h-full object-cover"
+                              loading="lazy"
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(item.productName || searchQuery || 'Moqaren')}&background=0ea5e9&color=fff&size=512&format=png`;
+                              }}
+                            />
+                          </div>
+                          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent"></div>
+                          <div className={`absolute bottom-4 ${lang === 'ar' ? 'right-4' : 'left-4'} bg-white/90 backdrop-blur-md text-slate-900 px-4 py-2 rounded-2xl shadow-lg border border-white/40 max-w-[85%]`}>
+                            <p className="font-black text-sm md:text-base line-clamp-1">{item.productName || searchQuery}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="p-4 md:p-8 flex-grow flex flex-col overflow-y-auto min-h-0" style={{ touchAction: 'pan-y' }}>
+                          <div className="flex justify-between items-end mb-4 md:mb-8 border-b border-dashed border-slate-200 pb-3 md:pb-6">
+                            <div>
+                              <span className="text-2xl md:text-5xl font-black text-slate-900 leading-none tracking-tighter">{item.price}</span>
+                              <span className="text-sm md:text-lg text-slate-400 font-bold mx-1 md:mx-2 uppercase">{item.currency}</span>
+                            </div>
+                            <div className="text-[10px] md:text-xs text-red-400 line-through font-black opacity-50 mb-0.5 md:mb-2">{item.originalPrice}</div>
+                          </div>
+                          
+                          <div className="space-y-3 md:space-y-5 mb-4 md:mb-8 flex-grow">
+                            <div className="flex items-center gap-2 md:gap-4 text-xs md:text-sm font-bold text-slate-700 bg-slate-50 p-2.5 md:p-3 rounded-xl md:rounded-2xl">
+                              <Star size={14} className="text-yellow-400 fill-yellow-400 shrink-0 md:w-[18px] md:h-[18px]" />
+                              <div className="flex-1 min-w-0">
+                                <span className="block text-slate-900 text-xs md:text-base">{item.rating} {t.rating}</span>
+                                <span className="text-slate-400 font-medium text-[10px] md:text-xs">{t.from} {item.reviewsCount.toLocaleString()} {t.client}</span>
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-2 md:gap-4 text-xs md:text-sm font-bold text-slate-700 bg-slate-50 p-2.5 md:p-3 rounded-xl md:rounded-2xl">
+                              <Shield size={14} className="text-blue-500 shrink-0 md:w-[18px] md:h-[18px]" />
+                              <div className="flex-1 min-w-0">
+                                <span className="block text-slate-900 text-xs md:text-base">{t.warrantyTitle}</span>
+                                <span className="text-slate-400 font-medium text-[10px] md:text-xs">{item.warranty}</span>
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-2 md:gap-4 text-xs md:text-sm font-bold text-slate-700 bg-slate-50 p-2.5 md:p-3 rounded-xl md:rounded-2xl">
+                              <ShoppingCart size={14} className="text-indigo-500 shrink-0 md:w-[18px] md:h-[18px]" />
+                              <div className="flex-1 min-w-0">
+                                <span className="block text-slate-900 text-xs md:text-base">{t.deliveryTitle}</span>
+                                <span className="text-slate-400 font-medium text-[10px] md:text-xs">{item.delivery}</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="bg-blue-50 p-3 md:p-5 rounded-xl md:rounded-2xl text-[11px] md:text-xs text-blue-800 mb-4 md:mb-8 font-bold leading-relaxed flex gap-2 md:gap-3 items-start">
+                            <Info size={14} className="shrink-0 mt-0.5 md:w-4 md:h-4" />
+                            "{item.aiAnalysis}"
+                          </div>
+
+                          {/* تحليل الزبدة من التعليقات */}
+                          {(() => {
+                            const productName = item.productName || searchQuery;
+                            const productKey = toSafeDocId(productName);
+                            const butter = reviewButterByProductKey?.[productKey]?.text;
+                            const isLoading = reviewButterLoadingByProductKey?.[productKey];
+
+                            return (
+                              <div className="mb-6 md:mb-8">
+                                <button
+                                  type="button"
+                                  onClick={() => handleAnalyzeReviewButter(productName)}
+                                  disabled={isLoading}
+                                  className="w-full bg-white border-2 border-slate-200 hover:border-blue-300 hover:bg-blue-50 text-slate-900 py-3 rounded-2xl font-black transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-60"
+                                >
+                                  {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} className="text-blue-600" />}
+                                  <span>{isLoading ? t.analyzingComments : t.analyzeButter}</span>
+                                </button>
+
+                                {butter && (
+                                  <div className="mt-4 bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm text-slate-700 font-bold leading-relaxed whitespace-pre-wrap">
+                                    {butter}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
+                          
+                          <a 
+                            href={getStoreLink(item.storeKey)} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="w-full bg-slate-900 text-white py-3 md:py-5 rounded-xl md:rounded-[1.5rem] font-black text-base md:text-lg active:bg-blue-600 md:hover:bg-blue-600 transition-all flex justify-center items-center gap-2 shadow-xl active:shadow-blue-200 md:hover:shadow-blue-200 active:scale-95 text-center group/btn"
+                          >
+                            {t.visitStore}
+                            <ExternalLink size={16} className="md:w-5 md:h-5 group-hover/btn:translate-x-1 transition-transform rtl:group-hover/btn:-translate-x-1" />
+                          </a>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 2. اسأل عن المنتج */}
                 {aiSummary && (
-                  <div className="bg-white border border-blue-100 rounded-[2rem] p-6 md:p-8 shadow-lg space-y-4">
-                    <h4 className="font-black text-slate-900 text-lg flex items-center gap-2">
-                      <Brain size={18} className="text-blue-600" />
+                  <div className="bg-white border border-blue-100 rounded-2xl md:rounded-[2rem] p-4 md:p-8 shadow-lg space-y-4">
+                    <h4 className="font-black text-slate-900 text-base md:text-lg flex items-center gap-2">
+                      <Brain size={16} className="text-blue-600 md:w-[18px] md:h-[18px]" />
                       {t.aiQaTitle}
                     </h4>
-                    <p className="text-sm text-slate-500">
+                    <p className="text-xs md:text-sm text-slate-500">
                       {t.aiQaPlaceholder}
                     </p>
                     <div className="flex flex-col md:flex-row gap-3">
@@ -2905,16 +3056,16 @@ ${languageInstruction}
                         type="button"
                         onClick={handleAskAiQuestion}
                         disabled={aiQaLoading || !aiQuestion.trim()}
-                        className="md:w-40 px-5 py-3 rounded-2xl font-black text-sm md:text-base text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed shadow-lg flex items-center justify-center gap-2"
+                        className="md:w-40 px-5 py-3 rounded-2xl font-black text-sm md:text-base text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-60 disabled:cursor-not-allowed shadow-lg flex items-center justify-center gap-2"
                       >
                         {aiQaLoading ? (
                           <>
-                            <Loader2 size={18} className="animate-spin" />
+                            <Loader2 size={16} className="animate-spin md:w-[18px] md:h-[18px]" />
                             {t.aiQaThinking}
                           </>
                         ) : (
                           <>
-                            <Brain size={18} />
+                            <Brain size={16} className="md:w-[18px] md:h-[18px]" />
                             {t.aiQaAskButton}
                           </>
                         )}
@@ -2954,161 +3105,27 @@ ${languageInstruction}
                     })()}
                   </div>
                 )}
-                
-                <div className="relative">
-                  <div className="md:hidden mb-6 text-center">
-                    <p className="text-slate-600 text-sm font-bold flex items-center justify-center gap-2 animate-pulse">
-                      <span>{t.swipeHint}</span>
-                      <ChevronRight size={16} />
-                    </p>
-                  </div>
-                  
-                  <div 
-                    ref={resultsContainerRef}
-                    className="flex overflow-x-auto pb-6 gap-6 md:grid md:grid-cols-3 md:gap-8 md:overflow-visible scrollbar-hide snap-x snap-mandatory touch-pan-x"
-                  >
-                    {results.map((item) => (
-                      <div 
-                        key={item.id} 
-                        className="bg-white rounded-[2.5rem] shadow-xl hover:shadow-2xl transition-all duration-300 border border-slate-100 overflow-hidden flex-shrink-0 w-[85vw] md:w-auto md:flex-grow snap-center md:hover:-translate-y-2"
-                      >
-                        {item.store.includes('شريك') && (
-                          <div className="absolute top-6 right-6 bg-red-500 text-white px-4 py-1.5 rounded-full text-[10px] font-black z-20 animate-pulse shadow-lg ring-4 ring-red-100">
-                            {t.specialOffer}
-                          </div>
-                        )}
-                        
-                        <div className={`${item.storeColor} py-8 px-8 text-white flex justify-between items-start relative overflow-hidden`}>
-                          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
-                          <div>
-                            <span className="font-black text-2xl tracking-tighter block mb-1">{item.store}</span>
-                            <div className="flex gap-2">
-                              <div className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase backdrop-blur-md inline-flex items-center gap-1">
-                                <Shield size={10} /> {t.trusted}
-                              </div>
-                              {item.isRealData ? (
-                                <div className="bg-green-500/80 px-3 py-1 rounded-full text-[10px] font-black uppercase backdrop-blur-md inline-flex items-center gap-1">
-                                  <CheckCircle size={10} /> بيانات حقيقية
-                                </div>
-                              ) : (
-                                <div className="bg-yellow-500/80 px-3 py-1 rounded-full text-[10px] font-black uppercase backdrop-blur-md inline-flex items-center gap-1">
-                                  <Info size={10} /> بيانات تجريبية
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          <div className="relative z-10 flex gap-2">
-                            <button onClick={() => handleShare(item)} className="bg-white/20 hover:bg-white hover:text-blue-600 p-2 rounded-full transition-all text-white backdrop-blur-md" title="مشاركة">
-                              <Share2 size={20} />
-                            </button>
-                            <button onClick={() => toggleFavorite(item)} className="bg-white/20 hover:bg-white hover:text-red-500 p-2 rounded-full transition-all text-white backdrop-blur-md" title="مفضلتي">
-                              <Heart size={20} className={isFavorite(item) ? 'fill-red-500 text-red-500' : ''} />
-                            </button>
-                          </div>
+
+                {/* 3. الزبدة (AI Summary) */}
+                {aiSummary && (
+                    <div className="bg-gradient-to-br from-slate-900 to-blue-950 text-white p-4 md:p-12 rounded-2xl md:rounded-[3rem] shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-6 md:gap-8 relative overflow-hidden border border-white/10">
+                        <div className="absolute top-0 right-0 w-full h-full opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+                        <div className="relative z-10 flex-1">
+                          <div className="flex items-center gap-2 md:gap-3 mb-4 md:mb-6 text-blue-300 font-black text-xs md:text-sm uppercase tracking-widest bg-white/10 w-fit px-3 py-1 md:px-4 md:py-1.5 rounded-full backdrop-blur-sm"><BarChart3 size={14} className="md:w-4 md:h-4" /> {t.aiTitle}</div>
+                          <p className="text-white text-xl md:text-4xl font-black leading-snug tracking-tight mb-2 md:mb-4">"{aiSummary.summary}"</p>
+                          {aiSummary.advice && (
+                            <p className="text-blue-200 text-sm md:text-lg font-bold mt-2 md:mt-4">💡 {lang === 'ar' ? 'نصيحة' : 'Tip'}: {aiSummary.advice}</p>
+                          )}
                         </div>
-
-                        {/* صورة المنتج */}
-                        <div className="relative">
-                          <div className="aspect-[16/10] bg-slate-100 overflow-hidden">
-                            <img
-                              src={item.imageUrl}
-                              alt={item.productName || searchQuery}
-                              className="w-full h-full object-cover"
-                              loading="lazy"
-                              onError={(e) => {
-                                e.target.onerror = null;
-                                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(item.productName || searchQuery || 'Moqaren')}&background=0ea5e9&color=fff&size=512&format=png`;
-                              }}
-                            />
-                          </div>
-                          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent"></div>
-                          <div className={`absolute bottom-4 ${lang === 'ar' ? 'right-4' : 'left-4'} bg-white/90 backdrop-blur-md text-slate-900 px-4 py-2 rounded-2xl shadow-lg border border-white/40 max-w-[85%]`}>
-                            <p className="font-black text-sm md:text-base line-clamp-1">{item.productName || searchQuery}</p>
-                          </div>
+                        <div className="relative z-10 bg-white/10 backdrop-blur-md border border-white/10 p-4 md:p-8 rounded-2xl md:rounded-[2.5rem] shadow-2xl shrink-0 text-center min-w-[180px] md:min-w-[220px]">
+                            <span className="text-[10px] md:text-xs font-bold text-blue-200 block mb-2 md:mb-3 uppercase tracking-widest">{t.winner}</span>
+                            <div className="flex flex-col items-center justify-center gap-1 md:gap-2 font-black text-2xl md:text-3xl">
+                                <div className="bg-green-500 rounded-full p-1.5 md:p-2 mb-1 md:mb-2 shadow-lg shadow-green-500/30"><CheckCircle size={24} className="text-white md:w-8 md:h-8" /></div>
+                                {aiSummary.verdict}
+                            </div>
                         </div>
-                        
-                        <div className="p-6 md:p-8 flex-grow flex flex-col">
-                          <div className="flex justify-between items-end mb-6 md:mb-8 border-b border-dashed border-slate-200 pb-4 md:pb-6">
-                            <div>
-                              <span className="text-4xl md:text-5xl font-black text-slate-900 leading-none tracking-tighter">{item.price}</span>
-                              <span className="text-lg text-slate-400 font-bold mx-2 uppercase">{item.currency}</span>
-                            </div>
-                            <div className="text-xs text-red-400 line-through font-black opacity-50 mb-2">{item.originalPrice}</div>
-                          </div>
-                          
-                          <div className="space-y-4 md:space-y-5 mb-6 md:mb-8 flex-grow">
-                            <div className="flex items-center gap-3 md:gap-4 text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-2xl">
-                              <Star size={18} className="text-yellow-400 fill-yellow-400 shrink-0" />
-                              <div className="flex-1">
-                                <span className="block text-slate-900 text-sm md:text-base">{item.rating} {t.rating}</span>
-                                <span className="text-slate-400 font-medium text-xs">{t.from} {item.reviewsCount.toLocaleString()} {t.client}</span>
-                              </div>
-                            </div>
-                            
-                            <div className="flex items-center gap-3 md:gap-4 text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-2xl">
-                              <Shield size={18} className="text-blue-500 shrink-0" />
-                              <div className="flex-1">
-                                <span className="block text-slate-900 text-sm md:text-base">{t.warrantyTitle}</span>
-                                <span className="text-slate-400 font-medium text-xs">{item.warranty}</span>
-                              </div>
-                            </div>
-                            
-                            <div className="flex items-center gap-3 md:gap-4 text-sm font-bold text-slate-700 bg-slate-50 p-3 rounded-2xl">
-                              <ShoppingCart size={18} className="text-indigo-500 shrink-0" />
-                              <div className="flex-1">
-                                <span className="block text-slate-900 text-sm md:text-base">{t.deliveryTitle}</span>
-                                <span className="text-slate-400 font-medium text-xs">{item.delivery}</span>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="bg-blue-50 p-4 md:p-5 rounded-2xl text-xs text-blue-800 mb-6 md:mb-8 font-bold leading-relaxed flex gap-3 items-start">
-                            <Info size={16} className="shrink-0 mt-0.5" />
-                            "{item.aiAnalysis}"
-                          </div>
-
-                          {/* تحليل الزبدة من التعليقات */}
-                          {(() => {
-                            const productName = item.productName || searchQuery;
-                            const productKey = toSafeDocId(productName);
-                            const butter = reviewButterByProductKey?.[productKey]?.text;
-                            const isLoading = reviewButterLoadingByProductKey?.[productKey];
-
-                            return (
-                              <div className="mb-6 md:mb-8">
-                                <button
-                                  type="button"
-                                  onClick={() => handleAnalyzeReviewButter(productName)}
-                                  disabled={isLoading}
-                                  className="w-full bg-white border-2 border-slate-200 hover:border-blue-300 hover:bg-blue-50 text-slate-900 py-3 rounded-2xl font-black transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-60"
-                                >
-                                  {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} className="text-blue-600" />}
-                                  <span>{isLoading ? t.analyzingComments : t.analyzeButter}</span>
-                                </button>
-
-                                {butter && (
-                                  <div className="mt-4 bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm text-slate-700 font-bold leading-relaxed whitespace-pre-wrap">
-                                    {butter}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })()}
-                          
-                          <a 
-                            href={getStoreLink(item.storeKey)} 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            className="w-full bg-slate-900 text-white py-4 md:py-5 rounded-[1.5rem] font-black text-lg hover:bg-blue-600 transition-all flex justify-center items-center gap-2 shadow-xl hover:shadow-blue-200 active:scale-95 text-center group/btn"
-                          >
-                            {t.visitStore}
-                            <ExternalLink size={20} className="group-hover/btn:translate-x-1 transition-transform rtl:group-hover/btn:-translate-x-1" />
-                          </a>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                    </div>
+                )}
               </div>
             )}
 
@@ -4726,39 +4743,39 @@ ${languageInstruction}
       )}
 
       {view === 'privacy' && (
-        <div className="max-w-4xl mx-auto px-4 py-32 animate-in fade-in">
-           <div className="bg-white rounded-[3rem] shadow-2xl p-10 md:p-20 border border-slate-100 relative overflow-hidden">
+        <div className="max-w-4xl mx-auto px-4 py-16 md:py-32 animate-in fade-in">
+           <div className="bg-white rounded-2xl md:rounded-[3rem] shadow-2xl p-6 md:p-20 border border-slate-100 relative overflow-hidden">
              <div className="relative z-10">
-                <h1 className="text-3xl font-black text-slate-900 mb-8 flex items-center gap-3">
-                  <Lock className="text-blue-600" /> {t.privacy}
+                <h1 className="text-2xl md:text-3xl font-black text-slate-900 mb-6 md:mb-8 flex items-center gap-2 md:gap-3">
+                  <Lock size={20} className="text-blue-600 md:w-6 md:h-6" /> {t.privacyTitle}
                 </h1>
-                <div className="space-y-8 text-slate-600 font-bold leading-loose text-base md:text-lg">
-                  <div className="bg-slate-50 p-6 rounded-2xl">
-                    <h3 className="text-xl font-black text-slate-900 mb-2">1. مقدمة</h3>
-                    <p>في "{t.siteName}"، نأخذ خصوصيتك على محمل الجد. تشرح هذه الوثيقة كيف نجمع بياناتك ونستخدمها ونحميها عند استخدامك لموقعنا.</p>
+                <div className="space-y-6 md:space-y-8 text-slate-600 font-bold leading-loose text-sm md:text-base md:text-lg">
+                  <div className="bg-slate-50 p-4 md:p-6 rounded-xl md:rounded-2xl">
+                    <h3 className="text-base md:text-xl font-black text-slate-900 mb-2">1. {lang === 'ar' ? 'مقدمة' : 'Introduction'}</h3>
+                    <p>{t.privacyIntro}</p>
                   </div>
-                  <div className="bg-slate-50 p-6 rounded-2xl">
-                    <h3 className="text-xl font-black text-slate-900 mb-2">2. البيانات التي نجمعها</h3>
+                  <div className="bg-slate-50 p-4 md:p-6 rounded-xl md:rounded-2xl">
+                    <h3 className="text-base md:text-xl font-black text-slate-900 mb-2">2. {t.privacyDataWeCollect}</h3>
                     <ul className="list-disc list-inside space-y-2">
-                        <li><strong>بيانات البحث:</strong> نقوم بتخزين كلمات البحث (بدون هوية) لتحسين خوارزمياتنا واقتراح منتجات أفضل.</li>
-                        <li><strong>بيانات الجهاز:</strong> مثل نوع المتصفح والجهاز لضمان أفضل تجربة تصفح.</li>
+                        <li><strong>{lang === 'ar' ? 'بيانات البحث' : 'Search data'}:</strong> {lang === 'ar' ? 'نقوم بتخزين كلمات البحث (بدون هوية) لتحسين خوارزمياتنا واقتراح منتجات أفضل.' : 'We store search terms (without identity) to improve our algorithms and suggest better products.'}</li>
+                        <li><strong>{lang === 'ar' ? 'بيانات الجهاز' : 'Device data'}:</strong> {lang === 'ar' ? 'مثل نوع المتصفح والجهاز لضمان أفضل تجربة تصفح.' : 'Such as browser and device type for the best browsing experience.'}</li>
                     </ul>
                   </div>
-                  <div className="bg-slate-50 p-6 rounded-2xl">
-                    <h3 className="text-xl font-black text-slate-900 mb-2">3. ملفات تعريف الارتباط (Cookies)</h3>
-                    <p>نستخدم الكوكيز لتحسين تجربتك وتذكر تفضيلاتك. يمكنك تعطيل الكوكيز من إعدادات متصفحك، لكن قد يؤثر ذلك على بعض وظائف الموقع.</p>
+                  <div className="bg-slate-50 p-4 md:p-6 rounded-xl md:rounded-2xl">
+                    <h3 className="text-base md:text-xl font-black text-slate-900 mb-2">3. {t.privacyCookies}</h3>
+                    <p>{lang === 'ar' ? 'نستخدم الكوكيز لتحسين تجربتك وتذكر تفضيلاتك. يمكنك تعطيل الكوكيز من إعدادات متصفحك، لكن قد يؤثر ذلك على بعض وظائف الموقع.' : 'We use cookies to improve your experience and remember your preferences. You can disable cookies in your browser settings, but this may affect some site features.'}</p>
                   </div>
-                  <div className="bg-slate-50 p-6 rounded-2xl">
-                    <h3 className="text-xl font-black text-slate-900 mb-2">4. الروابط الخارجية والعمولات</h3>
-                    <p>يحتوي موقعنا على روابط لمتاجر خارجية (مثل أمازون ونون). عند النقر عليها، قد نتحصل على عمولة بسيطة دون أي تكلفة إضافية عليك. نحن غير مسؤولين عن سياسات الخصوصية الخاصة بتلك المتاجر.</p>
+                  <div className="bg-slate-50 p-4 md:p-6 rounded-xl md:rounded-2xl">
+                    <h3 className="text-base md:text-xl font-black text-slate-900 mb-2">4. {t.privacyExternalLinks}</h3>
+                    <p>{lang === 'ar' ? 'يحتوي موقعنا على روابط لمتاجر خارجية (مثل أمازون ونون). عند النقر عليها، قد نتحصل على عمولة بسيطة دون أي تكلفة إضافية عليك. نحن غير مسؤولين عن سياسات الخصوصية الخاصة بتلك المتاجر.' : 'Our site contains links to external stores (e.g. Amazon, Noon). When you click them, we may receive a small commission at no extra cost to you. We are not responsible for those stores\' privacy policies.'}</p>
                   </div>
-                  <div className="bg-slate-50 p-6 rounded-2xl">
-                    <h3 className="text-xl font-black text-slate-900 mb-2">5. أمان البيانات</h3>
-                    <p>نستخدم بروتوكولات تشفير متقدمة (SSL) لحماية اتصالك بالموقع. لا نقوم ببيع بياناتك لأي طرف ثالث.</p>
+                  <div className="bg-slate-50 p-4 md:p-6 rounded-xl md:rounded-2xl">
+                    <h3 className="text-base md:text-xl font-black text-slate-900 mb-2">5. {t.privacySecurity}</h3>
+                    <p>{lang === 'ar' ? 'نستخدم بروتوكولات تشفير متقدمة (SSL) لحماية اتصالك بالموقع. لا نقوم ببيع بياناتك لأي طرف ثالث.' : 'We use advanced encryption (SSL) to protect your connection. We do not sell your data to any third party.'}</p>
                   </div>
                 </div>
-                <button onClick={resetToHome} className="mt-12 bg-slate-900 text-white px-10 py-4 rounded-2xl font-black hover:bg-blue-600 transition-colors">
-                  الرجوع للرئيسية
+                <button onClick={resetToHome} className="mt-8 md:mt-12 bg-slate-900 text-white px-6 py-3 md:px-10 md:py-4 rounded-xl md:rounded-2xl font-black text-sm md:text-base active:bg-blue-600 md:hover:bg-blue-600 transition-colors">
+                  {lang === 'ar' ? 'الرجوع للرئيسية' : 'Back to Home'}
                 </button>
              </div>
            </div>

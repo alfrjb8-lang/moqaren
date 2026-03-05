@@ -2818,7 +2818,7 @@ ${languageInstruction}
                 <input 
                   type="text" 
                   placeholder={t.searchPlaceholder} 
-                  className={`w-full py-6 md:py-8 rounded-[2.5rem] text-slate-900 shadow-2xl text-lg md:text-xl focus:outline-none focus:ring-4 focus:ring-blue-400/50 transition-all font-bold border-none relative z-10 placeholder:text-slate-400 ${lang === 'ar' ? 'pl-8 pr-14' : 'pr-8 pl-14'}`}
+                  className={`w-full py-4 md:py-8 rounded-[2.5rem] text-slate-900 shadow-2xl text-lg md:text-xl focus:outline-none focus:ring-4 focus:ring-blue-400/50 transition-all font-bold border-none relative z-10 placeholder:text-slate-400 ${lang === 'ar' ? 'pl-8 pr-14' : 'pr-8 pl-14'}`}
                   value={searchQuery} 
                   onChange={(e) => setSearchQuery(e.target.value)} 
                 />
@@ -2826,9 +2826,9 @@ ${languageInstruction}
                 <button 
                   type="submit" 
                   disabled={isSearching || isVisualSearching} 
-                  className={`absolute ${lang === 'ar' ? 'left-3' : 'right-3'} top-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-[2rem] font-black transition-all flex items-center gap-2 disabled:bg-slate-400 shadow-xl active:scale-95 z-20 text-sm md:text-base group-hover:shadow-blue-500/50`}
+                  className={`absolute ${lang === 'ar' ? 'left-3' : 'right-3'} top-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 md:px-8 md:py-4 rounded-[2rem] font-black transition-all flex items-center gap-2 disabled:bg-slate-400 shadow-xl active:scale-95 z-20 text-sm md:text-base group-hover:shadow-blue-500/50`}
                 >
-                  {isSearching ? <span className="animate-pulse">{t.analyzing}</span> : <>{t.searchBtn} <Rocket size={18} /></>}
+                  {isSearching ? <span className="animate-pulse">{t.analyzing}</span> : <>{t.searchBtn} <Rocket size={16} className="w-4 h-4 md:w-[18px] md:h-[18px]" /></>}
                 </button>
               </form>
               <input
@@ -2888,10 +2888,10 @@ ${languageInstruction}
               <div className="space-y-12 animate-in fade-in slide-in-from-bottom-10 duration-700 mb-32">
                 {/* 1. بطاقات المنتجات أولاً */}
                 <div className="relative">
-                  <div className="md:hidden mb-4 text-center">
+                  <div className="md:hidden mb-2 text-center">
                     <p className="text-slate-600 text-xs md:text-sm font-bold flex items-center justify-center gap-2 animate-pulse">
                       <span>{t.swipeHint}</span>
-                      <ChevronRight size={14} className="md:w-4 md:h-4" />
+                      <ChevronRight size={12} className="w-3 h-3 md:w-4 md:h-4" />
                     </p>
                   </div>
                   
@@ -2903,7 +2903,7 @@ ${languageInstruction}
                     {results.map((item) => (
                       <div 
                         key={item.id} 
-                        className="bg-white rounded-2xl md:rounded-[2.5rem] shadow-xl md:hover:shadow-2xl transition-all duration-300 border border-slate-100 overflow-hidden w-[80vw] md:w-auto flex-shrink-0 snap-start md:snap-align-none active:scale-[0.99] md:hover:-translate-y-2"
+                        className="bg-white rounded-2xl md:rounded-[2.5rem] shadow-xl md:hover:shadow-2xl transition-all duration-300 border border-slate-100 overflow-hidden w-[75vw] md:w-auto flex-shrink-0 snap-start md:snap-align-none active:scale-[0.99] md:hover:-translate-y-2"
                         style={{ touchAction: 'pan-y' }}
                       >
                         {item.store.includes('شريك') && (
@@ -2912,13 +2912,13 @@ ${languageInstruction}
                           </div>
                         )}
                         
-                        <div className={`${item.storeColor} py-3 md:py-8 px-3 md:px-8 text-white flex justify-between items-start relative overflow-hidden`}>
+                        <div className={`${item.storeColor} py-2.5 md:py-8 px-2.5 md:px-8 text-white flex justify-between items-start relative overflow-hidden`}>
                           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
                           <div>
-                            <span className="font-black text-base md:text-2xl tracking-tighter block mb-1">{item.store}</span>
+                            <span className="font-black text-sm md:text-2xl tracking-tighter block mb-1">{item.store}</span>
                             <div className="flex gap-1.5 md:gap-2">
                               <div className="bg-white/20 px-2 md:px-3 py-0.5 md:py-1 rounded-full text-[9px] md:text-[10px] font-black uppercase backdrop-blur-md inline-flex items-center gap-0.5 md:gap-1">
-                                <Shield size={14} className="w-3.5 h-3.5 md:w-2.5 md:h-2.5" /> {t.trusted}
+                                <Shield size={12} className="w-3 h-3 md:w-2.5 md:h-2.5" /> {t.trusted}
                               </div>
                               {item.isRealData ? (
                                 <div className="bg-green-500/80 px-3 py-1 rounded-full text-[10px] font-black uppercase backdrop-blur-md inline-flex items-center gap-1">
@@ -2933,17 +2933,17 @@ ${languageInstruction}
                           </div>
                           <div className="relative z-10 flex gap-1.5 md:gap-2">
                             <button onClick={() => handleShare(item)} className="bg-white/20 active:bg-white active:text-blue-600 md:hover:bg-white md:hover:text-blue-600 p-1.5 md:p-2 rounded-full transition-all text-white backdrop-blur-md" title="مشاركة">
-                              <Share2 size={14} className="w-3.5 h-3.5 md:w-5 md:h-5" />
+                              <Share2 size={12} className="w-3 h-3 md:w-5 md:h-5" />
                             </button>
                             <button onClick={() => toggleFavorite(item)} className="bg-white/20 active:bg-white active:text-red-500 md:hover:bg-white md:hover:text-red-500 p-1.5 md:p-2 rounded-full transition-all text-white backdrop-blur-md" title="مفضلتي">
-                              <Heart size={14} className={`w-3.5 h-3.5 md:w-5 md:h-5 ${isFavorite(item) ? 'fill-red-500 text-red-500' : ''}`} />
+                              <Heart size={12} className={`w-3 h-3 md:w-5 md:h-5 ${isFavorite(item) ? 'fill-red-500 text-red-500' : ''}`} />
                             </button>
                           </div>
                         </div>
 
                         {/* صورة المنتج */}
                         <div className="relative">
-                          <div className="aspect-[16/10] bg-slate-100 overflow-hidden">
+                          <div className="aspect-[16/9] md:aspect-[16/10] bg-slate-100 overflow-hidden">
                             <img
                               src={item.imageUrl}
                               alt={item.productName || searchQuery}
@@ -2961,34 +2961,34 @@ ${languageInstruction}
                           </div>
                         </div>
                         
-                        <div className="p-3 md:p-8 flex-grow flex flex-col overflow-y-auto min-h-0 space-y-2 md:space-y-0" style={{ touchAction: 'pan-y' }}>
-                          <div className="flex justify-between items-end mb-2 md:mb-8 border-b border-dashed border-slate-200 pb-2 md:pb-6">
+                        <div className="p-2.5 md:p-8 flex-grow flex flex-col overflow-y-auto min-h-0 space-y-1.5 md:space-y-0" style={{ touchAction: 'pan-y' }}>
+                          <div className="flex justify-between items-end mb-1.5 md:mb-8 border-b border-dashed border-slate-200 pb-1.5 md:pb-6">
                             <div>
-                              <span className="text-2xl md:text-5xl font-black text-slate-900 leading-none tracking-tighter">{item.price}</span>
-                              <span className="text-sm md:text-lg text-slate-400 font-bold mx-1 md:mx-2 uppercase">{item.currency}</span>
+                              <span className="text-xl md:text-5xl font-black text-slate-900 leading-none tracking-tighter">{item.price}</span>
+                              <span className="text-xs md:text-lg text-slate-400 font-bold mx-1 md:mx-2 uppercase">{item.currency}</span>
                             </div>
                             <div className="text-[10px] md:text-xs text-red-400 line-through font-black opacity-50 mb-0.5 md:mb-2">{item.originalPrice}</div>
                           </div>
                           
-                          <div className="space-y-2 md:space-y-5 mb-4 md:mb-8 flex-grow">
-                            <div className="flex items-center gap-2 md:gap-4 text-xs md:text-sm font-bold text-slate-700 bg-slate-50 p-2 md:p-3 rounded-xl md:rounded-2xl">
-                              <Star size={14} className="text-yellow-400 fill-yellow-400 shrink-0 w-3.5 h-3.5 md:w-[18px] md:h-[18px]" />
+                          <div className="space-y-1.5 md:space-y-5 mb-4 md:mb-8 flex-grow">
+                            <div className="flex items-center gap-2 md:gap-4 text-xs font-bold text-slate-700 bg-slate-50 p-2 md:p-3 rounded-xl md:rounded-2xl">
+                              <Star size={12} className="text-yellow-400 fill-yellow-400 shrink-0 w-3 h-3 md:w-[18px] md:h-[18px]" />
                               <div className="flex-1 min-w-0">
                                 <span className="block text-slate-900 text-xs md:text-base">{item.rating} {t.rating}</span>
                                 <span className="text-slate-400 font-medium text-[10px] md:text-xs">{t.from} {item.reviewsCount.toLocaleString()} {t.client}</span>
                               </div>
                             </div>
                             
-                            <div className="flex items-center gap-2 md:gap-4 text-xs md:text-sm font-bold text-slate-700 bg-slate-50 p-2 md:p-3 rounded-xl md:rounded-2xl">
-                              <Shield size={14} className="text-blue-500 shrink-0 w-3.5 h-3.5 md:w-[18px] md:h-[18px]" />
+                            <div className="flex items-center gap-2 md:gap-4 text-xs font-bold text-slate-700 bg-slate-50 p-2 md:p-3 rounded-xl md:rounded-2xl">
+                              <Shield size={12} className="text-blue-500 shrink-0 w-3 h-3 md:w-[18px] md:h-[18px]" />
                               <div className="flex-1 min-w-0">
                                 <span className="block text-slate-900 text-xs md:text-base">{t.warrantyTitle}</span>
                                 <span className="text-slate-400 font-medium text-[10px] md:text-xs">{item.warranty}</span>
                               </div>
                             </div>
                             
-                            <div className="flex items-center gap-2 md:gap-4 text-xs md:text-sm font-bold text-slate-700 bg-slate-50 p-2 md:p-3 rounded-xl md:rounded-2xl">
-                              <ShoppingCart size={14} className="text-indigo-500 shrink-0 w-3.5 h-3.5 md:w-[18px] md:h-[18px]" />
+                            <div className="flex items-center gap-2 md:gap-4 text-xs font-bold text-slate-700 bg-slate-50 p-2 md:p-3 rounded-xl md:rounded-2xl">
+                              <ShoppingCart size={12} className="text-indigo-500 shrink-0 w-3 h-3 md:w-[18px] md:h-[18px]" />
                               <div className="flex-1 min-w-0">
                                 <span className="block text-slate-900 text-xs md:text-base">{t.deliveryTitle}</span>
                                 <span className="text-slate-400 font-medium text-[10px] md:text-xs">{item.delivery}</span>
@@ -2996,8 +2996,8 @@ ${languageInstruction}
                             </div>
                           </div>
                           
-                          <div className="bg-blue-50 p-2 md:p-5 rounded-xl md:rounded-2xl text-[11px] md:text-xs text-blue-800 mb-4 md:mb-8 font-bold leading-relaxed flex gap-2 md:gap-3 items-start">
-                            <Info size={14} className="shrink-0 w-3.5 h-3.5 mt-0.5 md:w-4 md:h-4" />
+                          <div className="bg-blue-50 p-2 md:p-5 rounded-xl md:rounded-2xl text-[10px] md:text-xs text-blue-800 mb-4 md:mb-8 font-bold leading-relaxed flex gap-2 md:gap-3 items-start">
+                            <Info size={12} className="shrink-0 w-3 h-3 mt-0.5 md:w-4 md:h-4" />
                             "{item.aiAnalysis}"
                           </div>
 
@@ -3036,7 +3036,7 @@ ${languageInstruction}
                             className="w-full bg-slate-900 text-white py-3 md:py-5 rounded-[1.5rem] font-black text-base md:text-lg hover:bg-blue-600 transition-all flex justify-center items-center gap-2 shadow-xl hover:shadow-blue-200 active:scale-95 text-center group/btn"
                           >
                             {t.visitStore}
-                            <ExternalLink size={14} className="w-3.5 h-3.5 md:w-5 md:h-5 group-hover/btn:translate-x-1 transition-transform rtl:group-hover/btn:-translate-x-1" />
+                            <ExternalLink size={12} className="w-3 h-3 md:w-5 md:h-5 group-hover/btn:translate-x-1 transition-transform rtl:group-hover/btn:-translate-x-1" />
                           </a>
                         </div>
                       </div>
@@ -3160,7 +3160,7 @@ ${languageInstruction}
                 
                 <section id="why-trust" className="mb-32 scroll-mt-32">
                     <div className="text-center mb-16"><h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-6">{t.trustTitle}</h2><div className="inline-flex items-center gap-3 bg-blue-50 text-blue-900 px-6 py-3 rounded-full font-black text-lg animate-bounce"><Activity size={24} className="text-blue-600" /><span>{realSearchCount.toLocaleString()} {t.realSearch}</span></div></div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8"><div className="bg-white p-12 rounded-[3rem] shadow-xl border border-slate-100 hover:shadow-2xl transition-all"><div className="bg-blue-50 text-blue-600 w-20 h-20 rounded-[2rem] flex items-center justify-center mb-8"><BarChart3 size={40} /></div><h3 className="text-2xl font-black mb-4 text-slate-900">{t.trust1Title}</h3><p className="text-slate-500 font-bold leading-relaxed">{t.trust1Desc}</p></div><div className="bg-white p-12 rounded-[3rem] shadow-xl border border-slate-100 hover:shadow-2xl transition-all"><div className="bg-green-50 text-green-600 w-20 h-20 rounded-[2rem] flex items-center justify-center mb-8"><Shield size={40} /></div><h3 className="text-2xl font-black mb-4 text-slate-900">{t.trust2Title}</h3><p className="text-slate-500 font-bold leading-relaxed">{t.trust2Desc}</p></div><div className="bg-white p-12 rounded-[3rem] shadow-xl border border-slate-100 hover:shadow-2xl transition-all"><div className="bg-purple-50 text-purple-600 w-20 h-20 rounded-[2rem] flex items-center justify-center mb-8"><Heart size={40} /></div><h3 className="text-2xl font-black mb-4 text-slate-900">{t.trust3Title}</h3><p className="text-slate-500 font-bold leading-relaxed">{t.trust3Desc}</p></div></div>
+                    <div className="flex flex-row overflow-x-auto gap-3 snap-x snap-mandatory scrollbar-hide flex-nowrap pb-4 md:grid md:grid-cols-3 md:gap-8 md:overflow-visible md:flex-wrap"><div className="bg-white p-4 md:p-12 rounded-[3rem] shadow-xl border border-slate-100 hover:shadow-2xl transition-all w-64 flex-shrink-0 snap-start md:w-auto"><div className="bg-blue-50 text-blue-600 w-16 h-16 md:w-20 md:h-20 rounded-[2rem] flex items-center justify-center mb-4 md:mb-8"><BarChart3 className="w-8 h-8 md:w-10 md:h-10" /></div><h3 className="text-base md:text-2xl font-black mb-2 md:mb-4 text-slate-900">{t.trust1Title}</h3><p className="text-slate-500 font-bold leading-relaxed text-xs md:text-base">{t.trust1Desc}</p></div><div className="bg-white p-4 md:p-12 rounded-[3rem] shadow-xl border border-slate-100 hover:shadow-2xl transition-all w-64 flex-shrink-0 snap-start md:w-auto"><div className="bg-green-50 text-green-600 w-16 h-16 md:w-20 md:h-20 rounded-[2rem] flex items-center justify-center mb-4 md:mb-8"><Shield className="w-8 h-8 md:w-10 md:h-10" /></div><h3 className="text-base md:text-2xl font-black mb-2 md:mb-4 text-slate-900">{t.trust2Title}</h3><p className="text-slate-500 font-bold leading-relaxed text-xs md:text-base">{t.trust2Desc}</p></div><div className="bg-white p-4 md:p-12 rounded-[3rem] shadow-xl border border-slate-100 hover:shadow-2xl transition-all w-64 flex-shrink-0 snap-start md:w-auto"><div className="bg-purple-50 text-purple-600 w-16 h-16 md:w-20 md:h-20 rounded-[2rem] flex items-center justify-center mb-4 md:mb-8"><Heart className="w-8 h-8 md:w-10 md:h-10" /></div><h3 className="text-base md:text-2xl font-black mb-2 md:mb-4 text-slate-900">{t.trust3Title}</h3><p className="text-slate-500 font-bold leading-relaxed text-xs md:text-base">{t.trust3Desc}</p></div></div>
                 </section>
 
                 {/* ==================== */}

@@ -3017,10 +3017,10 @@ ${languageInstruction}
                             href={getStoreLink(item.storeKey)} 
                             target="_blank" 
                             rel="noopener noreferrer" 
-                            className="w-full bg-slate-900 text-white py-3 md:py-5 rounded-xl md:rounded-[1.5rem] font-black text-base md:text-lg active:bg-blue-600 md:hover:bg-blue-600 transition-all flex justify-center items-center gap-2 shadow-xl active:shadow-blue-200 md:hover:shadow-blue-200 active:scale-95 text-center group/btn"
+                            className="w-full bg-slate-900 text-white py-4 md:py-5 rounded-[1.5rem] font-black text-lg hover:bg-blue-600 transition-all flex justify-center items-center gap-2 shadow-xl hover:shadow-blue-200 active:scale-95 text-center group/btn"
                           >
                             {t.visitStore}
-                            <ExternalLink size={16} className="md:w-5 md:h-5 group-hover/btn:translate-x-1 transition-transform rtl:group-hover/btn:-translate-x-1" />
+                            <ExternalLink size={20} className="group-hover/btn:translate-x-1 transition-transform rtl:group-hover/btn:-translate-x-1" />
                           </a>
                         </div>
                       </div>

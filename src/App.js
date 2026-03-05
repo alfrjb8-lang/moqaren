@@ -83,6 +83,14 @@ const translations = {
     quickLinks: 'روابط سريعة',
     legal: 'قانوني',
     contactTitle: 'تواصل معنا',
+    contactPageTitle: 'تواصل معنا 📞',
+    contactPageDesc: 'حنا هنا عشان نسمعك، سواء عندك اقتراح أو مشكلة.',
+    sendMessage: 'أرسل رسالة مباشرة ✉️',
+    namePlaceholder: 'الاسم',
+    contactEmailPlaceholder: 'الإيميل',
+    messagePlaceholder: 'اكتب رسالتك هنا...',
+    sendButton: 'إرسال',
+    backToHome: 'الرجوع للرئيسية',
     rights: 'جميع الحقوق محفوظة لموقع مقارن © 2026',
     madeIn: 'صُنع بحب في السعودية 🇸🇦',
     privacy: 'سياسة الخصوصية',
@@ -208,6 +216,14 @@ const translations = {
     quickLinks: 'Quick Links',
     legal: 'Legal',
     contactTitle: 'Contact Us',
+    contactPageTitle: 'Contact Us 📞',
+    contactPageDesc: "We're here to hear you, whether you have a suggestion or a problem.",
+    sendMessage: 'Send a direct message ✉️',
+    namePlaceholder: 'Name',
+    contactEmailPlaceholder: 'Email',
+    messagePlaceholder: 'Write your message here...',
+    sendButton: 'Send',
+    backToHome: 'Back to Home',
     rights: 'All rights reserved moqaren © 2026',
     madeIn: 'Made with love in Saudi Arabia 🇸🇦',
     privacy: 'Privacy Policy',
@@ -2881,13 +2897,13 @@ ${languageInstruction}
                   
                   <div 
                     ref={resultsContainerRef}
-                    className="flex flex-col gap-6 md:flex-row md:overflow-x-auto pb-6 md:pb-0 md:gap-8 md:grid md:grid-cols-3 md:overflow-visible scrollbar-hide touch-pan-y"
+                    className="flex flex-row overflow-x-auto gap-4 snap-x snap-mandatory scrollbar-hide pb-6 md:pb-0 md:grid md:grid-cols-3 md:gap-8 md:overflow-visible"
                     style={{ touchAction: 'pan-y' }}
                   >
                     {results.map((item) => (
                       <div 
                         key={item.id} 
-                        className="bg-white rounded-2xl md:rounded-[2.5rem] shadow-xl md:hover:shadow-2xl transition-all duration-300 border border-slate-100 overflow-hidden w-full md:w-auto flex-shrink-0 md:flex-grow active:scale-[0.99] md:hover:-translate-y-2"
+                        className="bg-white rounded-2xl md:rounded-[2.5rem] shadow-xl md:hover:shadow-2xl transition-all duration-300 border border-slate-100 overflow-hidden w-[80vw] md:w-auto flex-shrink-0 snap-start md:snap-align-none active:scale-[0.99] md:hover:-translate-y-2"
                         style={{ touchAction: 'pan-y' }}
                       >
                         {item.store.includes('شريك') && (
@@ -2896,13 +2912,13 @@ ${languageInstruction}
                           </div>
                         )}
                         
-                        <div className={`${item.storeColor} py-4 md:py-8 px-4 md:px-8 text-white flex justify-between items-start relative overflow-hidden`}>
+                        <div className={`${item.storeColor} py-3 md:py-8 px-3 md:px-8 text-white flex justify-between items-start relative overflow-hidden`}>
                           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
                           <div>
-                            <span className="font-black text-lg md:text-2xl tracking-tighter block mb-1">{item.store}</span>
+                            <span className="font-black text-base md:text-2xl tracking-tighter block mb-1">{item.store}</span>
                             <div className="flex gap-1.5 md:gap-2">
                               <div className="bg-white/20 px-2 md:px-3 py-0.5 md:py-1 rounded-full text-[9px] md:text-[10px] font-black uppercase backdrop-blur-md inline-flex items-center gap-0.5 md:gap-1">
-                                <Shield size={8} className="md:w-2.5 md:h-2.5" /> {t.trusted}
+                                <Shield size={14} className="w-3.5 h-3.5 md:w-2.5 md:h-2.5" /> {t.trusted}
                               </div>
                               {item.isRealData ? (
                                 <div className="bg-green-500/80 px-3 py-1 rounded-full text-[10px] font-black uppercase backdrop-blur-md inline-flex items-center gap-1">
@@ -2917,10 +2933,10 @@ ${languageInstruction}
                           </div>
                           <div className="relative z-10 flex gap-1.5 md:gap-2">
                             <button onClick={() => handleShare(item)} className="bg-white/20 active:bg-white active:text-blue-600 md:hover:bg-white md:hover:text-blue-600 p-1.5 md:p-2 rounded-full transition-all text-white backdrop-blur-md" title="مشاركة">
-                              <Share2 size={16} className="md:w-5 md:h-5" />
+                              <Share2 size={14} className="w-3.5 h-3.5 md:w-5 md:h-5" />
                             </button>
                             <button onClick={() => toggleFavorite(item)} className="bg-white/20 active:bg-white active:text-red-500 md:hover:bg-white md:hover:text-red-500 p-1.5 md:p-2 rounded-full transition-all text-white backdrop-blur-md" title="مفضلتي">
-                              <Heart size={16} className={`md:w-5 md:h-5 ${isFavorite(item) ? 'fill-red-500 text-red-500' : ''}`} />
+                              <Heart size={14} className={`w-3.5 h-3.5 md:w-5 md:h-5 ${isFavorite(item) ? 'fill-red-500 text-red-500' : ''}`} />
                             </button>
                           </div>
                         </div>
@@ -2945,8 +2961,8 @@ ${languageInstruction}
                           </div>
                         </div>
                         
-                        <div className="p-4 md:p-8 flex-grow flex flex-col overflow-y-auto min-h-0" style={{ touchAction: 'pan-y' }}>
-                          <div className="flex justify-between items-end mb-4 md:mb-8 border-b border-dashed border-slate-200 pb-3 md:pb-6">
+                        <div className="p-3 md:p-8 flex-grow flex flex-col overflow-y-auto min-h-0 space-y-2 md:space-y-0" style={{ touchAction: 'pan-y' }}>
+                          <div className="flex justify-between items-end mb-2 md:mb-8 border-b border-dashed border-slate-200 pb-2 md:pb-6">
                             <div>
                               <span className="text-2xl md:text-5xl font-black text-slate-900 leading-none tracking-tighter">{item.price}</span>
                               <span className="text-sm md:text-lg text-slate-400 font-bold mx-1 md:mx-2 uppercase">{item.currency}</span>
@@ -2954,25 +2970,25 @@ ${languageInstruction}
                             <div className="text-[10px] md:text-xs text-red-400 line-through font-black opacity-50 mb-0.5 md:mb-2">{item.originalPrice}</div>
                           </div>
                           
-                          <div className="space-y-3 md:space-y-5 mb-4 md:mb-8 flex-grow">
-                            <div className="flex items-center gap-2 md:gap-4 text-xs md:text-sm font-bold text-slate-700 bg-slate-50 p-2.5 md:p-3 rounded-xl md:rounded-2xl">
-                              <Star size={14} className="text-yellow-400 fill-yellow-400 shrink-0 md:w-[18px] md:h-[18px]" />
+                          <div className="space-y-2 md:space-y-5 mb-4 md:mb-8 flex-grow">
+                            <div className="flex items-center gap-2 md:gap-4 text-xs md:text-sm font-bold text-slate-700 bg-slate-50 p-2 md:p-3 rounded-xl md:rounded-2xl">
+                              <Star size={14} className="text-yellow-400 fill-yellow-400 shrink-0 w-3.5 h-3.5 md:w-[18px] md:h-[18px]" />
                               <div className="flex-1 min-w-0">
                                 <span className="block text-slate-900 text-xs md:text-base">{item.rating} {t.rating}</span>
                                 <span className="text-slate-400 font-medium text-[10px] md:text-xs">{t.from} {item.reviewsCount.toLocaleString()} {t.client}</span>
                               </div>
                             </div>
                             
-                            <div className="flex items-center gap-2 md:gap-4 text-xs md:text-sm font-bold text-slate-700 bg-slate-50 p-2.5 md:p-3 rounded-xl md:rounded-2xl">
-                              <Shield size={14} className="text-blue-500 shrink-0 md:w-[18px] md:h-[18px]" />
+                            <div className="flex items-center gap-2 md:gap-4 text-xs md:text-sm font-bold text-slate-700 bg-slate-50 p-2 md:p-3 rounded-xl md:rounded-2xl">
+                              <Shield size={14} className="text-blue-500 shrink-0 w-3.5 h-3.5 md:w-[18px] md:h-[18px]" />
                               <div className="flex-1 min-w-0">
                                 <span className="block text-slate-900 text-xs md:text-base">{t.warrantyTitle}</span>
                                 <span className="text-slate-400 font-medium text-[10px] md:text-xs">{item.warranty}</span>
                               </div>
                             </div>
                             
-                            <div className="flex items-center gap-2 md:gap-4 text-xs md:text-sm font-bold text-slate-700 bg-slate-50 p-2.5 md:p-3 rounded-xl md:rounded-2xl">
-                              <ShoppingCart size={14} className="text-indigo-500 shrink-0 md:w-[18px] md:h-[18px]" />
+                            <div className="flex items-center gap-2 md:gap-4 text-xs md:text-sm font-bold text-slate-700 bg-slate-50 p-2 md:p-3 rounded-xl md:rounded-2xl">
+                              <ShoppingCart size={14} className="text-indigo-500 shrink-0 w-3.5 h-3.5 md:w-[18px] md:h-[18px]" />
                               <div className="flex-1 min-w-0">
                                 <span className="block text-slate-900 text-xs md:text-base">{t.deliveryTitle}</span>
                                 <span className="text-slate-400 font-medium text-[10px] md:text-xs">{item.delivery}</span>
@@ -2980,8 +2996,8 @@ ${languageInstruction}
                             </div>
                           </div>
                           
-                          <div className="bg-blue-50 p-3 md:p-5 rounded-xl md:rounded-2xl text-[11px] md:text-xs text-blue-800 mb-4 md:mb-8 font-bold leading-relaxed flex gap-2 md:gap-3 items-start">
-                            <Info size={14} className="shrink-0 mt-0.5 md:w-4 md:h-4" />
+                          <div className="bg-blue-50 p-2 md:p-5 rounded-xl md:rounded-2xl text-[11px] md:text-xs text-blue-800 mb-4 md:mb-8 font-bold leading-relaxed flex gap-2 md:gap-3 items-start">
+                            <Info size={14} className="shrink-0 w-3.5 h-3.5 mt-0.5 md:w-4 md:h-4" />
                             "{item.aiAnalysis}"
                           </div>
 
@@ -3017,10 +3033,10 @@ ${languageInstruction}
                             href={getStoreLink(item.storeKey)} 
                             target="_blank" 
                             rel="noopener noreferrer" 
-                            className="w-full bg-slate-900 text-white py-4 md:py-5 rounded-[1.5rem] font-black text-lg hover:bg-blue-600 transition-all flex justify-center items-center gap-2 shadow-xl hover:shadow-blue-200 active:scale-95 text-center group/btn"
+                            className="w-full bg-slate-900 text-white py-3 md:py-5 rounded-[1.5rem] font-black text-base md:text-lg hover:bg-blue-600 transition-all flex justify-center items-center gap-2 shadow-xl hover:shadow-blue-200 active:scale-95 text-center group/btn"
                           >
                             {t.visitStore}
-                            <ExternalLink size={20} className="group-hover/btn:translate-x-1 transition-transform rtl:group-hover/btn:-translate-x-1" />
+                            <ExternalLink size={14} className="w-3.5 h-3.5 md:w-5 md:h-5 group-hover/btn:translate-x-1 transition-transform rtl:group-hover/btn:-translate-x-1" />
                           </a>
                         </div>
                       </div>
@@ -3133,7 +3149,7 @@ ${languageInstruction}
               <>
                 <section id="about" className="mb-32 scroll-mt-32 mt-32">
                   <div className="text-center mb-16"><h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-6">{t.howItWorksTitle}</h2><p className="text-slate-500 font-bold text-xl">{t.threeStepsDesc}</p></div>
-                  <div className="grid md:grid-cols-3 gap-8">{[{ icon: MousePointer2, title: t.step1Title, desc: t.step1Desc, color: 'blue' }, { icon: Cpu, title: t.step2Title, desc: t.step2Desc, color: 'indigo' }, { icon: Rocket, title: t.step3Title, desc: t.step3Desc, color: 'green' }].map((item, i) => (<div key={i} className="bg-white p-12 rounded-[3rem] shadow-xl border border-slate-100 hover:-translate-y-2 transition-all text-center group"><div className={`bg-${item.color}-50 text-${item.color}-600 w-24 h-24 rounded-[2rem] flex items-center justify-center mx-auto mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}><item.icon size={48} /></div><h3 className="text-2xl font-black mb-4 text-slate-900">{item.title}</h3><p className="text-slate-500 font-bold leading-relaxed">{item.desc}</p></div>))}</div>
+                  <div className="flex flex-row overflow-x-auto gap-3 snap-x snap-mandatory scrollbar-hide flex-nowrap md:grid md:grid-cols-3 md:gap-8 md:overflow-visible md:flex-wrap pb-2 md:pb-0">{[{ icon: MousePointer2, title: t.step1Title, desc: t.step1Desc, color: 'blue' }, { icon: Cpu, title: t.step2Title, desc: t.step2Desc, color: 'indigo' }, { icon: Rocket, title: t.step3Title, desc: t.step3Desc, color: 'green' }].map((item, i) => (<div key={i} className="bg-white p-4 md:p-12 rounded-[3rem] shadow-xl border border-slate-100 hover:-translate-y-2 transition-all text-center group w-64 flex-shrink-0 snap-start md:w-auto md:snap-align-none"><div className={`bg-${item.color}-50 text-${item.color}-600 w-16 h-16 md:w-24 md:h-24 rounded-[2rem] flex items-center justify-center mx-auto mb-4 md:mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}><item.icon className="w-8 h-8 md:w-12 md:h-12 shrink-0" /></div><h3 className="text-base md:text-2xl font-black mb-2 md:mb-4 text-slate-900">{item.title}</h3><p className="text-slate-500 font-bold leading-relaxed text-xs md:text-base">{item.desc}</p></div>))}</div>
                 </section>
                 
                 <section id="how-we-earn" className="bg-slate-900 rounded-[3rem] p-10 md:p-24 text-white text-center shadow-2xl mb-32 scroll-mt-32 relative overflow-hidden">
@@ -4785,22 +4801,22 @@ ${languageInstruction}
       {view === 'contact' && (
         <div className="max-w-6xl mx-auto px-4 py-32 animate-in fade-in">
            <div className="text-center mb-16">
-              <h1 className="text-4xl font-black text-slate-900 mb-4">{t.contactTitle} 📞</h1>
-              <p className="text-slate-500 font-bold text-xl">حنا هنا عشان نسمعك، سواء عندك اقتراح أو مشكلة.</p>
+              <h1 className="text-4xl font-black text-slate-900 mb-4">{t.contactPageTitle}</h1>
+              <p className="text-slate-500 font-bold text-xl">{t.contactPageDesc}</p>
            </div>
            <div className="grid md:grid-cols-2 gap-10">
               <div className="space-y-6">
                  <div className="bg-white p-8 rounded-[2.5rem] shadow-lg border border-slate-50 flex items-center gap-6 hover:-translate-y-1 transition-transform">
                     <div className="bg-blue-100 text-blue-600 p-4 rounded-2xl"><Mail size={28} /></div>
                     <div>
-                      <h3 className="font-black text-lg text-slate-800">الإيميل</h3>
+                      <h3 className="font-black text-lg text-slate-800">{t.contactEmailPlaceholder}</h3>
                       <p className="text-blue-600 font-bold">{adminConfig.supportEmail}</p>
                     </div>
                  </div>
                  <div className="bg-white p-8 rounded-[2.5rem] shadow-lg border border-slate-50 flex items-center gap-6 hover:-translate-y-1 transition-transform">
                     <div className="bg-purple-100 text-purple-600 p-4 rounded-2xl"><Send size={28} /></div>
                     <div>
-                      <h3 className="font-black text-lg text-slate-800">سوشيال ميديا</h3>
+                      <h3 className="font-black text-lg text-slate-800">{lang === 'ar' ? 'سوشيال ميديا' : 'Social media'}</h3>
                       <div className="flex gap-3 mt-1">
                         <a href={adminConfig.twitterLink} className="text-slate-400 hover:text-blue-500 transition-colors"><Music size={20} /></a>
                         <a href={adminConfig.instagramLink} className="text-slate-400 hover:text-pink-500 transition-colors"><Instagram size={20} /></a>
@@ -4809,12 +4825,12 @@ ${languageInstruction}
                  </div>
               </div>
               <div className="bg-white p-10 rounded-[2.5rem] shadow-xl border border-slate-50 h-full">
-                 <h3 className="text-2xl font-black mb-6 text-slate-900">أرسل رسالة مباشرة ✉️</h3>
+                 <h3 className="text-2xl font-black mb-6 text-slate-900">{t.sendMessage}</h3>
                  <form className="space-y-4" onSubmit={handleContactSubmit}>
                     <input 
                       type="text" 
                       className="w-full p-4 rounded-2xl bg-slate-50 border-none font-bold focus:ring-4 focus:ring-blue-100" 
-                      placeholder="الاسم" 
+                      placeholder={t.namePlaceholder} 
                       required 
                       value={contactForm.name} 
                       onChange={e => setContactForm({...contactForm, name: e.target.value})} 
@@ -4822,27 +4838,27 @@ ${languageInstruction}
                     <input 
                       type="email" 
                       className="w-full p-4 rounded-2xl bg-slate-50 border-none font-bold focus:ring-4 focus:ring-blue-100" 
-                      placeholder="الإيميل" 
+                      placeholder={t.contactEmailPlaceholder} 
                       required 
                       value={contactForm.email} 
                       onChange={e => setContactForm({...contactForm, email: e.target.value})} 
                     />
                     <textarea 
                       className="w-full p-4 rounded-2xl bg-slate-50 border-none font-bold focus:ring-4 focus:ring-blue-100 h-32 resize-none" 
-                      placeholder="اكتب رسالتك هنا..." 
+                      placeholder={t.messagePlaceholder} 
                       required 
                       value={contactForm.message} 
                       onChange={e => setContactForm({...contactForm, message: e.target.value})}
                     ></textarea>
                     <button type="submit" className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-lg shadow-lg hover:bg-slate-800 transition-all">
-                      إرسال
+                      {t.sendButton}
                     </button>
                  </form>
               </div>
            </div>
            <div className="text-center mt-16">
              <button onClick={resetToHome} className="text-slate-400 font-bold hover:text-blue-600 flex items-center justify-center gap-2 mx-auto">
-               <ArrowLeft size={16} /> الرجوع للرئيسية
+               <ArrowLeft size={16} /> {t.backToHome}
              </button>
            </div>
         </div>

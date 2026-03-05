@@ -9,7 +9,7 @@ import {
   Instagram, Send, Settings, Eye, EyeOff, Save, ArrowLeft, Plus, Trash2, X,
   FileText, Activity, Globe, ChevronLeft, Coins, Database, Bell, MessageCircle, BarChart2, Flame, Languages, Link, Server,
   ChevronRight, Clock, XCircle, Share2, Calendar, TrendingUp, Filter, UserCheck, LogOut,
-  Brain, Hexagon, Key, Upload, Image, Type, AlignLeft, Layers, Grid, Move, Camera, Loader2, Sparkles, Music
+  Brain, Hexagon, Key, Upload, Image, Type, AlignLeft, Layers, Grid, Move, Camera, Loader2, Sparkles
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, onSnapshot, collection, increment, updateDoc, addDoc, deleteDoc, getDocs, arrayUnion, serverTimestamp, query, orderBy, limit } from 'firebase/firestore';
@@ -20,6 +20,13 @@ import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, 
 // ============================
 const MapPinIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+);
+
+// أيقونة تيك توك الرسمية (lucide-react لا تتضمنها)
+const TikTokIcon = ({ size = 20, className = '' }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+  </svg>
 );
 
 // ============================
@@ -158,7 +165,9 @@ const translations = {
     aiQaNoQuestionsYet: 'ما فيه أسئلة سابقة لهذا البحث.',
     aiQaQuestionLabel: 'سؤال',
     aiQaAnswerLabel: 'إجابة',
-    aiQaThinking: 'جاري التفكير...'
+    aiQaThinking: 'جاري التفكير...',
+    riyadhAddress: 'الرياض، المملكة العربية السعودية',
+    showMoreFeedback: 'عرض المزيد'
   },
   en: {
     siteName: 'moqaren',
@@ -291,7 +300,9 @@ const translations = {
     aiQaNoQuestionsYet: 'No questions for this search yet.',
     aiQaQuestionLabel: 'Question',
     aiQaAnswerLabel: 'Answer',
-    aiQaThinking: 'Thinking...'
+    aiQaThinking: 'Thinking...',
+    riyadhAddress: 'Riyadh, Kingdom of Saudi Arabia',
+    showMoreFeedback: 'Show more'
   }
 };
 
@@ -621,6 +632,7 @@ const App = () => {
   const [publicFeedbackList, setPublicFeedbackList] = useState([]);
   const [adminFeedbackList, setAdminFeedbackList] = useState([]);
   const [feedbackReplyDrafts, setFeedbackReplyDrafts] = useState({});
+  const [showMoreFeedback, setShowMoreFeedback] = useState(false);
   
   // ============================
   // 🎯 نظام إدارة الهيدر المتقدم (شعارات + نصوص)
@@ -1174,6 +1186,7 @@ const App = () => {
   // 11. useEffect Hooks
   // ============================
   
+  // تحسين سحب بطاقات النتائج في الجوال: requestAnimationFrame + معالجة لمس صحيحة
   useEffect(() => {
     const container = resultsContainerRef.current;
     if (!container || !results || window.innerWidth >= 768) return;
@@ -1181,6 +1194,7 @@ const App = () => {
     let isDown = false;
     let startX;
     let scrollLeft;
+    let rafId = null;
 
     const handleMouseDown = (e) => {
       isDown = true;
@@ -1199,33 +1213,44 @@ const App = () => {
       container.scrollLeft = scrollLeft - walk;
     };
 
+    const handleTouchStart = (e) => {
+      isDown = true;
+      startX = e.touches[0].pageX - container.offsetLeft;
+      scrollLeft = container.scrollLeft;
+    };
+
+    const handleTouchEnd = () => { isDown = false; };
+
+    const handleTouchMove = (e) => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.touches[0].pageX - container.offsetLeft;
+      const walk = (x - startX) * 2;
+      const targetScroll = scrollLeft - walk;
+      if (rafId !== null) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        container.scrollLeft = targetScroll;
+        rafId = null;
+      });
+    };
+
     container.addEventListener('mousedown', handleMouseDown);
     container.addEventListener('mouseleave', handleMouseLeave);
     container.addEventListener('mouseup', handleMouseUp);
     container.addEventListener('mousemove', handleMouseMove);
-
-    container.addEventListener('touchstart', (e) => {
-      isDown = true;
-      startX = e.touches[0].pageX - container.offsetLeft;
-      scrollLeft = container.scrollLeft;
-    });
-
-    container.addEventListener('touchend', () => { isDown = false; });
-    container.addEventListener('touchmove', (e) => {
-      if (!isDown) return;
-      const x = e.touches[0].pageX - container.offsetLeft;
-      const walk = (x - startX) * 2;
-      container.scrollLeft = scrollLeft - walk;
-    });
+    container.addEventListener('touchstart', handleTouchStart, { passive: true });
+    container.addEventListener('touchend', handleTouchEnd, { passive: true });
+    container.addEventListener('touchmove', handleTouchMove, { passive: false });
 
     return () => {
+      if (rafId !== null) cancelAnimationFrame(rafId);
       container.removeEventListener('mousedown', handleMouseDown);
       container.removeEventListener('mouseleave', handleMouseLeave);
       container.removeEventListener('mouseup', handleMouseUp);
       container.removeEventListener('mousemove', handleMouseMove);
-      container.removeEventListener('touchstart', handleMouseDown);
-      container.removeEventListener('touchend', handleMouseUp);
-      container.removeEventListener('touchmove', handleMouseMove);
+      container.removeEventListener('touchstart', handleTouchStart);
+      container.removeEventListener('touchend', handleTouchEnd);
+      container.removeEventListener('touchmove', handleTouchMove);
     };
   }, [results]);
 
@@ -1370,11 +1395,29 @@ const App = () => {
   // 13. وظائف التسويق والاشتراكات
   // ============================
   
+  // تحقق صارم من صحة الإيميل (للتقليل من الأخطاء والرسائل الوهمية)
+  const isValidEmailFormat = (value) => {
+    const v = String(value || '').trim().toLowerCase();
+    if (v.length < 5 || v.length > 128) return false;
+    const regex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
+    return regex.test(v);
+  };
+
   const handleSubscribe = async (e) => {
       if (e && typeof e.preventDefault === 'function') e.preventDefault();
-      console.log('handleSubscribe called', { hasUser: !!user, email: promoEmail?.slice(0, 5) + '...', isSubscribing });
 
-      if (!promoEmail || isSubscribing) return;
+      const emailRaw = (promoEmail || '').trim();
+      if (!emailRaw) {
+        showNotification(lang === 'ar' ? 'الرجاء إدخال بريدك الإلكتروني' : 'Please enter your email', 'error');
+        return;
+      }
+      if (isSubscribing) return;
+
+      const email = emailRaw.toLowerCase();
+      if (!isValidEmailFormat(email)) {
+        showNotification(lang === 'ar' ? 'صيغة البريد الإلكتروني غير صحيحة. مثال: name@example.com' : 'Invalid email format. Example: name@example.com', 'error');
+        return;
+      }
 
       let currentUser = user;
       if (!currentUser) {
@@ -1382,7 +1425,7 @@ const App = () => {
           const cred = await signInAnonymously(auth);
           currentUser = cred?.user || auth.currentUser;
         } catch (anonErr) {
-          console.log('handleSubscribe: anonymous sign-in failed', anonErr);
+          console.warn('handleSubscribe: anonymous sign-in failed', anonErr);
           showNotification(lang === 'ar' ? 'جاري التحقق، حاول مرة أخرى' : 'Verifying, please try again', 'error');
           return;
         }
@@ -1392,16 +1435,11 @@ const App = () => {
         return;
       }
 
-      const email = promoEmail.trim().toLowerCase();
-      const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(email);
-      if (!isValidEmail) {
-        showNotification(lang === 'ar' ? 'اكتب إيميل صحيح' : 'Please enter a valid email', 'error');
-        return;
-      }
-
       setIsSubscribing(true);
       try {
-          const subDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'newsletter_subscribers', email);
+          // استخدام معرف مستند آمن (يتجنب رموز غير مسموحة في Firestore مثل /)
+          const safeDocId = toSafeDocId(email);
+          const subDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'newsletter_subscribers', safeDocId);
           const cleanTerm = (searchQuery || '').trim().toLowerCase();
           const payload = {
             email,
@@ -1417,7 +1455,6 @@ const App = () => {
           }
 
           await setDoc(subDocRef, payload, { merge: true });
-          console.log('handleSubscribe: saved to newsletter_subscribers', email);
 
           localStorage.setItem('moqaren_user_email', email);
           setSubscriberEmail(email);
@@ -1425,8 +1462,13 @@ const App = () => {
           setShowPromoPopup(false);
           showNotification(t.thanksSubscribe);
       } catch (error) {
-          console.error("Subscription error", error);
-          showNotification(lang === 'ar' ? 'تعذر حفظ الاشتراك، حاول لاحقاً' : 'Failed to save subscription', 'error');
+          console.error('Subscription error', error);
+          const msg = error?.code === 'permission-denied'
+            ? (lang === 'ar' ? 'صلاحية غير كافية. تواصل مع الإدارة.' : 'Permission denied. Contact admin.')
+            : error?.message?.includes('network')
+            ? (lang === 'ar' ? 'تحقق من الاتصال بالإنترنت وحاول مرة أخرى' : 'Check your connection and try again')
+            : (lang === 'ar' ? 'تعذر حفظ الاشتراك. حاول لاحقاً.' : 'Failed to save subscription. Try again later.');
+          showNotification(msg, 'error');
       } finally {
           setIsSubscribing(false);
       }
@@ -3149,7 +3191,7 @@ ${languageInstruction}
               <>
                 <section id="about" className="mb-32 scroll-mt-32 mt-32">
                   <div className="text-center mb-16"><h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-6">{t.howItWorksTitle}</h2><p className="text-slate-500 font-bold text-xl">{t.threeStepsDesc}</p></div>
-                  <div className="flex flex-row overflow-x-auto gap-3 snap-x snap-mandatory scrollbar-hide flex-nowrap md:grid md:grid-cols-3 md:gap-8 md:overflow-visible md:flex-wrap pb-2 md:pb-0">{[{ icon: MousePointer2, title: t.step1Title, desc: t.step1Desc, color: 'blue' }, { icon: Cpu, title: t.step2Title, desc: t.step2Desc, color: 'indigo' }, { icon: Rocket, title: t.step3Title, desc: t.step3Desc, color: 'green' }].map((item, i) => (<div key={i} className="bg-white p-4 md:p-12 rounded-[3rem] shadow-xl border border-slate-100 hover:-translate-y-2 transition-all text-center group w-64 flex-shrink-0 snap-start md:w-auto md:snap-align-none"><div className={`bg-${item.color}-50 text-${item.color}-600 w-16 h-16 md:w-24 md:h-24 rounded-[2rem] flex items-center justify-center mx-auto mb-4 md:mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}><item.icon className="w-8 h-8 md:w-12 md:h-12 shrink-0" /></div><h3 className="text-base md:text-2xl font-black mb-2 md:mb-4 text-slate-900">{item.title}</h3><p className="text-slate-500 font-bold leading-relaxed text-xs md:text-base">{item.desc}</p></div>))}</div>
+                  <div className="flex flex-row overflow-x-auto gap-3 snap-x snap-mandatory scrollbar-hide flex-nowrap md:grid md:grid-cols-3 md:gap-8 md:overflow-visible md:flex-wrap pb-2 md:pb-0">{[{ icon: MousePointer2, title: t.step1Title, desc: t.step1Desc, color: 'blue' }, { icon: Cpu, title: t.step2Title, desc: t.step2Desc, color: 'indigo' }, { icon: Rocket, title: t.step3Title, desc: t.step3Desc, color: 'green' }].map((item, i) => (<div key={i} className="bg-white p-4 md:p-12 rounded-2xl md:rounded-[3rem] shadow-none md:shadow-xl border border-slate-200 md:border-slate-100 hover:-translate-y-2 transition-all text-center group w-64 flex-shrink-0 snap-start md:w-auto md:snap-align-none"><div className={`bg-${item.color}-50 text-${item.color}-600 w-16 h-16 md:w-24 md:h-24 rounded-xl md:rounded-[2rem] flex items-center justify-center mx-auto mb-4 md:mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}><item.icon className="w-8 h-8 md:w-12 md:h-12 shrink-0" /></div><h3 className="text-base md:text-2xl font-black mb-2 md:mb-4 text-slate-900">{item.title}</h3><p className="text-slate-500 font-bold leading-relaxed text-xs md:text-base">{item.desc}</p></div>))}</div>
                 </section>
                 
                 <section id="how-we-earn" className="bg-slate-900 rounded-[3rem] p-10 md:p-24 text-white text-center shadow-2xl mb-32 scroll-mt-32 relative overflow-hidden">
@@ -3160,35 +3202,36 @@ ${languageInstruction}
                 
                 <section id="why-trust" className="mb-32 scroll-mt-32">
                     <div className="text-center mb-16"><h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-6">{t.trustTitle}</h2><div className="inline-flex items-center gap-3 bg-blue-50 text-blue-900 px-6 py-3 rounded-full font-black text-lg animate-bounce"><Activity size={24} className="text-blue-600" /><span>{realSearchCount.toLocaleString()} {t.realSearch}</span></div></div>
-                    <div className="flex flex-row overflow-x-auto gap-3 snap-x snap-mandatory scrollbar-hide flex-nowrap pb-4 md:grid md:grid-cols-3 md:gap-8 md:overflow-visible md:flex-wrap"><div className="bg-white p-4 md:p-12 rounded-[3rem] shadow-xl border border-slate-100 hover:shadow-2xl transition-all w-64 flex-shrink-0 snap-start md:w-auto"><div className="bg-blue-50 text-blue-600 w-16 h-16 md:w-20 md:h-20 rounded-[2rem] flex items-center justify-center mb-4 md:mb-8"><BarChart3 className="w-8 h-8 md:w-10 md:h-10" /></div><h3 className="text-base md:text-2xl font-black mb-2 md:mb-4 text-slate-900">{t.trust1Title}</h3><p className="text-slate-500 font-bold leading-relaxed text-xs md:text-base">{t.trust1Desc}</p></div><div className="bg-white p-4 md:p-12 rounded-[3rem] shadow-xl border border-slate-100 hover:shadow-2xl transition-all w-64 flex-shrink-0 snap-start md:w-auto"><div className="bg-green-50 text-green-600 w-16 h-16 md:w-20 md:h-20 rounded-[2rem] flex items-center justify-center mb-4 md:mb-8"><Shield className="w-8 h-8 md:w-10 md:h-10" /></div><h3 className="text-base md:text-2xl font-black mb-2 md:mb-4 text-slate-900">{t.trust2Title}</h3><p className="text-slate-500 font-bold leading-relaxed text-xs md:text-base">{t.trust2Desc}</p></div><div className="bg-white p-4 md:p-12 rounded-[3rem] shadow-xl border border-slate-100 hover:shadow-2xl transition-all w-64 flex-shrink-0 snap-start md:w-auto"><div className="bg-purple-50 text-purple-600 w-16 h-16 md:w-20 md:h-20 rounded-[2rem] flex items-center justify-center mb-4 md:mb-8"><Heart className="w-8 h-8 md:w-10 md:h-10" /></div><h3 className="text-base md:text-2xl font-black mb-2 md:mb-4 text-slate-900">{t.trust3Title}</h3><p className="text-slate-500 font-bold leading-relaxed text-xs md:text-base">{t.trust3Desc}</p></div></div>
+                    <div className="flex flex-row overflow-x-auto gap-3 snap-x snap-mandatory scrollbar-hide flex-nowrap pb-4 md:grid md:grid-cols-3 md:gap-8 md:overflow-visible md:flex-wrap"><div className="bg-white p-4 md:p-12 rounded-2xl md:rounded-[3rem] shadow-none md:shadow-xl border border-slate-200 md:border-slate-100 hover:shadow-none md:hover:shadow-2xl transition-all w-64 flex-shrink-0 snap-start md:w-auto"><div className="bg-blue-50 text-blue-600 w-16 h-16 md:w-20 md:h-20 rounded-xl md:rounded-[2rem] flex items-center justify-center mb-4 md:mb-8"><BarChart3 className="w-8 h-8 md:w-10 md:h-10" /></div><h3 className="text-base md:text-2xl font-black mb-2 md:mb-4 text-slate-900">{t.trust1Title}</h3><p className="text-slate-500 font-bold leading-relaxed text-xs md:text-base">{t.trust1Desc}</p></div><div className="bg-white p-4 md:p-12 rounded-2xl md:rounded-[3rem] shadow-none md:shadow-xl border border-slate-200 md:border-slate-100 hover:shadow-none md:hover:shadow-2xl transition-all w-64 flex-shrink-0 snap-start md:w-auto"><div className="bg-green-50 text-green-600 w-16 h-16 md:w-20 md:h-20 rounded-xl md:rounded-[2rem] flex items-center justify-center mb-4 md:mb-8"><Shield className="w-8 h-8 md:w-10 md:h-10" /></div><h3 className="text-base md:text-2xl font-black mb-2 md:mb-4 text-slate-900">{t.trust2Title}</h3><p className="text-slate-500 font-bold leading-relaxed text-xs md:text-base">{t.trust2Desc}</p></div><div className="bg-white p-4 md:p-12 rounded-2xl md:rounded-[3rem] shadow-none md:shadow-xl border border-slate-200 md:border-slate-100 hover:shadow-none md:hover:shadow-2xl transition-all w-64 flex-shrink-0 snap-start md:w-auto"><div className="bg-purple-50 text-purple-600 w-16 h-16 md:w-20 md:h-20 rounded-xl md:rounded-[2rem] flex items-center justify-center mb-4 md:mb-8"><Heart className="w-8 h-8 md:w-10 md:h-10" /></div><h3 className="text-base md:text-2xl font-black mb-2 md:mb-4 text-slate-900">{t.trust3Title}</h3><p className="text-slate-500 font-bold leading-relaxed text-xs md:text-base">{t.trust3Desc}</p></div></div>
                 </section>
 
                 {/* ==================== */}
                 {/* 🆕 آراء وتعليقات العملاء */}
                 {/* ==================== */}
+                {/* قسم آراء العملاء: مصغّر في الجوال (خطوط أصغر، padding أقل، 3 تعليقات + عرض المزيد) */}
                 <section id="customer-feedback" className="mb-10 scroll-mt-32">
-                  <div className="text-center mb-10">
-                    <h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-4">{t.customerFeedbackTitle}</h2>
-                    <p className="text-slate-500 font-bold text-lg">{t.customerFeedbackDesc}</p>
+                  <div className="text-center mb-6 md:mb-10">
+                    <h2 className="text-xl md:text-5xl font-black text-slate-900 mb-2 md:mb-4">{t.customerFeedbackTitle}</h2>
+                    <p className="text-slate-500 font-bold text-sm md:text-lg">{t.customerFeedbackDesc}</p>
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-8">
-                    <div className="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100">
-                      <h3 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-2">
-                        <MessageSquare className="text-blue-600" /> {lang === 'ar' ? 'اكتب رأيك' : 'Write your feedback'}
+                  <div className="grid md:grid-cols-2 gap-4 md:gap-8">
+                    <div className="bg-white p-4 md:p-8 rounded-xl md:rounded-[2.5rem] shadow-none md:shadow-xl border border-slate-200 md:border-slate-100">
+                      <h3 className="text-base md:text-xl font-black text-slate-900 mb-4 md:mb-6 flex items-center gap-2">
+                        <MessageSquare className="text-blue-600 w-4 h-4 md:w-5 md:h-5" /> {lang === 'ar' ? 'اكتب رأيك' : 'Write your feedback'}
                       </h3>
 
-                      <form onSubmit={handleSubmitCustomerFeedback} className="space-y-4">
+                      <form onSubmit={handleSubmitCustomerFeedback} className="space-y-3 md:space-y-4">
                         <input
                           type="text"
-                          className="w-full p-4 rounded-2xl bg-slate-50 border border-slate-200 font-bold focus:ring-4 focus:ring-blue-100"
+                          className="w-full p-3 md:p-4 rounded-xl md:rounded-2xl bg-slate-50 border border-slate-200 font-bold text-sm md:text-base focus:ring-4 focus:ring-blue-100"
                           placeholder={t.yourName}
                           required
                           value={feedbackName}
                           onChange={(e) => setFeedbackName(e.target.value)}
                         />
                         <textarea
-                          className="w-full p-4 rounded-2xl bg-slate-50 border border-slate-200 font-bold focus:ring-4 focus:ring-blue-100 h-32 resize-none"
+                          className="w-full p-3 md:p-4 rounded-xl md:rounded-2xl bg-slate-50 border border-slate-200 font-bold text-sm md:text-base focus:ring-4 focus:ring-blue-100 h-24 md:h-32 resize-none"
                           placeholder={t.yourComment}
                           required
                           value={feedbackMessage}
@@ -3197,42 +3240,53 @@ ${languageInstruction}
                         <button
                           type="submit"
                           disabled={isSendingFeedback}
-                          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-black text-lg shadow-lg transition-all active:scale-95 disabled:bg-slate-400 flex items-center justify-center gap-2"
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 md:py-4 rounded-xl md:rounded-2xl font-black text-sm md:text-lg shadow-lg transition-all active:scale-95 disabled:bg-slate-400 flex items-center justify-center gap-2"
                         >
-                          {isSendingFeedback ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+                          {isSendingFeedback ? <Loader2 size={16} className="animate-spin md:w-[18px] md:h-[18px]" /> : <Send size={16} className="md:w-[18px] md:h-[18px]" />}
                           {isSendingFeedback ? t.sending : t.sendComment}
                         </button>
                       </form>
                     </div>
 
-                    <div className="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100">
-                      <h3 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-2">
-                        <Users className="text-indigo-600" /> {lang === 'ar' ? 'آخر التعليقات' : 'Latest feedback'}
+                    <div className="bg-white p-4 md:p-8 rounded-xl md:rounded-[2.5rem] shadow-none md:shadow-xl border border-slate-200 md:border-slate-100">
+                      <h3 className="text-base md:text-xl font-black text-slate-900 mb-4 md:mb-6 flex items-center gap-2">
+                        <Users className="text-indigo-600 w-4 h-4 md:w-5 md:h-5" /> {lang === 'ar' ? 'آخر التعليقات' : 'Latest feedback'}
                       </h3>
 
-                      <div className="space-y-4 max-h-[420px] overflow-y-auto custom-scrollbar pr-1">
+                      <div className="space-y-3 md:space-y-4 max-h-[320px] md:max-h-[420px] overflow-y-auto custom-scrollbar pr-1">
                         {publicFeedbackList?.length > 0 ? (
-                          publicFeedbackList.slice(0, 10).map((fb) => (
-                            <div key={fb.id} className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
-                              <div className="flex items-start justify-between gap-4 mb-2">
-                                <p className="font-black text-slate-900">{fb.name}</p>
-                                <p className="text-[10px] font-bold text-slate-400 whitespace-nowrap">
-                                  {fb.createdAtIso ? new Date(fb.createdAtIso).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US') : ''}
-                                </p>
-                              </div>
-                              <p className="text-sm font-bold text-slate-700 leading-relaxed whitespace-pre-wrap">{fb.message}</p>
-
-                              {fb.reply && String(fb.reply).trim() && (
-                                <div className="mt-3 bg-white border border-blue-100 rounded-2xl p-3">
-                                  <p className="text-xs font-black text-blue-800 mb-1">{lang === 'ar' ? 'رد الإدارة' : 'Admin reply'}</p>
-                                  <p className="text-sm font-bold text-slate-700 whitespace-pre-wrap">{fb.reply}</p>
+                          <>
+                            {(showMoreFeedback ? publicFeedbackList : publicFeedbackList.slice(0, 3)).map((fb) => (
+                              <div key={fb.id} className="bg-slate-50 border border-slate-200 rounded-xl md:rounded-2xl p-3 md:p-4">
+                                <div className="flex items-start justify-between gap-2 md:gap-4 mb-1 md:mb-2">
+                                  <p className="font-black text-slate-900 text-sm md:text-base">{fb.name}</p>
+                                  <p className="text-[10px] font-bold text-slate-400 whitespace-nowrap">
+                                    {fb.createdAtIso ? new Date(fb.createdAtIso).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US') : ''}
+                                  </p>
                                 </div>
-                              )}
-                            </div>
-                          ))
+                                <p className="text-xs md:text-sm font-bold text-slate-700 leading-relaxed whitespace-pre-wrap">{fb.message}</p>
+
+                                {fb.reply && String(fb.reply).trim() && (
+                                  <div className="mt-2 md:mt-3 bg-white border border-blue-100 rounded-xl md:rounded-2xl p-2 md:p-3">
+                                    <p className="text-[10px] md:text-xs font-black text-blue-800 mb-1">{lang === 'ar' ? 'رد الإدارة' : 'Admin reply'}</p>
+                                    <p className="text-xs md:text-sm font-bold text-slate-700 whitespace-pre-wrap">{fb.reply}</p>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                            {!showMoreFeedback && publicFeedbackList.length > 3 && (
+                              <button
+                                type="button"
+                                onClick={() => setShowMoreFeedback(true)}
+                                className="w-full py-2.5 rounded-xl border-2 border-blue-200 text-blue-600 font-black text-sm hover:bg-blue-50 transition-colors"
+                              >
+                                {t.showMoreFeedback}
+                              </button>
+                            )}
+                          </>
                         ) : (
-                          <div className="text-center py-12 opacity-60">
-                            <p className="font-bold text-slate-500">{t.noFeedback}</p>
+                          <div className="text-center py-8 md:py-12 opacity-60">
+                            <p className="font-bold text-slate-500 text-sm md:text-base">{t.noFeedback}</p>
                           </div>
                         )}
                       </div>
@@ -4818,7 +4872,7 @@ ${languageInstruction}
                     <div>
                       <h3 className="font-black text-lg text-slate-800">{lang === 'ar' ? 'سوشيال ميديا' : 'Social media'}</h3>
                       <div className="flex gap-3 mt-1">
-                        <a href={adminConfig.twitterLink} className="text-slate-400 hover:text-blue-500 transition-colors"><Music size={20} /></a>
+                        <a href={adminConfig.twitterLink} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-slate-900 transition-colors" aria-label="TikTok"><TikTokIcon size={20} /></a>
                         <a href={adminConfig.instagramLink} className="text-slate-400 hover:text-pink-500 transition-colors"><Instagram size={20} /></a>
                       </div>
                     </div>
@@ -4877,7 +4931,7 @@ ${languageInstruction}
               </div>
               <p className="text-slate-400 text-sm leading-relaxed font-medium mb-6">{t.footerDesc}</p>
               <div className="flex gap-4">
-                <a href={adminConfig.twitterLink} className="bg-white/5 hover:bg-blue-500 hover:text-white p-3 rounded-full transition-all"><Music size={18} /></a>
+                <a href={adminConfig.twitterLink} target="_blank" rel="noopener noreferrer" className="bg-white/5 hover:bg-slate-800 hover:text-white p-3 rounded-full transition-all" aria-label="TikTok"><TikTokIcon size={18} /></a>
                 <a href={adminConfig.instagramLink} className="bg-white/5 hover:bg-pink-500 hover:text-white p-3 rounded-full transition-all"><Instagram size={18} /></a>
               </div>
             </div>
@@ -4903,7 +4957,7 @@ ${languageInstruction}
               <h4 className="text-white font-black text-lg mb-6">{t.contactTitle}</h4>
               <ul className="space-y-4 text-sm font-medium">
                 <li className="flex items-center gap-3"><Mail size={18} className="text-blue-500" /><span dir="ltr">{adminConfig.supportEmail}</span></li>
-                <li className="flex items-start gap-3"><MapPinIcon /><span>الرياض، المملكة العربية السعودية</span></li>
+                <li className="flex items-start gap-3"><MapPinIcon /><span>{t.riyadhAddress}</span></li>
               </ul>
             </div>
           </div>

@@ -2633,15 +2633,15 @@ ${languageInstruction}
         t={t}
       />
 
-      {/* الشعار العائم (أعلى اليمين) - mobile: أصغر وبدون نص */}
+      {/* الشعار العائم (أعلى اليمين) - شفاف مع لون أبيض على الأزرق */}
       <button
         onClick={handleLogoClick}
-        className="fixed right-2 md:right-4 top-2 md:top-6 z-[90] bg-white/90 backdrop-blur-xl shadow-xl border border-white/60 rounded-full p-1 md:px-3 md:py-2 flex items-center gap-2 cursor-pointer group active:scale-95 transition-all"
+        className="fixed right-2 md:right-4 top-2 md:top-6 z-[90] backdrop-blur-sm bg-blue-950/30 border border-white/10 shadow-xl rounded-full p-1 md:px-3 md:py-2 flex items-center gap-2 cursor-pointer group active:scale-95 transition-all"
       >
-        <div className="bg-gradient-to-tr from-blue-600 to-indigo-600 p-1 md:p-1.5 rounded-full text-white shadow-lg md:group-hover:scale-110 transition-transform">
+        <div className="bg-white/20 p-1 md:p-1.5 rounded-full text-white shadow-lg md:group-hover:scale-110 transition-transform">
           <Brain size={18} className="w-4 h-4 md:w-[18px] md:h-[18px]" />
         </div>
-        <span className="text-lg font-black text-slate-800 tracking-tighter hidden md:block">
+        <span className="text-lg font-black text-white tracking-tighter hidden md:block">
           {t.siteName}
         </span>
       </button>
@@ -2718,13 +2718,13 @@ ${languageInstruction}
         </div>
       </div>
 
-      {/* زر تبديل اللغة (أعلى اليسار) - mobile: أصغر و top-2 */}
+      {/* زر تبديل اللغة (أعلى اليسار) - شفاف مع لون أبيض على الأزرق */}
       <button 
         onClick={toggleLanguage} 
-        className="fixed left-2 md:left-4 top-2 md:top-6 z-[100] bg-white/90 backdrop-blur-xl shadow-xl border border-white/50 p-2 md:p-3 rounded-full md:hover:scale-110 transition-all active:scale-95 group"
+        className="fixed left-2 md:left-4 top-2 md:top-6 z-[100] backdrop-blur-sm bg-blue-950/30 border border-white/10 p-2 md:p-3 rounded-full md:hover:scale-110 transition-all active:scale-95 group"
         title="Switch Language"
       >
-        <Languages size={20} className="text-slate-600 md:group-hover:text-blue-600 transition-colors w-[18px] h-[18px] md:w-5 md:h-5" />
+        <Languages size={20} className="text-white/90 md:group-hover:text-white transition-colors w-[18px] h-[18px] md:w-5 md:h-5" />
         <span className="absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none font-bold">
           {t.langName}
         </span>
@@ -2745,18 +2745,18 @@ ${languageInstruction}
         </div>
       )}
 
-      {/* شريط التنقل - mobile: padding أقل، تمرير أفقي، زر للشركات مخفي */}
+      {/* شريط التنقل - يطفو فوق الخلفية الزرقاء بتأثير زجاجي */}
       <nav className="fixed top-2 md:top-6 left-0 right-0 z-50 flex justify-center px-2 md:px-4 pointer-events-none">
-        <div className="bg-white/90 backdrop-blur-xl shadow-2xl shadow-blue-900/10 rounded-full px-1 py-1 md:px-2 md:py-2 flex items-center flex-nowrap gap-1 md:gap-2 pointer-events-auto border border-white/50 max-w-full overflow-x-auto no-scrollbar">
+        <div className="backdrop-blur-sm bg-blue-950/30 border border-white/10 rounded-full px-1 py-1 md:px-2 md:py-2 flex items-center flex-nowrap gap-1 md:gap-2 pointer-events-auto max-w-full overflow-x-auto no-scrollbar shadow-2xl shadow-blue-950/20">
           <div className="flex items-center flex-1 flex-nowrap min-w-0">
             {[{ id: 'about', label: t.about, icon: Info, action: () => scrollToSection('about') }, { id: 'features', label: t.features, icon: Star, action: () => scrollToSection('why-trust') }, { id: 'earn', label: t.earn, icon: Coins, action: () => scrollToSection('how-we-earn') }].map((item) => (
-                <button key={item.id} onClick={item.action} className={`px-2 md:px-5 py-1.5 md:py-2 rounded-full font-bold text-xs flex items-center gap-1 md:gap-2 transition-all duration-300 shrink-0 ${view === 'home' ? 'active:bg-blue-50 active:text-blue-600 md:hover:bg-blue-50 md:hover:text-blue-600 text-slate-600' : ''}`}>
-                    <item.icon size={12} className="md:w-3.5 md:h-3.5 opacity-70 shrink-0" />
+                <button key={item.id} onClick={item.action} className="px-2 md:px-5 py-1.5 md:py-2 rounded-full font-bold text-xs flex items-center gap-1 md:gap-2 transition-all duration-300 shrink-0 text-white/90 hover:text-white active:bg-white/10 md:hover:bg-white/10">
+                    <item.icon size={12} className="md:w-3.5 md:h-3.5 opacity-80 shrink-0" />
                     <span className="whitespace-nowrap">{item.label}</span>
                 </button>
             ))}
           </div>
-          <div className="h-6 w-px bg-slate-200 mx-1 hidden md:block shrink-0"></div>
+          <div className="h-6 w-px bg-white/20 mx-1 hidden md:block shrink-0"></div>
           <button onClick={() => setView('merchant')} className="hidden md:flex bg-slate-900 text-white px-5 py-2 rounded-full font-bold text-xs hover:bg-slate-800 shadow-lg items-center gap-2 active:scale-95 transition-all whitespace-nowrap">
             <Award size={14} /> {t.merchant}
           </button>
@@ -2778,8 +2778,8 @@ ${languageInstruction}
       {/* الواجهة الرئيسية */}
       {view === 'home' && (
         <>
-          {/* الهيدر الأزرق مع شعارات ونصوص الشركات */}
-          <div className="bg-gradient-to-b from-slate-950 via-blue-950 to-indigo-900 text-white pt-32 md:pt-40 pb-20 md:pb-32 px-4 relative overflow-hidden rounded-b-2xl md:rounded-b-[5rem] shadow-2xl">
+          {/* الهيدر الأزرق */}
+          <div className="bg-gradient-to-b from-slate-950 via-blue-950 to-indigo-950 text-white pt-32 md:pt-40 pb-64 md:pb-80 px-4 relative overflow-hidden rounded-b-2xl md:rounded-b-[5rem] shadow-2xl">
             {/* طبقة الخلفية المتحركة */}
             <div className="absolute top-0 left-0 w-full h-full opacity-30 pointer-events-none">
                 <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-blue-500 rounded-full blur-[120px] animate-pulse"></div>
@@ -2793,58 +2793,6 @@ ${languageInstruction}
               </pattern>
               <rect width="100%" height="100%" fill="url(#data-grid)" />
             </svg>
-
-            {/* شعارات ونصوص الشركات */}
-            <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
-              {headerElements.map((element) => (
-                <div 
-                  key={element.id}
-                  className={`absolute ${element.position} group transition-all duration-500 hover:scale-150 hover:z-30`}
-                  style={{ 
-                    animationDelay: `${element.delay * 0.5}s`,
-                    animation: 'float 8s ease-in-out infinite'
-                  }}
-                >
-                  {element.type === 'logo' ? (
-                    <div className={`relative ${element.bgColor} rounded-full p-2 shadow-2xl border-2 border-white/30 backdrop-blur-sm`}
-                         style={{ width: `${element.size}px`, height: `${element.size}px` }}>
-                      <img 
-                        src={element.logo} 
-                        alt={element.name}
-                        className="w-full h-full rounded-full object-cover"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(element.name)}&background=random&color=fff&size=64`;
-                        }}
-                      />
-                      <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur-md text-white text-[10px] px-2 py-1 rounded-full whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all duration-300 font-bold border border-white/20">
-                        {element.name}
-                      </div>
-                      <div className="absolute -inset-1 border-2 border-white/30 rounded-full animate-ping opacity-20"></div>
-                    </div>
-                  ) : (
-                    <div 
-                      className={`relative ${element.bgColor} rounded-full shadow-2xl border-2 border-white/30 backdrop-blur-sm flex items-center justify-center px-4`}
-                      style={{ 
-                        height: `${element.size}px`,
-                        minWidth: `${element.size}px`
-                      }}
-                    >
-                      <span 
-                        className={`${element.textColor} font-${element.fontWeight} whitespace-nowrap`}
-                        style={{ fontSize: `${element.fontSize}px` }}
-                      >
-                        {element.text}
-                      </span>
-                      <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur-md text-white text-[10px] px-2 py-1 rounded-full whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all duration-300 font-bold border border-white/20">
-                        {element.text}
-                      </div>
-                      <div className="absolute -inset-1 border-2 border-white/30 rounded-full animate-ping opacity-20"></div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
 
             {/* المحتوى الرئيسي للهيدر */}
             <div className="max-w-4xl mx-auto text-center relative z-10">
@@ -2890,26 +2838,6 @@ ${languageInstruction}
                 {isVisualSearching ? <Loader2 size={22} className="animate-spin" /> : <Camera size={22} />}
                 <span>{t.visualSearch}</span>
               </button>
-              
-              <div className="mt-10 flex flex-wrap justify-center gap-3 text-sm font-bold text-blue-200/60 animate-in fade-in duration-1000 delay-300">
-                <span>{t.trendingLabel}</span>
-                {adminConfig.trendingKeywords && adminConfig.trendingKeywords.length > 0 ? (
-                  adminConfig.trendingKeywords.map((keyword, index) => (
-                    <button 
-                      key={index} 
-                      onClick={() => setSearchQuery(keyword)} 
-                      className="hover:text-white transition-all bg-white/5 px-3 py-1 rounded-full border border-white/5 hover:bg-white/10 hover:border-white/20 active:scale-95"
-                    >
-                      {keyword}
-                    </button>
-                  ))
-                ) : (
-                  <>
-                    <button onClick={() => setSearchQuery('آيفون 15')} className="hover:text-white transition-all bg-white/5 px-3 py-1 rounded-full border border-white/5 hover:bg-white/10">آيفون 15</button>
-                    <button onClick={() => setSearchQuery('سوني 5')} className="hover:text-white transition-all bg-white/5 px-3 py-1 rounded-full border border-white/5 hover:bg-white/10">سوني 5</button>
-                  </>
-                )}
-              </div>
             </div>
           </div>
 
@@ -4659,41 +4587,6 @@ ${languageInstruction}
                 </div>
               </div>
 
-              {/* إدارة الكلمات الرائجة */}
-              <div className="mb-12 bg-orange-50 border border-orange-100 rounded-[2rem] p-8">
-                <h3 className="font-black text-orange-900 border-b border-orange-200 pb-4 mb-6 flex items-center gap-2">
-                  <Flame className="text-orange-600" />
-                  إدارة الكلمات الرائجة
-                </h3>
-                <div className="space-y-4">
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {adminConfig.trendingKeywords?.map((kw, idx) => (
-                      <div key={idx} className="bg-white text-orange-800 px-3 py-2 rounded-xl text-sm font-bold flex items-center gap-2 shadow-sm border border-orange-100">
-                        {kw}
-                        <button onClick={() => handleDeleteTrendingKeyword(idx)} className="text-orange-300 hover:text-red-500 transition-colors">
-                          <X size={14} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex gap-2">
-                    <input 
-                      type="text" 
-                      placeholder="أضف كلمة جديدة" 
-                      className="flex-1 p-4 rounded-xl text-sm font-bold border-none shadow-sm" 
-                      value={newTrendingKeyword} 
-                      onChange={(e) => setNewTrendingKeyword(e.target.value)} 
-                    />
-                    <button 
-                      onClick={handleAddTrendingKeyword} 
-                      className="bg-orange-600 text-white px-6 rounded-xl font-bold text-sm hover:bg-orange-700 shadow-lg shadow-orange-200"
-                    >
-                      <Plus size={20} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
               {/* بيانات التواصل والعروض */}
               <div className="grid md:grid-cols-2 gap-10 mb-12">
                 <div className="space-y-6">
@@ -5021,4 +4914,3 @@ ${languageInstruction}
 };
 
 export default App;
-

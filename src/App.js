@@ -2633,10 +2633,10 @@ ${languageInstruction}
         t={t}
       />
 
-      {/* الشعار العائم (أعلى اليمين) - شفاف مع لون أبيض على الأزرق */}
+      {/* الشعار العائم (أعلى اليمين) - داخل منطقة المحتوى عند الصفحة الرئيسية */}
       <button
         onClick={handleLogoClick}
-        className="fixed right-2 md:right-4 top-2 md:top-6 z-[90] backdrop-blur-sm bg-blue-950/30 border border-white/10 shadow-xl rounded-full p-1 md:px-3 md:py-2 flex items-center gap-2 cursor-pointer group active:scale-95 transition-all"
+        className={`fixed top-2 md:top-6 z-[90] backdrop-blur-sm bg-blue-950/30 border border-white/10 shadow-xl rounded-full p-1 md:px-3 md:py-2 flex items-center gap-2 cursor-pointer group active:scale-95 transition-all ${view === 'home' ? 'right-32 md:right-48 lg:right-64' : 'right-2 md:right-4'}`}
       >
         <div className="bg-white/20 p-1 md:p-1.5 rounded-full text-white shadow-lg md:group-hover:scale-110 transition-transform">
           <Brain size={18} className="w-4 h-4 md:w-[18px] md:h-[18px]" />
@@ -2718,7 +2718,7 @@ ${languageInstruction}
         </div>
       </div>
 
-      {/* زر تبديل اللغة (أعلى اليسار) - شفاف مع لون أبيض على الأزرق */}
+      {/* زر تبديل اللغة (أعلى اليسار) - محاذي لليسار */}
       <button 
         onClick={toggleLanguage} 
         className="fixed left-2 md:left-4 top-2 md:top-6 z-[100] backdrop-blur-sm bg-blue-950/30 border border-white/10 p-2 md:p-3 rounded-full md:hover:scale-110 transition-all active:scale-95 group"
@@ -2745,8 +2745,8 @@ ${languageInstruction}
         </div>
       )}
 
-      {/* شريط التنقل - يطفو فوق الخلفية الزرقاء بتأثير زجاجي */}
-      <nav className="fixed top-2 md:top-6 left-0 right-0 z-50 flex justify-center px-2 md:px-4 pointer-events-none">
+      {/* شريط التنقل - يطفو فوق الخلفية الزرقاء، محاذي لليسار مع المساحة اليمينية */}
+      <nav className={`fixed top-2 md:top-6 left-0 right-0 z-50 flex pointer-events-none ${view === 'home' ? 'pl-4 md:pl-6 pr-32 md:pr-48 lg:pr-64 justify-start' : 'justify-center px-2 md:px-4'}`}>
         <div className="backdrop-blur-sm bg-blue-950/30 border border-white/10 rounded-full px-1 py-1 md:px-2 md:py-2 flex items-center flex-nowrap gap-1 md:gap-2 pointer-events-auto max-w-full overflow-x-auto no-scrollbar shadow-2xl shadow-blue-950/20">
           <div className="flex items-center flex-1 flex-nowrap min-w-0">
             {[{ id: 'about', label: t.about, icon: Info, action: () => scrollToSection('about') }, { id: 'features', label: t.features, icon: Star, action: () => scrollToSection('why-trust') }, { id: 'earn', label: t.earn, icon: Coins, action: () => scrollToSection('how-we-earn') }].map((item) => (
@@ -2763,11 +2763,11 @@ ${languageInstruction}
         </div>
       </nav>
 
-      {/* زر عائم للتعليقات - تحت الـ navbar */}
+      {/* زر عائم للتعليقات - محاذي لليسار في منطقة المحتوى */}
       {view === 'home' && (
         <button
           onClick={() => scrollToSection('customer-feedback')}
-          className="fixed z-40 top-14 md:top-24 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 md:px-5 md:py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-xs md:text-sm shadow-lg shadow-blue-500/30 transition-all active:scale-95"
+          className="fixed z-40 top-14 md:top-24 left-4 md:left-6 flex items-center gap-2 px-4 py-2 md:px-5 md:py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-xs md:text-sm shadow-lg shadow-blue-500/30 transition-all active:scale-95"
           title={t.customerFeedbackTitle}
         >
           <MessageCircle size={18} />
@@ -2775,11 +2775,11 @@ ${languageInstruction}
         </button>
       )}
 
-      {/* الواجهة الرئيسية */}
+      {/* الواجهة الرئيسية - محتوى محاذي لليسار مع مساحة يمينية كبيرة */}
       {view === 'home' && (
         <>
-          {/* الهيدر الأزرق */}
-          <div className="bg-gradient-to-b from-slate-950 via-blue-950 to-indigo-950 text-white pt-32 md:pt-40 pb-64 md:pb-80 px-4 relative overflow-hidden rounded-b-2xl md:rounded-b-[5rem] shadow-2xl">
+          {/* الهيدر الأزرق - الخلفية تغطي كامل العرض */}
+          <div className="bg-gradient-to-b from-slate-950 via-blue-950 to-indigo-950 text-white pt-32 md:pt-40 pb-64 md:pb-80 pl-4 md:pl-6 pr-32 md:pr-48 lg:pr-64 relative overflow-hidden rounded-b-2xl md:rounded-b-[5rem] shadow-2xl">
             {/* طبقة الخلفية المتحركة */}
             <div className="absolute top-0 left-0 w-full h-full opacity-30 pointer-events-none">
                 <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-blue-500 rounded-full blur-[120px] animate-pulse"></div>
@@ -2794,16 +2794,16 @@ ${languageInstruction}
               <rect width="100%" height="100%" fill="url(#data-grid)" />
             </svg>
 
-            {/* المحتوى الرئيسي للهيدر */}
-            <div className="max-w-4xl mx-auto text-center relative z-10">
+            {/* المحتوى الرئيسي للهيدر - محاذي لليسار */}
+            <div className="max-w-4xl mr-auto text-left relative z-10">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/10 text-blue-200 text-xs font-black mb-8 backdrop-blur-md shadow-lg animate-in fade-in slide-in-from-top-4 duration-700">
                 <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span></span>
                 <span>{realSearchCount.toLocaleString()} {t.realSearch}</span>
               </div>
               <h1 className="text-4xl md:text-7xl font-black mb-6 leading-tight drop-shadow-2xl text-white tracking-tight animate-in fade-in slide-in-from-bottom-8 duration-700">{t.heroTitlePart1} <br/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-indigo-300">{t.heroTitlePart2}</span></h1>
-              <p className="text-blue-100 text-lg md:text-2xl mb-12 max-w-2xl mx-auto font-medium leading-relaxed opacity-90 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100">{t.heroDesc}</p>
+              <p className="text-blue-100 text-lg md:text-2xl mb-12 max-w-2xl font-medium leading-relaxed opacity-90 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100">{t.heroDesc}</p>
               
-              <form onSubmit={handleSearch} className="relative max-w-3xl mx-auto group animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
+              <form onSubmit={handleSearch} className="relative max-w-3xl group animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
                 <div className="absolute inset-0 bg-blue-400/20 blur-2xl rounded-[2.5rem] group-hover:bg-blue-400/30 transition-all duration-500"></div>
                 <input 
                   type="text" 
@@ -2831,7 +2831,7 @@ ${languageInstruction}
               <button
                 type="button"
                 onClick={handleOpenVisualSearch}
-                className="mt-4 w-full max-w-xs mx-auto flex items-center justify-center gap-2 py-3 px-6 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold transition-all active:scale-95 backdrop-blur-md"
+                className="mt-4 max-w-xs flex items-center justify-center gap-2 py-3 px-6 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold transition-all active:scale-95 backdrop-blur-md"
                 title={t.visualSearch}
                 aria-label={t.visualSearch}
               >
@@ -2841,7 +2841,8 @@ ${languageInstruction}
             </div>
           </div>
 
-          <main className="max-w-7xl mx-auto px-4 md:px-6 -mt-16 md:-mt-20 relative z-20">
+          <div className="pr-32 md:pr-48 lg:pr-64">
+          <main className="max-w-7xl mr-auto ml-4 md:ml-6 px-4 md:px-6 -mt-16 md:-mt-20 relative z-20">
             {isSearching && (
               <div className="bg-white rounded-2xl md:rounded-[3rem] p-8 md:p-20 shadow-xl border border-slate-100 text-center mb-20 md:mb-32">
                 <div className="relative w-16 h-16 md:w-24 md:h-24 mx-auto mb-6 md:mb-8">
@@ -3117,26 +3118,26 @@ ${languageInstruction}
 
             {!results && !isSearching && (
               <>
+                {/* 1. وش مقارن؟ (About Us) */}
                 <section id="about" className="mb-32 scroll-mt-32 mt-32">
                   <div className="text-center mb-16"><h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-6">{t.howItWorksTitle}</h2><p className="text-slate-500 font-bold text-xl">{t.threeStepsDesc}</p></div>
                   <div className="flex flex-row overflow-x-auto gap-3 snap-x snap-mandatory scrollbar-hide flex-nowrap md:grid md:grid-cols-3 md:gap-8 md:overflow-visible md:flex-wrap pb-2 md:pb-0">{[{ icon: MousePointer2, title: t.step1Title, desc: t.step1Desc, color: 'blue' }, { icon: Cpu, title: t.step2Title, desc: t.step2Desc, color: 'indigo' }, { icon: Rocket, title: t.step3Title, desc: t.step3Desc, color: 'green' }].map((item, i) => (<div key={i} className="bg-white p-4 md:p-12 rounded-2xl md:rounded-[3rem] shadow-none md:shadow-xl border border-slate-200 md:border-slate-100 hover:-translate-y-2 transition-all text-center group w-64 flex-shrink-0 snap-start md:w-auto md:snap-align-none"><div className={`bg-${item.color}-50 text-${item.color}-600 w-16 h-16 md:w-24 md:h-24 rounded-xl md:rounded-[2rem] flex items-center justify-center mx-auto mb-4 md:mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}><item.icon className="w-8 h-8 md:w-12 md:h-12 shrink-0" /></div><h3 className="text-base md:text-2xl font-black mb-2 md:mb-4 text-slate-900">{item.title}</h3><p className="text-slate-500 font-bold leading-relaxed text-xs md:text-base">{item.desc}</p></div>))}</div>
                 </section>
                 
-                <section id="how-we-earn" className="bg-slate-900 rounded-[3rem] p-10 md:p-24 text-white text-center shadow-2xl mb-32 scroll-mt-32 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-600/20 rounded-full blur-[120px]"></div><div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-indigo-600/20 rounded-full blur-[100px]"></div>
-                    <h2 className="text-3xl md:text-5xl font-black mb-8 relative z-10">{t.earnTitle}</h2><p className="text-blue-100 text-lg md:text-2xl max-w-4xl mx-auto leading-relaxed mb-16 relative z-10 font-medium">{t.earnDesc}</p>
-                    <div className="flex flex-wrap justify-center gap-6 relative z-10 font-black"><div className="bg-white/10 px-10 py-6 rounded-[2rem] backdrop-blur-md border border-white/10 flex items-center gap-3 hover:bg-white/20 transition-colors"><CheckCircle size={24} className="text-green-400" /> {t.neutrality}</div><div className="bg-white/10 px-10 py-6 rounded-[2rem] backdrop-blur-md border border-white/10 flex items-center gap-3 hover:bg-white/20 transition-colors"><CheckCircle size={24} className="text-green-400" /> {t.noExtraCost}</div></div>
-                </section>
-                
+                {/* 2. ليش تثق فينا؟ (Why Trust Us) */}
                 <section id="why-trust" className="mb-32 scroll-mt-32">
                     <div className="text-center mb-16"><h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-6">{t.trustTitle}</h2><div className="inline-flex items-center gap-3 bg-blue-50 text-blue-900 px-6 py-3 rounded-full font-black text-lg animate-bounce"><Activity size={24} className="text-blue-600" /><span>{realSearchCount.toLocaleString()} {t.realSearch}</span></div></div>
                     <div className="flex flex-row overflow-x-auto gap-3 snap-x snap-mandatory scrollbar-hide flex-nowrap pb-4 md:grid md:grid-cols-3 md:gap-8 md:overflow-visible md:flex-wrap"><div className="bg-white p-4 md:p-12 rounded-2xl md:rounded-[3rem] shadow-none md:shadow-xl border border-slate-200 md:border-slate-100 hover:shadow-none md:hover:shadow-2xl transition-all w-64 flex-shrink-0 snap-start md:w-auto"><div className="bg-blue-50 text-blue-600 w-16 h-16 md:w-20 md:h-20 rounded-xl md:rounded-[2rem] flex items-center justify-center mb-4 md:mb-8"><BarChart3 className="w-8 h-8 md:w-10 md:h-10" /></div><h3 className="text-base md:text-2xl font-black mb-2 md:mb-4 text-slate-900">{t.trust1Title}</h3><p className="text-slate-500 font-bold leading-relaxed text-xs md:text-base">{t.trust1Desc}</p></div><div className="bg-white p-4 md:p-12 rounded-2xl md:rounded-[3rem] shadow-none md:shadow-xl border border-slate-200 md:border-slate-100 hover:shadow-none md:hover:shadow-2xl transition-all w-64 flex-shrink-0 snap-start md:w-auto"><div className="bg-green-50 text-green-600 w-16 h-16 md:w-20 md:h-20 rounded-xl md:rounded-[2rem] flex items-center justify-center mb-4 md:mb-8"><Shield className="w-8 h-8 md:w-10 md:h-10" /></div><h3 className="text-base md:text-2xl font-black mb-2 md:mb-4 text-slate-900">{t.trust2Title}</h3><p className="text-slate-500 font-bold leading-relaxed text-xs md:text-base">{t.trust2Desc}</p></div><div className="bg-white p-4 md:p-12 rounded-2xl md:rounded-[3rem] shadow-none md:shadow-xl border border-slate-200 md:border-slate-100 hover:shadow-none md:hover:shadow-2xl transition-all w-64 flex-shrink-0 snap-start md:w-auto"><div className="bg-purple-50 text-purple-600 w-16 h-16 md:w-20 md:h-20 rounded-xl md:rounded-[2rem] flex items-center justify-center mb-4 md:mb-8"><Heart className="w-8 h-8 md:w-10 md:h-10" /></div><h3 className="text-base md:text-2xl font-black mb-2 md:mb-4 text-slate-900">{t.trust3Title}</h3><p className="text-slate-500 font-bold leading-relaxed text-xs md:text-base">{t.trust3Desc}</p></div></div>
                 </section>
 
-                {/* ==================== */}
-                {/* 🆕 آراء وتعليقات العملاء */}
-                {/* ==================== */}
-                {/* قسم آراء العملاء: مصغّر في الجوال (خطوط أصغر، padding أقل، 3 تعليقات + عرض المزيد) */}
+                {/* 3. كيف نربح؟ (How We Earn) */}
+                <section id="how-we-earn" className="bg-slate-900 rounded-[3rem] p-10 md:p-24 text-white text-center shadow-2xl mb-32 scroll-mt-32 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-600/20 rounded-full blur-[120px]"></div><div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-indigo-600/20 rounded-full blur-[100px]"></div>
+                    <h2 className="text-3xl md:text-5xl font-black mb-8 relative z-10">{t.earnTitle}</h2><p className="text-blue-100 text-lg md:text-2xl max-w-4xl mx-auto leading-relaxed mb-16 relative z-10 font-medium">{t.earnDesc}</p>
+                    <div className="flex flex-wrap justify-center gap-6 relative z-10 font-black"><div className="bg-white/10 px-10 py-6 rounded-[2rem] backdrop-blur-md border border-white/10 flex items-center gap-3 hover:bg-white/20 transition-colors"><CheckCircle size={24} className="text-green-400" /> {t.neutrality}</div><div className="bg-white/10 px-10 py-6 rounded-[2rem] backdrop-blur-md border border-white/10 flex items-center gap-3 hover:bg-white/20 transition-colors"><CheckCircle size={24} className="text-green-400" /> {t.noExtraCost}</div></div>
+                </section>
+
+                {/* 4. آراء العملاء (Customer Feedback) */}
                 <section id="customer-feedback" className="mb-10 scroll-mt-32">
                   <div className="text-center mb-6 md:mb-10">
                     <h2 className="text-xl md:text-5xl font-black text-slate-900 mb-2 md:mb-4">{t.customerFeedbackTitle}</h2>
@@ -3224,6 +3225,7 @@ ${languageInstruction}
               </>
             )}
           </main>
+          </div>
         </>
       )}
 
@@ -3256,855 +3258,6 @@ ${languageInstruction}
                 <div className="flex gap-3">
                     <button onClick={handleSaveAllChanges} className="px-6 py-2 bg-green-600 text-white rounded-xl font-black text-xs hover:bg-green-700 shadow-lg flex items-center gap-2"><Save size={14} /> حفظ جميع الإعدادات</button>
                     <button onClick={handleLogout} className="text-red-500 font-bold text-sm flex items-center gap-1"><LogOut size={14} /> خروج</button>
-                </div>
-              </div>
-              
-              {/* ==================== */}
-              {/* 🎯 قسم التحكم بنافذة الاشتراك (جديد) */}
-              {/* ==================== */}
-              <div className="mb-12 bg-gradient-to-br from-pink-500 via-red-500 to-yellow-500 rounded-[2rem] p-8 shadow-2xl border-2 border-white/20">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="font-black text-white border-b-2 border-white/30 pb-2 flex items-center gap-3 text-xl">
-                    <Bell className="text-yellow-300" size={28} />
-                    🎯 التحكم بنافذة الاشتراك الترويجي
-                  </h3>
-                  <span className={`${adminConfig.promoPopupEnabled ? 'bg-green-400' : 'bg-red-400'} text-white text-xs px-4 py-2 rounded-full font-black shadow-lg`}>
-                    {adminConfig.promoPopupEnabled ? '🟢 مفعلة' : '🔴 مقفلة'}
-                  </span>
-                </div>
-
-                <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="bg-white/20 p-4 rounded-2xl">
-                        <Mail size={32} className="text-white" />
-                      </div>
-                      <div>
-                        <h4 className="font-black text-white text-lg mb-1">نافذة الاشتراك في العروض</h4>
-                        <p className="text-white/80 text-sm font-bold">
-                          {adminConfig.promoPopupEnabled 
-                            ? '🟢 النافذة مفعلة - ستظهر للزوار بعد 3.5 ثواني' 
-                            : '🔴 النافذة مقفلة - لن تظهر للزوار'}
-                        </p>
-                        {!adminConfig.promoPopupEnabled && (
-                          <p className="text-yellow-300 text-xs font-bold mt-2 flex items-center gap-1">
-                            <AlertCircle size={12} />
-                            ملاحظة: المستخدمين اللي اشتركوا قبل ما يلاقوا الإيميل محفوظ وما راح تظهر لهم النافذة
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {/* زر التفعيل/الإيقاف */}
-                    <button
-                      onClick={togglePromoPopup}
-                      className={`relative w-24 h-12 rounded-full transition-all duration-500 ${
-                        adminConfig.promoPopupEnabled 
-                          ? 'bg-green-400 shadow-lg shadow-green-400/50' 
-                          : 'bg-red-400 shadow-lg shadow-red-400/50'
-                      }`}
-                    >
-                      <span
-                        className={`absolute top-1 w-10 h-10 bg-white rounded-full shadow-xl transition-all duration-500 flex items-center justify-center ${
-                          adminConfig.promoPopupEnabled 
-                            ? 'right-1' 
-                            : 'right-13'
-                        }`}
-                      >
-                        {adminConfig.promoPopupEnabled ? '✅' : '❌'}
-                      </span>
-                    </button>
-                  </div>
-
-                  {/* إحصائيات سريعة عن الاشتراكات */}
-                  <div className="mt-6 pt-6 border-t border-white/20 grid grid-cols-2 gap-4">
-                    <div className="bg-white/10 p-4 rounded-xl text-center">
-                      <p className="text-white/70 text-xs font-bold mb-1">إجمالي المشتركين</p>
-                      <p className="text-white text-2xl font-black">{subscribersList.length}</p>
-                    </div>
-                    <div className="bg-white/10 p-4 rounded-xl text-center">
-                      <p className="text-white/70 text-xs font-bold mb-1">آخر اشتراك</p>
-                      <p className="text-white text-sm font-black">
-                        {subscribersList.length > 0 
-                          ? new Date(subscribersList[0]?.joined_at).toLocaleDateString('ar-SA')
-                          : 'لا يوجد'
-                        }
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* معاينة للنافذة */}
-                <div className="mt-6 bg-slate-900/50 rounded-xl p-4 border border-white/20">
-                  <p className="text-white/80 text-xs font-bold mb-3 flex items-center gap-2">
-                    <Eye size={14} />
-                    معاينة النافذة (كيف راح تظهر للزوار):
-                  </p>
-                  <div className="relative bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl p-6 opacity-75">
-                    <div className="bg-white rounded-2xl p-4 max-w-xs mx-auto">
-                      <div className="text-center">
-                        <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                          <Mail size={20} className="text-blue-600" />
-                        </div>
-                        <h3 className="text-lg font-black text-gray-900 mb-2">
-                          {adminConfig.promoPopupEnabled ? 'لا تفوت عروضنا الحصرية! 🎁' : '🚫 النافذة مقفلة'}
-                        </h3>
-                        <p className="text-gray-500 text-xs font-bold mb-4">
-                          {adminConfig.promoPopupEnabled 
-                            ? 'سجل إيميلك عشان نرسل لك العروض اللي تهمك أول بأول.'
-                            : 'تم إيقاف نافذة الاشتراك من قبل الإدارة'}
-                        </p>
-                        <div className={`h-10 bg-gray-100 rounded-xl ${adminConfig.promoPopupEnabled ? 'opacity-100' : 'opacity-50'}`}>
-                          <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs font-bold">
-                            {adminConfig.promoPopupEnabled ? 'اشتراك' : 'غير متاح'}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* ==================== */}
-              {/* 🎯 قسم إدارة الهيدر المتقدم */}
-              {/* ==================== */}
-              <div className="mb-12 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 rounded-[2rem] p-8 shadow-2xl border-2 border-white/20">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="font-black text-white border-b-2 border-white/30 pb-2 flex items-center gap-3 text-xl">
-                    <Award className="text-yellow-300" size={28} />
-                    🎯 إدارة الهيدر المتقدم (شعارات + نصوص)
-                  </h3>
-                  <span className="bg-yellow-400 text-blue-900 text-xs px-4 py-2 rounded-full font-black shadow-lg">
-                    {headerElements.length} عنصر
-                  </span>
-                </div>
-
-                <p className="text-white/80 mb-6 text-sm font-bold bg-white/10 p-3 rounded-xl border border-white/20">
-                  ⚡ أضف شعارات أو نصوص للمتاجر والشركات، وستظهر بشكل عشوائي وجميل في الهيدر الأزرق. تحكم كامل بالألوان والأحجام والمواقع!
-                </p>
-
-                {/* اختيار نوع العنصر */}
-                <div className="flex gap-4 mb-6">
-                  <button
-                    onClick={() => handleElementTypeChange('logo')}
-                    className={`flex-1 py-4 rounded-xl font-black text-sm transition-all flex items-center justify-center gap-2 ${
-                      newElementType === 'logo' 
-                        ? 'bg-yellow-400 text-blue-900 shadow-lg' 
-                        : 'bg-white/10 text-white hover:bg-white/20 border border-white/30'
-                    }`}
-                  >
-                    <Image size={20} />
-                    إضافة شعار
-                  </button>
-                  <button
-                    onClick={() => handleElementTypeChange('text')}
-                    className={`flex-1 py-4 rounded-xl font-black text-sm transition-all flex items-center justify-center gap-2 ${
-                      newElementType === 'text' 
-                        ? 'bg-yellow-400 text-blue-900 shadow-lg' 
-                        : 'bg-white/10 text-white hover:bg-white/20 border border-white/30'
-                    }`}
-                  >
-                    <Type size={20} />
-                    إضافة نص
-                  </button>
-                </div>
-
-                {/* نموذج إضافة عنصر جديد */}
-                <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 mb-8 border border-white/20">
-                  <h4 className="font-black text-white mb-4 flex items-center gap-2">
-                    <Plus size={18} className="text-yellow-300" />
-                    {newElementType === 'logo' ? 'إضافة شعار جديد' : 'إضافة نص جديد'}
-                  </h4>
-                  
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {newElementType === 'logo' ? (
-                      <>
-                        <div>
-                          <label className="text-white/80 text-xs font-bold mb-1 block">اسم الشركة</label>
-                          <input 
-                            type="text"
-                            value={newElementName}
-                            onChange={(e) => setNewElementName(e.target.value)}
-                            className="w-full p-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder:text-white/50 font-bold text-sm"
-                            placeholder="مثال: أمازون"
-                          />
-                        </div>
-                        
-                        <div>
-                          <label className="text-white/80 text-xs font-bold mb-1 block">رابط الشعار (اختياري)</label>
-                          <input 
-                            type="text"
-                            value={newElementLogo}
-                            onChange={(e) => setNewElementLogo(e.target.value)}
-                            className="w-full p-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder:text-white/50 font-bold text-sm"
-                            placeholder="https://example.com/logo.png"
-                            dir="ltr"
-                          />
-                        </div>
-                        
-                        <div>
-                          <label className="text-white/80 text-xs font-bold mb-1 block">اللون</label>
-                          <select 
-                            value={newElementColor}
-                            onChange={(e) => setNewElementColor(e.target.value)}
-                            className="w-full p-3 rounded-xl bg-white/20 border border-white/30 text-white font-bold text-sm"
-                          >
-                            {availableColors.map((color, idx) => (
-                              <option key={idx} value={color.value} className="bg-slate-800 text-white">
-                                {color.label}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div>
-                          <label className="text-white/80 text-xs font-bold mb-1 block">النص</label>
-                          <input 
-                            type="text"
-                            value={newElementText}
-                            onChange={(e) => setNewElementText(e.target.value)}
-                            className="w-full p-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder:text-white/50 font-bold text-sm"
-                            placeholder="مثال: noon, Amazon, SHEIN"
-                            dir="ltr"
-                          />
-                        </div>
-                        
-                        <div>
-                          <label className="text-white/80 text-xs font-bold mb-1 block">التدرج اللوني</label>
-                          <select 
-                            value={newElementGradient}
-                            onChange={(e) => setNewElementGradient(e.target.value)}
-                            className="w-full p-3 rounded-xl bg-white/20 border border-white/30 text-white font-bold text-sm"
-                          >
-                            {availableGradients.map((gradient, idx) => (
-                              <option key={idx} value={gradient.value} className="bg-slate-800 text-white">
-                                {gradient.label}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        
-                        <div>
-                          <label className="text-white/80 text-xs font-bold mb-1 block">لون النص</label>
-                          <select 
-                            value={newElementTextColor}
-                            onChange={(e) => setNewElementTextColor(e.target.value)}
-                            className="w-full p-3 rounded-xl bg-white/20 border border-white/30 text-white font-bold text-sm"
-                          >
-                            {textColors.map((color, idx) => (
-                              <option key={idx} value={color.value} className="bg-slate-800 text-white">
-                                {color.label}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        
-                        <div>
-                          <label className="text-white/80 text-xs font-bold mb-1 block">حجم الخط</label>
-                          <select 
-                            value={newElementFontSize}
-                            onChange={(e) => setNewElementFontSize(Number(e.target.value))}
-                            className="w-full p-3 rounded-xl bg-white/20 border border-white/30 text-white font-bold text-sm"
-                          >
-                            {fontSizes.map((size, idx) => (
-                              <option key={idx} value={size.value} className="bg-slate-800 text-white">
-                                {size.label}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        
-                        <div>
-                          <label className="text-white/80 text-xs font-bold mb-1 block">وزن الخط</label>
-                          <select 
-                            value={newElementFontWeight}
-                            onChange={(e) => setNewElementFontWeight(e.target.value)}
-                            className="w-full p-3 rounded-xl bg-white/20 border border-white/30 text-white font-bold text-sm"
-                          >
-                            {fontWeights.map((weight, idx) => (
-                              <option key={idx} value={weight.value} className="bg-slate-800 text-white">
-                                {weight.label}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </>
-                    )}
-                    
-                    <div>
-                      <label className="text-white/80 text-xs font-bold mb-1 block">الموقع</label>
-                      <select 
-                        value={newElementPosition}
-                        onChange={(e) => setNewElementPosition(e.target.value)}
-                        className="w-full p-3 rounded-xl bg-white/20 border border-white/30 text-white font-bold text-sm"
-                      >
-                        <option value="random" className="bg-slate-800 text-white">📍 عشوائي</option>
-                        {randomPositions.map((pos, idx) => (
-                          <option key={idx} value={pos} className="bg-slate-800 text-white">
-                            موقع {idx + 1}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    
-                    <div>
-                      <label className="text-white/80 text-xs font-bold mb-1 block">الحجم</label>
-                      <select 
-                        value={newElementSize}
-                        onChange={(e) => setNewElementSize(Number(e.target.value))}
-                        className="w-full p-3 rounded-xl bg-white/20 border border-white/30 text-white font-bold text-sm"
-                      >
-                        <option value={32}>صغير (32px)</option>
-                        <option value={40}>صغير+ (40px)</option>
-                        <option value={48}>وسط (48px)</option>
-                        <option value={56}>وسط+ (56px)</option>
-                        <option value={64}>كبير (64px)</option>
-                        <option value={70}>كبير+ (70px)</option>
-                        <option value={80}>كبير جداً (80px)</option>
-                      </select>
-                    </div>
-                    
-                    <div>
-                      <label className="text-white/80 text-xs font-bold mb-1 block">تأخير الحركة</label>
-                      <select 
-                        value={newElementDelay}
-                        onChange={(e) => setNewElementDelay(Number(e.target.value))}
-                        className="w-full p-3 rounded-xl bg-white/20 border border-white/30 text-white font-bold text-sm"
-                      >
-                        <option value={0}>0</option>
-                        <option value={1}>1</option>
-                        <option value={2}>2</option>
-                        <option value={3}>3</option>
-                        <option value={4}>4</option>
-                        <option value={5}>5</option>
-                        <option value={6}>6</option>
-                        <option value={7}>7</option>
-                      </select>
-                    </div>
-                    
-                    <div className="flex items-end">
-                      <button 
-                        onClick={handleAddHeaderElement}
-                        className="w-full bg-yellow-400 hover:bg-yellow-500 text-blue-900 py-3 rounded-xl font-black text-sm transition-all flex items-center justify-center gap-2 shadow-lg"
-                      >
-                        <Plus size={18} />
-                        {newElementType === 'logo' ? 'إضافة شعار' : 'إضافة نص'}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* عرض العناصر الحالية */}
-                <div className="bg-white/5 rounded-xl p-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <h4 className="font-black text-white flex items-center gap-2">
-                      <Layers size={18} />
-                      العناصر الحالية ({headerElements.length})
-                    </h4>
-                    <button 
-                      onClick={handleRandomizePositions}
-                      className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-bold text-xs transition-all flex items-center gap-2"
-                    >
-                      <Move size={14} />
-                      عشوائية المواقع
-                    </button>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto custom-scrollbar p-1">
-                    {headerElements.map((element) => (
-                      <div key={element.id} className="bg-white/10 backdrop-blur-sm rounded-xl p-4 flex items-center gap-4 border border-white/20 hover:bg-white/20 transition-all">
-                        {element.type === 'logo' ? (
-                          <div className={`${element.bgColor} w-12 h-12 rounded-full p-1.5 flex-shrink-0 border-2 border-white/50 shadow-lg`}>
-                            <img 
-                              src={element.logo} 
-                              alt={element.name}
-                              className="w-full h-full rounded-full object-cover"
-                              onError={(e) => {
-                                e.target.onerror = null;
-                                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(element.name)}&background=random&color=fff&size=48`;
-                              }}
-                            />
-                          </div>
-                        ) : (
-                          <div className={`${element.bgColor} h-12 rounded-full px-4 flex-shrink-0 border-2 border-white/50 shadow-lg flex items-center justify-center`}>
-                            <span 
-                              className={`${element.textColor} font-${element.fontWeight} whitespace-nowrap`}
-                              style={{ fontSize: `${element.fontSize}px` }}
-                            >
-                              {element.text}
-                            </span>
-                          </div>
-                        )}
-                        
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className={`px-2 py-0.5 rounded-full text-[8px] font-black ${
-                              element.type === 'logo' ? 'bg-blue-500/30 text-blue-200' : 'bg-purple-500/30 text-purple-200'
-                            }`}>
-                              {element.type === 'logo' ? 'شعار' : 'نص'}
-                            </span>
-                            <h5 className="font-black text-white truncate">
-                              {element.type === 'logo' ? element.name : element.text}
-                            </h5>
-                            <span className="text-[8px] bg-white/20 text-white px-2 py-0.5 rounded-full">
-                              {element.size}px
-                            </span>
-                          </div>
-                          <p className="text-white/60 text-[10px] font-bold truncate">
-                            {element.position}
-                          </p>
-                        </div>
-                        
-                        <div className="flex gap-1">
-                          <button 
-                            onClick={() => handleDeleteHeaderElement(element.id)}
-                            className="p-2 bg-red-500/20 hover:bg-red-500/40 rounded-lg text-white transition-colors"
-                            title="حذف"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* ==================== */}
-              {/* قسم الذكاء الاصطناعي */}
-              {/* ==================== */}
-              <div className="mb-12 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-[2rem] p-8">
-                <h3 className="font-black text-blue-900 border-b border-blue-200 pb-4 mb-6 flex items-center gap-2">
-                  <Brain className="text-blue-600" />
-                  إعدادات الذكاء الاصطناعي المتقدم
-                </h3>
-                
-                <div className="grid md:grid-cols-2 gap-8">
-                  <div className="bg-white p-6 rounded-2xl border border-blue-100 shadow-sm">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="bg-blue-100 p-2 rounded-xl">
-                        <Hexagon className="text-blue-600" size={24} />
-                      </div>
-                      <h4 className="font-black text-blue-800 text-lg">Google Gemini</h4>
-                    </div>
-                    
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 mb-2 block">API Key</label>
-                        <div className="relative">
-                          <input 
-                            type="password" 
-                            value={adminConfig.aiSettings?.geminiApiKey || ''}
-                            onChange={(e) => setAdminConfig({
-                              ...adminConfig, 
-                              aiSettings: { 
-                                ...adminConfig.aiSettings, 
-                                geminiApiKey: e.target.value 
-                              }
-                            })} 
-                            className="w-full p-3 rounded-xl bg-slate-50 border border-blue-200 font-bold text-sm pr-10"
-                            placeholder="sk-proj-xxxxxxxxxx"
-                          />
-                          <Eye size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-300 cursor-pointer" 
-                            onClick={(e) => {
-                              const input = e.target.previousSibling;
-                              if (input.type === 'password') input.type = 'text';
-                              else input.type = 'password';
-                            }}
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 mb-2 block">API Key (تحليل التعليقات)</label>
-                        <div className="relative">
-                          <input
-                            type="password"
-                            value={adminConfig.aiSettings?.reviewButterApiKey || ''}
-                            onChange={(e) => setAdminConfig({
-                              ...adminConfig,
-                              aiSettings: {
-                                ...adminConfig.aiSettings,
-                                reviewButterApiKey: e.target.value
-                              }
-                            })}
-                            className="w-full p-3 rounded-xl bg-slate-50 border border-blue-200 font-bold text-sm pr-10"
-                            placeholder="Gemini API Key"
-                          />
-                          <Eye size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-300 cursor-pointer"
-                            onClick={(e) => {
-                              const input = e.target.previousSibling;
-                              if (input.type === 'password') input.type = 'text';
-                              else input.type = 'password';
-                            }}
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 mb-2 block">API Key (البحث بالصورة)</label>
-                        <div className="relative">
-                          <input
-                            type="password"
-                            value={adminConfig.aiSettings?.geminiVisionApiKey || ''}
-                            onChange={(e) => setAdminConfig({
-                              ...adminConfig,
-                              aiSettings: {
-                                ...adminConfig.aiSettings,
-                                geminiVisionApiKey: e.target.value
-                              }
-                            })}
-                            className="w-full p-3 rounded-xl bg-slate-50 border border-blue-200 font-bold text-sm pr-10"
-                            placeholder="Gemini Vision API Key"
-                          />
-                          <Eye size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-300 cursor-pointer"
-                            onClick={(e) => {
-                              const input = e.target.previousSibling;
-                              if (input.type === 'password') input.type = 'text';
-                              else input.type = 'password';
-                            }}
-                          />
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 mb-2 block">الموديل</label>
-                        <select 
-                          value={adminConfig.aiSettings?.geminiModel || 'gemini-2.0-flash-exp'}
-                          onChange={(e) => setAdminConfig({
-                            ...adminConfig, 
-                            aiSettings: { 
-                              ...adminConfig.aiSettings, 
-                              geminiModel: e.target.value 
-                            }
-                          })}
-                          className="w-full p-3 rounded-xl bg-slate-50 border border-blue-200 font-bold text-sm"
-                        >
-                          <option value="gemini-2.0-flash-exp">Flash (أسرع)</option>
-                          <option value="gemini-1.5-pro">Pro (أدق)</option>
-                          <option value="gemini-2.0-pro-exp">Pro Experimental</option>
-                        </select>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-xs font-bold text-slate-500 mb-2 block">موديل (تحليل التعليقات)</label>
-                          <select
-                            value={adminConfig.aiSettings?.reviewButterModel || 'gemini-2.0-flash-exp'}
-                            onChange={(e) => setAdminConfig({
-                              ...adminConfig,
-                              aiSettings: {
-                                ...adminConfig.aiSettings,
-                                reviewButterModel: e.target.value
-                              }
-                            })}
-                            className="w-full p-3 rounded-xl bg-slate-50 border border-blue-200 font-bold text-sm"
-                          >
-                            <option value="gemini-2.0-flash-exp">Flash (أسرع)</option>
-                            <option value="gemini-1.5-pro">Pro (أدق)</option>
-                            <option value="gemini-2.0-pro-exp">Pro Experimental</option>
-                          </select>
-                        </div>
-
-                        <div>
-                          <label className="text-xs font-bold text-slate-500 mb-2 block">موديل (البحث بالصورة)</label>
-                          <select
-                            value={adminConfig.aiSettings?.geminiVisionModel || 'gemini-2.0-flash-exp'}
-                            onChange={(e) => setAdminConfig({
-                              ...adminConfig,
-                              aiSettings: {
-                                ...adminConfig.aiSettings,
-                                geminiVisionModel: e.target.value
-                              }
-                            })}
-                            className="w-full p-3 rounded-xl bg-slate-50 border border-blue-200 font-bold text-sm"
-                          >
-                            <option value="gemini-2.0-flash-exp">Flash (أسرع)</option>
-                            <option value="gemini-1.5-pro">Pro (أدق)</option>
-                            <option value="gemini-2.0-pro-exp">Pro Experimental</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-white p-6 rounded-2xl border border-blue-100 shadow-sm">
-                    <h4 className="font-black text-blue-800 mb-4">ميزات التحليل المتقدم</h4>
-                    
-                    <div className="space-y-3">
-                      {[
-                        { key: 'priceComparison', label: 'مقارنة الأسعار بين المتاجر', icon: TrendingDown },
-                        { key: 'reviewAnalysis', label: 'تحليل آخر 100 تعليق', icon: MessageSquare },
-                        { key: 'materialComparison', label: 'مقارنة مواد المنتج', icon: Database },
-                        { key: 'warrantyCheck', label: 'فحص الضمانات', icon: Shield },
-                        { key: 'deliverySpeed', label: 'سرعة التوصيل', icon: Rocket },
-                        { key: 'competitorAnalysis', label: 'تحليل المنافسين', icon: BarChart3 }
-                      ].map((feature, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-3 bg-blue-50 rounded-xl">
-                          <div className="flex items-center gap-3">
-                            <feature.icon size={18} className="text-blue-600" />
-                            <span className="font-bold text-sm text-slate-700">{feature.label}</span>
-                          </div>
-                          <div className="relative">
-                            <input 
-                              type="checkbox" 
-                              checked={adminConfig.aiSettings?.geminiFeatures?.[feature.key] || false}
-                              onChange={(e) => setAdminConfig({
-                                ...adminConfig,
-                                aiSettings: {
-                                  ...adminConfig.aiSettings,
-                                  geminiFeatures: {
-                                    ...adminConfig.aiSettings?.geminiFeatures,
-                                    [feature.key]: e.target.checked
-                                  }
-                                }
-                              })}
-                              className="sr-only"
-                              id={`feature-${feature.key}`}
-                            />
-                            <label 
-                              htmlFor={`feature-${feature.key}`}
-                              className={`block w-10 h-6 rounded-full cursor-pointer ${adminConfig.aiSettings?.geminiFeatures?.[feature.key] ? 'bg-blue-600' : 'bg-slate-300'}`}
-                            >
-                              <span className={`block w-4 h-4 mt-1 ml-1 rounded-full bg-white transform transition-transform ${adminConfig.aiSettings?.geminiFeatures?.[feature.key] ? 'translate-x-4' : ''}`}></span>
-                            </label>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* ==================== */}
-              {/* قسم مفاتيح المتاجر - واجهة آمنة (لا تعرض المفاتيح بعد الحفظ) */}
-              {/* ==================== */}
-              <div className="mb-12 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-100 rounded-[2rem] p-8">
-                <h3 className="font-black text-green-900 border-b border-green-200 pb-4 mb-6 flex items-center gap-2">
-                  <Key className="text-green-600" />
-                  مفاتيح API للمتاجر
-                </h3>
-                <p className="text-sm text-slate-600 mb-6 font-bold">بعد الحفظ، المفاتيح تُخفي من الواجهة لحماية أمانها. يبقى فقط حالة الاتصال.</p>
-                
-                <div className="space-y-6">
-                  {/* Amazon */}
-                  <StoreApiCard
-                    storeKey="amazon"
-                    storeName="Amazon Saudi"
-                    storeLetter="A"
-                    storeColor="orange"
-                    hasKeys={hasStoreKeysSaved('amazon')}
-                    isEditing={storeApiEditingKey === 'amazon'}
-                    onEdit={() => setStoreApiEditingKey('amazon')}
-                    onCancel={() => setStoreApiEditingKey(null)}
-                    connectionStatus={storeApiConnectionStatus.amazon}
-                    isTesting={storeApiTestingStatus === 'amazon'}
-                    onTest={() => testStoreConnection('amazon')}
-                    onSave={(formData) => handleSaveStoreApiKeys('amazon', null, formData)}
-                    adminConfig={adminConfig}
-                    setAdminConfig={setAdminConfig}
-                    toggleEnabled={() => toggleStoreEnabled('amazon')}
-                    enabled={adminConfig.storeApiKeys?.amazon?.enabled !== false}
-                  />
-                  
-                  {/* Noon */}
-                  <StoreApiCard
-                    storeKey="noon"
-                    storeName="Noon"
-                    storeLetter="N"
-                    storeColor="yellow"
-                    hasKeys={hasStoreKeysSaved('noon')}
-                    isEditing={storeApiEditingKey === 'noon'}
-                    onEdit={() => setStoreApiEditingKey('noon')}
-                    onCancel={() => setStoreApiEditingKey(null)}
-                    connectionStatus={storeApiConnectionStatus.noon}
-                    isTesting={storeApiTestingStatus === 'noon'}
-                    onTest={() => testStoreConnection('noon')}
-                    onSave={(formData) => handleSaveStoreApiKeys('noon', null, formData)}
-                    adminConfig={adminConfig}
-                    setAdminConfig={setAdminConfig}
-                    toggleEnabled={() => toggleStoreEnabled('noon')}
-                    enabled={adminConfig.storeApiKeys?.noon?.enabled !== false}
-                  />
-                  
-                  {/* Custom Stores */}
-                  {adminConfig.storeApiKeys?.customStores?.map((store, index) => (
-                    <StoreApiCard
-                      key={index}
-                      storeKey="custom"
-                      storeIndex={index}
-                      storeName={store.name}
-                      storeLetter={store.name.charAt(0)}
-                      storeColor="green"
-                      hasKeys={hasStoreKeysSaved('custom', index)}
-                      isEditing={storeApiEditingKey === `custom-${index}`}
-                      onEdit={() => setStoreApiEditingKey(`custom-${index}`)}
-                      onCancel={() => setStoreApiEditingKey(null)}
-                      connectionStatus={storeApiConnectionStatus[`custom-${index}`]}
-                      isTesting={storeApiTestingStatus === `custom-${index}`}
-                      onTest={() => testStoreConnection('custom', index)}
-                      onSave={(formData) => handleSaveStoreApiKeys('custom', index, formData)}
-                      onDelete={() => handleDeleteCustomStore(index)}
-                      adminConfig={adminConfig}
-                      setAdminConfig={setAdminConfig}
-                      toggleEnabled={() => toggleStoreEnabled('custom', index)}
-                      enabled={store.enabled !== false}
-                    />
-                  ))}
-                  
-                  {/* إضافة متجر جديد */}
-                  <div className="bg-white/50 border-2 border-dashed border-green-200 rounded-2xl p-6">
-                    <h4 className="font-black text-green-800 mb-4 flex items-center gap-2">
-                      <Plus className="text-green-600" size={20} />
-                      إضافة متجر جديد
-                    </h4>
-                    <div className="space-y-3">
-                      <div className="grid md:grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-xs font-bold text-slate-500 mb-1 block">اسم المتجر</label>
-                          <input type="text" placeholder="مثال: متجر إلكتروني" value={newStoreApiName} onChange={(e) => setNewStoreApiName(e.target.value)} className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold" />
-                        </div>
-                        <div>
-                          <label className="text-xs font-bold text-slate-500 mb-1 block">مفتاح API</label>
-                          <input type="password" placeholder="مفتاح API" value={newStoreApiKey} onChange={(e) => setNewStoreApiKey(e.target.value)} className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold" />
-                        </div>
-                      </div>
-                      <div className="grid md:grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-xs font-bold text-slate-500 mb-1 block">Secret Key</label>
-                          <input type="password" placeholder="الرمز السري" value={newStoreApiSecret} onChange={(e) => setNewStoreApiSecret(e.target.value)} className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold" />
-                        </div>
-                        <div>
-                          <label className="text-xs font-bold text-slate-500 mb-1 block">معرف المتجر (Store ID)</label>
-                          <input type="text" placeholder="معرف المتجر" value={newStoreApiStoreId} onChange={(e) => setNewStoreApiStoreId(e.target.value)} className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold" />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 mb-1 block">رابط العمولة</label>
-                        <input type="text" placeholder="https://..." value={newStoreApiAffiliateLink} onChange={(e) => setNewStoreApiAffiliateLink(e.target.value)} className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold text-left" dir="ltr" />
-                      </div>
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 mb-1 block">رابط API (اختياري)</label>
-                        <input type="text" placeholder="https://api.example.com/search" value={newStoreApiUrl} onChange={(e) => setNewStoreApiUrl(e.target.value)} className="w-full p-2 rounded-lg bg-slate-50 border border-green-200 text-sm font-bold text-left" dir="ltr" />
-                      </div>
-                      <button onClick={handleAddCustomStore} className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-bold text-sm transition-colors flex items-center justify-center gap-2 mt-2">
-                        <Plus size={16} /> إضافة متجر جديد
-                      </button>
-                    </div>
-                  </div>
-                  
-                </div>
-              </div>
-            
-              {/* ==================== */}
-              {/* قسم مفاتيح API لجلب التعليقات من المصادر الخارجية */}
-              {/* ==================== */}
-              <div className="mb-12 bg-gradient-to-r from-sky-50 to-cyan-50 border border-sky-100 rounded-[2rem] p-8">
-                <h3 className="font-black text-sky-900 border-b border-sky-200 pb-4 mb-6 flex items-center gap-2">
-                  <MessageCircle className="text-sky-600" />
-                  مفاتيح API لجلب التعليقات من المصادر الخارجية
-                </h3>
-                <p className="text-sm text-slate-600 mb-6 font-bold">
-                  هذا القسم خاص فقط بجلب تعليقات ومراجعات العملاء من منصات المراجعات مثل Google Reviews و Trustpilot و Capterra و G2.com، ولا يؤثر على جلب الأسعار أو المنتجات.
-                </p>
-
-                <div className="space-y-6">
-                  <StoreApiCard
-                    storeKey="reviews-google"
-                    storeName="Google Reviews API"
-                    storeLetter="G"
-                    storeColor="green"
-                    hasKeys={hasReviewKeysSaved('googleReviews')}
-                    isEditing={reviewApiEditingKey === 'googleReviews'}
-                    onEdit={() => setReviewApiEditingKey('googleReviews')}
-                    onCancel={() => setReviewApiEditingKey(null)}
-                    connectionStatus={reviewApiConnectionStatus.googleReviews}
-                    isTesting={reviewApiTestingKey === 'googleReviews'}
-                    onTest={() => testReviewConnection('googleReviews')}
-                    onSave={(formData) => handleSaveReviewApiKeys('googleReviews', formData)}
-                    adminConfig={adminConfig}
-                    setAdminConfig={setAdminConfig}
-                    toggleEnabled={() => toggleReviewApiEnabled('googleReviews')}
-                    enabled={adminConfig.reviewApis?.googleReviews?.enabled === true}
-                  />
-
-                  <StoreApiCard
-                    storeKey="reviews-trustpilot"
-                    storeName="Trustpilot API"
-                    storeLetter="T"
-                    storeColor="green"
-                    hasKeys={hasReviewKeysSaved('trustpilot')}
-                    isEditing={reviewApiEditingKey === 'trustpilot'}
-                    onEdit={() => setReviewApiEditingKey('trustpilot')}
-                    onCancel={() => setReviewApiEditingKey(null)}
-                    connectionStatus={reviewApiConnectionStatus.trustpilot}
-                    isTesting={reviewApiTestingKey === 'trustpilot'}
-                    onTest={() => testReviewConnection('trustpilot')}
-                    onSave={(formData) => handleSaveReviewApiKeys('trustpilot', formData)}
-                    adminConfig={adminConfig}
-                    setAdminConfig={setAdminConfig}
-                    toggleEnabled={() => toggleReviewApiEnabled('trustpilot')}
-                    enabled={adminConfig.reviewApis?.trustpilot?.enabled === true}
-                  />
-
-                  <StoreApiCard
-                    storeKey="reviews-capterra"
-                    storeName="Capterra API"
-                    storeLetter="C"
-                    storeColor="green"
-                    hasKeys={hasReviewKeysSaved('capterra')}
-                    isEditing={reviewApiEditingKey === 'capterra'}
-                    onEdit={() => setReviewApiEditingKey('capterra')}
-                    onCancel={() => setReviewApiEditingKey(null)}
-                    connectionStatus={reviewApiConnectionStatus.capterra}
-                    isTesting={reviewApiTestingKey === 'capterra'}
-                    onTest={() => testReviewConnection('capterra')}
-                    onSave={(formData) => handleSaveReviewApiKeys('capterra', formData)}
-                    adminConfig={adminConfig}
-                    setAdminConfig={setAdminConfig}
-                    toggleEnabled={() => toggleReviewApiEnabled('capterra')}
-                    enabled={adminConfig.reviewApis?.capterra?.enabled === true}
-                  />
-
-                  <StoreApiCard
-                    storeKey="reviews-g2"
-                    storeName="G2.com API"
-                    storeLetter="G2"
-                    storeColor="green"
-                    hasKeys={hasReviewKeysSaved('g2')}
-                    isEditing={reviewApiEditingKey === 'g2'}
-                    onEdit={() => setReviewApiEditingKey('g2')}
-                    onCancel={() => setReviewApiEditingKey(null)}
-                    connectionStatus={reviewApiConnectionStatus.g2}
-                    isTesting={reviewApiTestingKey === 'g2'}
-                    onTest={() => testReviewConnection('g2')}
-                    onSave={(formData) => handleSaveReviewApiKeys('g2', formData)}
-                    adminConfig={adminConfig}
-                    setAdminConfig={setAdminConfig}
-                    toggleEnabled={() => toggleReviewApiEnabled('g2')}
-                    enabled={adminConfig.reviewApis?.g2?.enabled === true}
-                  />
-
-                  <StoreApiCard
-                    storeKey="reviews-other"
-                    storeName="Other Reviews Source"
-                    storeLetter="O"
-                    storeColor="green"
-                    hasKeys={hasReviewKeysSaved('other')}
-                    isEditing={reviewApiEditingKey === 'other'}
-                    onEdit={() => setReviewApiEditingKey('other')}
-                    onCancel={() => setReviewApiEditingKey(null)}
-                    connectionStatus={reviewApiConnectionStatus.other}
-                    isTesting={reviewApiTestingKey === 'other'}
-                    onTest={() => testReviewConnection('other')}
-                    onSave={(formData) => handleSaveReviewApiKeys('other', formData)}
-                    adminConfig={adminConfig}
-                    setAdminConfig={setAdminConfig}
-                    toggleEnabled={() => toggleReviewApiEnabled('other')}
-                    enabled={adminConfig.reviewApis?.other?.enabled === true}
-                  />
                 </div>
               </div>
               

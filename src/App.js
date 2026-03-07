@@ -2,9 +2,6 @@
 // 1. الاستيرادات الرئيسية
 // ============================
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, useMotionValue, useSpring } from 'framer-motion';
-import { useInView } from 'react-intersection-observer';
-import Tilt from 'react-parallax-tilt';
 import { 
   Search, ShoppingCart, Star, Shield, Info, ExternalLink, Zap, 
   BarChart3, TrendingDown, AlertCircle, CheckCircle, MousePointer2, 
@@ -53,22 +50,6 @@ const translations = {
     heroTitlePart1: 'قارن بذكاء..',
     heroTitlePart2: 'وقرّر في ثوانٍ',
     heroDesc: 'إحنا "الزبدة" في عالم التسوق.. محركنا يفرّ لك كل المتاجر ويعطيك الخلاصة وأفضل سعر.',
-    // بطاقة البطل (Hero Card) - المراحل
-    heroCardTagline: 'نوفر لك جودة + وقت + سعر',
-    heroQuality: 'جودة',
-    heroTime: 'وقت',
-    heroPrice: 'سعر',
-    aboutCardTitle: 'وش مقارن؟',
-    aboutCardDesc: 'محرك بحث ذكي يقارن الأسعار بين المتاجر ويعطيك الزبدة',
-    aboutIconSearch: 'بحث',
-    aboutIconAi: 'ذكاء اصطناعي',
-    aboutIconButter: 'زبدة',
-    earnCard1Title: 'عمولة بسيطة',
-    earnCard1Desc: 'نربح عمولة من المتاجر عند الشراء عن طريقنا، بدون ما يزود السعر عليك',
-    earnCard2Title: 'مجاني ١٠٠٪',
-    earnCard2Desc: 'استخدام الموقع مجاني لك بالكامل، ما نخصم منك شي',
-    earnCard3Title: 'شفافية تامة',
-    earnCard3Desc: 'نوضح لك مصدر التوفير وطريقة عملنا بدون مخفي',
     searchPlaceholder: 'وش بخاطرك تشتري اليوم؟ (آيفون، سماعة، عطر..)',
     searchBtn: 'بحث ذكي',
     analyzing: 'جاري التحليل...',
@@ -204,21 +185,6 @@ const translations = {
     heroTitlePart1: 'Compare Smartly..',
     heroTitlePart2: 'Decide in Seconds',
     heroDesc: 'We give you the "gist" of shopping. Our engine scans all stores to give you the summary and best price.',
-    heroCardTagline: 'Quality + Time + Price',
-    heroQuality: 'Quality',
-    heroTime: 'Time',
-    heroPrice: 'Price',
-    aboutCardTitle: 'What is Moqaren?',
-    aboutCardDesc: 'A smart search engine that compares prices across stores and gives you the best deal',
-    aboutIconSearch: 'Search',
-    aboutIconAi: 'AI',
-    aboutIconButter: 'The gist',
-    earnCard1Title: 'Small commission',
-    earnCard1Desc: 'We earn a commission from stores when you buy through us, at no extra cost to you',
-    earnCard2Title: '100% free',
-    earnCard2Desc: 'Using the site is completely free for you',
-    earnCard3Title: 'Full transparency',
-    earnCard3Desc: 'We explain how we save you money with no hidden terms',
     searchPlaceholder: 'What are you looking for today? (iPhone, Headset...)',
     searchBtn: 'Smart Search',
     analyzing: 'Analyzing...',
@@ -630,16 +596,7 @@ const App = () => {
   const [isVisualSearching, setIsVisualSearching] = useState(false);
   const [results, setResults] = useState(null);
   const [aiSummary, setAiSummary] = useState(null);
-  const [view, setView] = useState('home');
-  // مرحلة البطاقة البطل: home | about | earn (تتغير حسب التمرير)
-  const [heroStage, setHeroStage] = useState('home');
-  const [aboutTriggerRef, aboutInView] = useInView({ threshold: 0.15, rootMargin: '-60px 0px' });
-  const [earnTriggerRef, earnInView] = useInView({ threshold: 0.12 });
-  useEffect(() => {
-    if (earnInView) setHeroStage('earn');
-    else if (aboutInView) setHeroStage('about');
-    else setHeroStage('home');
-  }, [aboutInView, earnInView]);
+  const [view, setView] = useState('home'); 
   const [showExclusiveToast, setShowExclusiveToast] = useState(false);
   const [currentOffer, setCurrentOffer] = useState(null);
   const [showSidePanel, setShowSidePanel] = useState(false);
@@ -2821,195 +2778,142 @@ ${languageInstruction}
       {/* الواجهة الرئيسية */}
       {view === 'home' && (
         <>
-          {/* ========== بطاقة البطل (Hero Card) - تصميم عصري زجاجي ========== */}
-          {/* خلفية الموقع: #F8FAFC حسب نظام التصميم */}
-          <div id="about" className="min-h-screen pt-24 md:pt-28 pb-12 md:pb-20 px-4 md:px-8 scroll-mt-20" style={{ backgroundColor: '#F8FAFC' }}>
-            <div className="max-w-4xl mx-auto text-center">
-              {/* شعار مقارن أعلى البطاقة */}
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-6 md:mb-8"
-              >
-                <span className="text-2xl md:text-3xl font-black tracking-tight" style={{ color: '#2563EB' }}>
-                  {t.siteName}
-                </span>
-              </motion.div>
-
-              {/* البطاقة الزجاجية الواحدة - تظهر في مرحلة home و about فقط؛ مرحلة earn لها قسم منفصل */}
-              {heroStage !== 'earn' && (
-                <Tilt
-                  tiltMaxAngleX={8}
-                  tiltMaxAngleY={8}
-                  perspective={800}
-                  glareEnable={true}
-                  glareMaxOpacity={0.12}
-                  glareColor="#fff"
-                  glarePosition="all"
-                  className="inline-block w-full max-w-2xl"
-                  style={{ transformStyle: 'preserve-3d' }}
-                >
-                  <motion.div
-                    className="rounded-[2rem] md:rounded-[2.5rem] p-8 md:p-12 w-full"
-                    style={{
-                      backgroundColor: 'rgba(255,255,255,0.8)',
-                      border: '1px solid rgba(0,0,0,0.05)',
-                      boxShadow: '0 20px 40px rgba(0,0,0,0.08)',
-                      backdropFilter: 'blur(16px)',
-                      WebkitBackdropFilter: 'blur(16px)',
-                    }}
-                    animate={{ scale: [1, 1.02, 1] }}
-                    transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                  >
-                    {/* محتوى المرحلة الأولى: Home */}
-                    {heroStage === 'home' && (
-                      <motion.div
-                        key="home"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.4 }}
-                        className="space-y-6"
-                      >
-                        <h1 className="text-2xl md:text-4xl font-black leading-tight" style={{ color: '#0F172A' }}>
-                          {t.heroCardTagline}
-                        </h1>
-                        <div className="flex justify-center gap-6 md:gap-10 flex-wrap">
-                          <motion.span className="text-3xl md:text-5xl" animate={{ y: [0, -6, 0] }} transition={{ duration: 2, repeat: Infinity, delay: 0 }} title={t.heroQuality}>🏆</motion.span>
-                          <motion.span className="text-3xl md:text-5xl" animate={{ y: [0, -6, 0] }} transition={{ duration: 2, repeat: Infinity, delay: 0.3 }} title={t.heroTime}>⏱️</motion.span>
-                          <motion.span className="text-3xl md:text-5xl" animate={{ y: [0, -6, 0] }} transition={{ duration: 2, repeat: Infinity, delay: 0.6 }} title={t.heroPrice}>💰</motion.span>
-                        </div>
-                        <p className="text-sm font-bold" style={{ color: '#64748B' }}>
-                          {t.heroQuality} · {t.heroTime} · {t.heroPrice}
-                        </p>
-                      </motion.div>
-                    )}
-                    {/* محتوى المرحلة الثانية: About - وش مقارن؟ */}
-                    {heroStage === 'about' && (
-                      <motion.div
-                        key="about"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.4 }}
-                        className="space-y-4"
-                      >
-                        <h2 className="text-xl md:text-3xl font-black" style={{ color: '#0F172A' }}>
-                          {t.aboutCardTitle}
-                        </h2>
-                        <p className="text-base md:text-lg font-bold max-w-lg mx-auto leading-relaxed" style={{ color: '#64748B' }}>
-                          {t.aboutCardDesc}
-                        </p>
-                        <div className="flex justify-center gap-4 md:gap-6 flex-wrap pt-2">
-                          <span className="text-2xl md:text-4xl" title={t.aboutIconSearch}>🔍</span>
-                          <span className="text-2xl md:text-4xl" title={t.aboutIconAi}>🤖</span>
-                          <span className="text-2xl md:text-4xl" title={t.aboutIconButter}>💡</span>
-                        </div>
-                      </motion.div>
-                    )}
-                  </motion.div>
-                </Tilt>
-              )}
-
-              {/* شريط البحث أسفل البطاقة - بسيط ونظيف */}
-              <div className="mt-8 md:mt-12 max-w-2xl mx-auto">
-                <form onSubmit={handleSearch} className="relative">
-                  <input
-                    type="text"
-                    placeholder={t.searchPlaceholder}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className={`w-full py-4 md:py-5 px-5 md:px-6 rounded-2xl text-base md:text-lg font-bold focus:outline-none focus:ring-4 focus:ring-blue-200 border relative z-10 placeholder:opacity-70 ${lang === 'ar' ? 'pl-14 pr-5' : 'pr-14 pl-5'}`}
-                    style={{ backgroundColor: '#F1F5F9', color: '#0F172A', borderColor: 'rgba(0,0,0,0.05)' }}
-                  />
-                  <Search className={`absolute ${lang === 'ar' ? 'right-5' : 'left-5'} top-1/2 -translate-y-1/2 z-20 pointer-events-none opacity-50`} size={24} style={{ color: '#64748B' }} />
-                  <button
-                    type="submit"
-                    disabled={isSearching || isVisualSearching}
-                    className={`absolute ${lang === 'ar' ? 'left-2' : 'right-2'} top-1/2 -translate-y-1/2 bg-[#2563EB] hover:opacity-90 text-white px-4 py-2.5 rounded-xl font-black text-sm transition-all disabled:opacity-50 z-20`}
-                  >
-                    {isSearching ? t.analyzing : t.searchBtn}
-                  </button>
-                </form>
-                <input ref={visualFileInputRef} type="file" accept="image/*" className="hidden" onChange={handleVisualFileChange} />
-                <button
-                  type="button"
-                  onClick={handleOpenVisualSearch}
-                  className="mt-3 w-full max-w-xs mx-auto flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-sm transition-all active:scale-95 border border-slate-200"
-                  style={{ backgroundColor: '#F1F5F9', color: '#64748B' }}
-                  title={t.visualSearch}
-                >
-                  {isVisualSearching ? <Loader2 size={18} className="animate-spin" /> : <Camera size={18} />}
-                  {t.visualSearch}
-                </button>
-              </div>
-
-              {/* إحصائيات حقيقية - عدد عمليات البحث */}
-              <div className="mt-6 flex items-center justify-center gap-2 text-sm font-bold" style={{ color: '#64748B' }}>
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </span>
-                {realSearchCount.toLocaleString()} {t.realSearch}
-              </div>
-
-              {/* كلمات رائجة */}
-              <div className="mt-6 flex flex-wrap justify-center gap-2 text-sm font-bold">
-                <span style={{ color: '#64748B' }}>{t.trendingLabel}</span>
-                {(adminConfig.trendingKeywords && adminConfig.trendingKeywords.length > 0
-                  ? adminConfig.trendingKeywords
-                  : ['آيفون 15', 'سوني 5']
-                ).map((keyword, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setSearchQuery(keyword)}
-                    className="px-3 py-1.5 rounded-full border transition-all active:scale-95 hover:bg-white hover:shadow-md"
-                    style={{ borderColor: 'rgba(0,0,0,0.08)', color: '#2563EB', backgroundColor: 'rgba(255,255,255,0.8)' }}
-                  >
-                    {keyword}
-                  </button>
-                ))}
-              </div>
+          {/* الهيدر الأزرق مع شعارات ونصوص الشركات */}
+          <div className="bg-gradient-to-b from-slate-950 via-blue-950 to-indigo-900 text-white pt-32 md:pt-40 pb-20 md:pb-32 px-4 relative overflow-hidden rounded-b-2xl md:rounded-b-[5rem] shadow-2xl">
+            {/* طبقة الخلفية المتحركة */}
+            <div className="absolute top-0 left-0 w-full h-full opacity-30 pointer-events-none">
+                <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-blue-500 rounded-full blur-[120px] animate-pulse"></div>
+                <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-indigo-500 rounded-full blur-[120px] animate-pulse" style={{animationDelay: '1s'}}></div>
             </div>
 
-            {/* محفّز مرحلة "وش مقارن؟" - عند دخوله للشاشة تتغير البطاقة لمحتوى About */}
-            <div ref={aboutTriggerRef} className="h-1 w-full" aria-hidden="true" />
+            {/* نمط الشبكة */}
+            <svg className="absolute inset-0 w-full h-full text-white/5 mix-blend-overlay pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+              <pattern id="data-grid" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                <circle cx="1" cy="1" r="1" fill="currentColor" />
+              </pattern>
+              <rect width="100%" height="100%" fill="url(#data-grid)" />
+            </svg>
 
-            {/* قسم "كيف نربح؟" - ثلاث بطاقات أفقية مع حركة Bounce متتابعة */}
-            <section id="how-we-earn" ref={earnTriggerRef} className="max-w-5xl mx-auto mt-20 md:mt-32 px-4 scroll-mt-24">
-              <h2 className="text-2xl md:text-3xl font-black text-center mb-8 md:mb-12" style={{ color: '#0F172A' }}>
-                {t.earnTitle}
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-                {[
-                  { title: t.earnCard1Title, icon: '🤝', desc: t.earnCard1Desc },
-                  { title: t.earnCard2Title, icon: '🆓', desc: t.earnCard2Desc },
-                  { title: t.earnCard3Title, icon: '👁️', desc: t.earnCard3Desc },
-                ].map((card, i) => (
-                  <motion.div
-                    key={card.title}
-                    initial={{ opacity: 0, y: 30, scale: 0.9 }}
-                    animate={heroStage === 'earn' ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0.5, y: 20, scale: 0.95 }}
-                    transition={{ duration: 0.5, delay: i * 0.1, type: 'spring', stiffness: 120 }}
-                    whileHover={{ y: -8, rotate: 1, boxShadow: '0 30px 60px rgba(0,0,0,0.12)' }}
-                    className="rounded-2xl md:rounded-[1.5rem] p-6 md:p-8 border cursor-default"
-                    style={{
-                      backgroundColor: 'rgba(255,255,255,0.8)',
-                      borderColor: 'rgba(0,0,0,0.05)',
-                      boxShadow: '0 20px 40px rgba(0,0,0,0.08)',
-                      backdropFilter: 'blur(12px)',
-                    }}
-                  >
-                    <div className="text-3xl md:text-4xl mb-3">{card.icon}</div>
-                    <h3 className="text-lg md:text-xl font-black mb-2" style={{ color: '#0F172A' }}>{card.title}</h3>
-                    <p className="text-sm font-bold leading-relaxed" style={{ color: '#64748B' }}>{card.desc}</p>
-                  </motion.div>
-                ))}
+            {/* شعارات ونصوص الشركات */}
+            <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
+              {headerElements.map((element) => (
+                <div 
+                  key={element.id}
+                  className={`absolute ${element.position} group transition-all duration-500 hover:scale-150 hover:z-30`}
+                  style={{ 
+                    animationDelay: `${element.delay * 0.5}s`,
+                    animation: 'float 8s ease-in-out infinite'
+                  }}
+                >
+                  {element.type === 'logo' ? (
+                    <div className={`relative ${element.bgColor} rounded-full p-2 shadow-2xl border-2 border-white/30 backdrop-blur-sm`}
+                         style={{ width: `${element.size}px`, height: `${element.size}px` }}>
+                      <img 
+                        src={element.logo} 
+                        alt={element.name}
+                        className="w-full h-full rounded-full object-cover"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(element.name)}&background=random&color=fff&size=64`;
+                        }}
+                      />
+                      <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur-md text-white text-[10px] px-2 py-1 rounded-full whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all duration-300 font-bold border border-white/20">
+                        {element.name}
+                      </div>
+                      <div className="absolute -inset-1 border-2 border-white/30 rounded-full animate-ping opacity-20"></div>
+                    </div>
+                  ) : (
+                    <div 
+                      className={`relative ${element.bgColor} rounded-full shadow-2xl border-2 border-white/30 backdrop-blur-sm flex items-center justify-center px-4`}
+                      style={{ 
+                        height: `${element.size}px`,
+                        minWidth: `${element.size}px`
+                      }}
+                    >
+                      <span 
+                        className={`${element.textColor} font-${element.fontWeight} whitespace-nowrap`}
+                        style={{ fontSize: `${element.fontSize}px` }}
+                      >
+                        {element.text}
+                      </span>
+                      <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur-md text-white text-[10px] px-2 py-1 rounded-full whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all duration-300 font-bold border border-white/20">
+                        {element.text}
+                      </div>
+                      <div className="absolute -inset-1 border-2 border-white/30 rounded-full animate-ping opacity-20"></div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* المحتوى الرئيسي للهيدر */}
+            <div className="max-w-4xl mx-auto text-center relative z-10">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/10 text-blue-200 text-xs font-black mb-8 backdrop-blur-md shadow-lg animate-in fade-in slide-in-from-top-4 duration-700">
+                <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span></span>
+                <span>{realSearchCount.toLocaleString()} {t.realSearch}</span>
               </div>
-            </section>
+              <h1 className="text-4xl md:text-7xl font-black mb-6 leading-tight drop-shadow-2xl text-white tracking-tight animate-in fade-in slide-in-from-bottom-8 duration-700">{t.heroTitlePart1} <br/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-indigo-300">{t.heroTitlePart2}</span></h1>
+              <p className="text-blue-100 text-lg md:text-2xl mb-12 max-w-2xl mx-auto font-medium leading-relaxed opacity-90 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100">{t.heroDesc}</p>
+              
+              <form onSubmit={handleSearch} className="relative max-w-3xl mx-auto group animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
+                <div className="absolute inset-0 bg-blue-400/20 blur-2xl rounded-[2.5rem] group-hover:bg-blue-400/30 transition-all duration-500"></div>
+                <input 
+                  type="text" 
+                  placeholder={t.searchPlaceholder} 
+                  className={`w-full py-4 md:py-8 rounded-[2.5rem] text-slate-900 shadow-2xl text-lg md:text-xl focus:outline-none focus:ring-4 focus:ring-blue-400/50 transition-all font-bold border-none relative z-10 placeholder:text-slate-400 ${lang === 'ar' ? 'pl-8 pr-14' : 'pr-8 pl-14'}`}
+                  value={searchQuery} 
+                  onChange={(e) => setSearchQuery(e.target.value)} 
+                />
+                <Search className={`absolute ${lang === 'ar' ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 text-slate-400 z-20 pointer-events-none`} size={28} />
+                <button 
+                  type="submit" 
+                  disabled={isSearching || isVisualSearching} 
+                  className={`absolute ${lang === 'ar' ? 'left-3' : 'right-3'} top-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 md:px-8 md:py-4 rounded-[2rem] font-black transition-all flex items-center gap-2 disabled:bg-slate-400 shadow-xl active:scale-95 z-20 text-sm md:text-base group-hover:shadow-blue-500/50`}
+                >
+                  {isSearching ? <span className="animate-pulse">{t.analyzing}</span> : <>{t.searchBtn} <Rocket size={16} className="w-4 h-4 md:w-[18px] md:h-[18px]" /></>}
+                </button>
+              </form>
+              <input
+                ref={visualFileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleVisualFileChange}
+              />
+              <button
+                type="button"
+                onClick={handleOpenVisualSearch}
+                className="mt-4 w-full max-w-xs mx-auto flex items-center justify-center gap-2 py-3 px-6 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold transition-all active:scale-95 backdrop-blur-md"
+                title={t.visualSearch}
+                aria-label={t.visualSearch}
+              >
+                {isVisualSearching ? <Loader2 size={22} className="animate-spin" /> : <Camera size={22} />}
+                <span>{t.visualSearch}</span>
+              </button>
+              
+              <div className="mt-10 flex flex-wrap justify-center gap-3 text-sm font-bold text-blue-200/60 animate-in fade-in duration-1000 delay-300">
+                <span>{t.trendingLabel}</span>
+                {adminConfig.trendingKeywords && adminConfig.trendingKeywords.length > 0 ? (
+                  adminConfig.trendingKeywords.map((keyword, index) => (
+                    <button 
+                      key={index} 
+                      onClick={() => setSearchQuery(keyword)} 
+                      className="hover:text-white transition-all bg-white/5 px-3 py-1 rounded-full border border-white/5 hover:bg-white/10 hover:border-white/20 active:scale-95"
+                    >
+                      {keyword}
+                    </button>
+                  ))
+                ) : (
+                  <>
+                    <button onClick={() => setSearchQuery('آيفون 15')} className="hover:text-white transition-all bg-white/5 px-3 py-1 rounded-full border border-white/5 hover:bg-white/10">آيفون 15</button>
+                    <button onClick={() => setSearchQuery('سوني 5')} className="hover:text-white transition-all bg-white/5 px-3 py-1 rounded-full border border-white/5 hover:bg-white/10">سوني 5</button>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
 
-          <main className="max-w-7xl mx-auto px-4 md:px-6 relative z-20" style={{ backgroundColor: '#F8FAFC' }}>
+          <main className="max-w-7xl mx-auto px-4 md:px-6 -mt-16 md:-mt-20 relative z-20">
             {isSearching && (
               <div className="bg-white rounded-2xl md:rounded-[3rem] p-8 md:p-20 shadow-xl border border-slate-100 text-center mb-20 md:mb-32">
                 <div className="relative w-16 h-16 md:w-24 md:h-24 mx-auto mb-6 md:mb-8">
@@ -3022,47 +2926,30 @@ ${languageInstruction}
               </div>
             )}
 
-            {results && !isSearching && (() => {
-              // ترتيب النتائج: الأرخص أولاً لتمييزه بتأثير أخضر (مرحلة نتائج البحث)
-              const sortedResults = [...results].sort((a, b) => (a.price || 0) - (b.price || 0));
-              return (
-              <div className="space-y-12 mb-32">
+            {results && !isSearching && (
+              <div className="space-y-12 animate-in fade-in slide-in-from-bottom-10 duration-700 mb-32">
+                {/* 1. بطاقات المنتجات أولاً */}
                 <div className="relative">
                   <div className="md:hidden mb-2 text-center">
-                    <p className="text-slate-600 text-xs md:text-sm font-bold flex items-center justify-center gap-2">
+                    <p className="text-slate-600 text-xs md:text-sm font-bold flex items-center justify-center gap-2 animate-pulse">
                       <span>{t.swipeHint}</span>
                       <ChevronRight size={12} className="w-3 h-3 md:w-4 md:h-4" />
                     </p>
                   </div>
+                  
                   <div 
                     ref={resultsContainerRef}
                     className="flex flex-row overflow-x-auto gap-4 snap-x snap-mandatory scrollbar-hide pb-6 md:pb-0 md:grid md:grid-cols-3 md:gap-8 md:overflow-visible"
                     style={{ touchAction: 'pan-y' }}
                   >
-                    {sortedResults.map((item, index) => {
-                      const isCheapest = index === 0;
-                      return (
-                      <motion.div
-                        key={item.id}
-                        initial={{ opacity: 0, y: -24 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4, delay: index * 0.1 }}
-                        whileHover={{ scale: 1.02, rotate: 1, boxShadow: '0 30px 60px rgba(0,0,0,0.12)' }}
-                        className="rounded-2xl md:rounded-[2.5rem] overflow-hidden w-[75vw] md:w-auto flex-shrink-0 snap-start md:snap-align-none border flex flex-col"
-                        style={{
-                          backgroundColor: 'rgba(255,255,255,0.95)',
-                          borderColor: isCheapest ? '#10B981' : 'rgba(0,0,0,0.05)',
-                          boxShadow: isCheapest ? '0 20px 40px rgba(16,185,129,0.25)' : '0 20px 40px rgba(0,0,0,0.08)',
-                          touchAction: 'pan-y',
-                        }}
+                    {results.map((item) => (
+                      <div 
+                        key={item.id} 
+                        className="bg-white rounded-2xl md:rounded-[2.5rem] shadow-xl md:hover:shadow-2xl transition-all duration-300 border border-slate-100 overflow-hidden w-[75vw] md:w-auto flex-shrink-0 snap-start md:snap-align-none active:scale-[0.99] md:hover:-translate-y-2"
+                        style={{ touchAction: 'pan-y' }}
                       >
-                        {isCheapest && (
-                          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 px-4 py-1.5 rounded-full text-xs font-black text-white shadow-lg" style={{ backgroundColor: '#10B981' }}>
-                            {lang === 'ar' ? 'أرخص سعر' : 'Best price'}
-                          </div>
-                        )}
                         {item.store.includes('شريك') && (
-                          <div className={`absolute top-6 z-20 px-4 py-1.5 rounded-full text-[10px] font-black text-white shadow-lg ${lang === 'ar' ? 'right-6' : 'left-6'}`} style={{ backgroundColor: '#ef4444' }}>
+                          <div className="absolute top-6 right-6 bg-red-500 text-white px-4 py-1.5 rounded-full text-[10px] font-black z-20 animate-pulse shadow-lg ring-4 ring-red-100">
                             {t.specialOffer}
                           </div>
                         )}
@@ -3188,14 +3075,14 @@ ${languageInstruction}
                             href={getStoreLink(item.storeKey)} 
                             target="_blank" 
                             rel="noopener noreferrer" 
-                            className="w-full bg-slate-900 text-white py-3 md:py-5 rounded-[1.5rem] font-black text-base md:text-lg hover:bg-[#2563EB] transition-all flex justify-center items-center gap-2 shadow-xl active:scale-95 text-center group/btn"
+                            className="w-full bg-slate-900 text-white py-3 md:py-5 rounded-[1.5rem] font-black text-base md:text-lg hover:bg-blue-600 transition-all flex justify-center items-center gap-2 shadow-xl hover:shadow-blue-200 active:scale-95 text-center group/btn"
                           >
                             {t.visitStore}
                             <ExternalLink size={12} className="w-3 h-3 md:w-5 md:h-5 group-hover/btn:translate-x-1 transition-transform rtl:group-hover/btn:-translate-x-1" />
                           </a>
                         </div>
-                      </motion.div>
-                    ); })}
+                      </div>
+                    ))}
                   </div>
                 </div>
 
@@ -3298,17 +3185,16 @@ ${languageInstruction}
                     </div>
                 )}
               </div>
-              );
-            })()}
+            )}
 
             {!results && !isSearching && (
               <>
-                <section id="how-it-works" className="mb-32 scroll-mt-32 mt-32">
+                <section id="about" className="mb-32 scroll-mt-32 mt-32">
                   <div className="text-center mb-16"><h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-6">{t.howItWorksTitle}</h2><p className="text-slate-500 font-bold text-xl">{t.threeStepsDesc}</p></div>
                   <div className="flex flex-row overflow-x-auto gap-3 snap-x snap-mandatory scrollbar-hide flex-nowrap md:grid md:grid-cols-3 md:gap-8 md:overflow-visible md:flex-wrap pb-2 md:pb-0">{[{ icon: MousePointer2, title: t.step1Title, desc: t.step1Desc, color: 'blue' }, { icon: Cpu, title: t.step2Title, desc: t.step2Desc, color: 'indigo' }, { icon: Rocket, title: t.step3Title, desc: t.step3Desc, color: 'green' }].map((item, i) => (<div key={i} className="bg-white p-4 md:p-12 rounded-2xl md:rounded-[3rem] shadow-none md:shadow-xl border border-slate-200 md:border-slate-100 hover:-translate-y-2 transition-all text-center group w-64 flex-shrink-0 snap-start md:w-auto md:snap-align-none"><div className={`bg-${item.color}-50 text-${item.color}-600 w-16 h-16 md:w-24 md:h-24 rounded-xl md:rounded-[2rem] flex items-center justify-center mx-auto mb-4 md:mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}><item.icon className="w-8 h-8 md:w-12 md:h-12 shrink-0" /></div><h3 className="text-base md:text-2xl font-black mb-2 md:mb-4 text-slate-900">{item.title}</h3><p className="text-slate-500 font-bold leading-relaxed text-xs md:text-base">{item.desc}</p></div>))}</div>
                 </section>
                 
-                <section id="earn-extra" className="bg-slate-900 rounded-[3rem] p-10 md:p-24 text-white text-center shadow-2xl mb-32 scroll-mt-32 relative overflow-hidden">
+                <section id="how-we-earn" className="bg-slate-900 rounded-[3rem] p-10 md:p-24 text-white text-center shadow-2xl mb-32 scroll-mt-32 relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-600/20 rounded-full blur-[120px]"></div><div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-indigo-600/20 rounded-full blur-[100px]"></div>
                     <h2 className="text-3xl md:text-5xl font-black mb-8 relative z-10">{t.earnTitle}</h2><p className="text-blue-100 text-lg md:text-2xl max-w-4xl mx-auto leading-relaxed mb-16 relative z-10 font-medium">{t.earnDesc}</p>
                     <div className="flex flex-wrap justify-center gap-6 relative z-10 font-black"><div className="bg-white/10 px-10 py-6 rounded-[2rem] backdrop-blur-md border border-white/10 flex items-center gap-3 hover:bg-white/20 transition-colors"><CheckCircle size={24} className="text-green-400" /> {t.neutrality}</div><div className="bg-white/10 px-10 py-6 rounded-[2rem] backdrop-blur-md border border-white/10 flex items-center gap-3 hover:bg-white/20 transition-colors"><CheckCircle size={24} className="text-green-400" /> {t.noExtraCost}</div></div>
@@ -5135,3 +5021,4 @@ ${languageInstruction}
 };
 
 export default App;
+
